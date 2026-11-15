@@ -618,17 +618,12 @@ components:
       properties:
         ref:
           type: string
-          maxLength: 512
         repositoryUrl:
+          description: GitHub 来源仅在被选中时由应用层校验。
           type: string
-          maxLength: 2048
         skillPath:
           description: 空路径表示 Skill 位于仓库根目录。
           type: string
-          maxLength: 1024
-      required:
-        - repositoryUrl
-        - ref
     skillhub.v1.ImportSkillRequest:
       title: skillhub.v1.ImportSkillRequest
       type: object
@@ -663,7 +658,7 @@ components:
         - version
     skillhub.v1.ImportSkillResponse:
       title: skillhub.v1.ImportSkillResponse
-      description: GitHub 来源复制为个人 Skill 时，服务端保留仓库信息和解析到的 commit。
+      description: 本地来源保存完整快照；GitHub 来源保存仓库信息及解析到的 commit。
       type: object
       properties:
         skill:

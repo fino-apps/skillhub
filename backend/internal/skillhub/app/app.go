@@ -17,18 +17,21 @@ import (
 
 type ServiceDeps struct {
 	SkillhubSvc service.ISkillhubService
+	Intake      *service.Intake
 }
 
 type skillhubServer struct {
 	pb.UnimplementedSkillhubServiceServer
 
 	skillhubSvc service.ISkillhubService
+	intake      *service.Intake
 }
 
 // NewService wires the generated transport server to the application service.
 func NewService(deps ServiceDeps) pb.SkillhubServiceServer {
 	return skillhubServer{
 		skillhubSvc: deps.SkillhubSvc,
+		intake:      deps.Intake,
 	}
 }
 
@@ -201,7 +204,7 @@ func (s skillhubServer) ListVersions(ctx context.Context, in *pb.ListVersionsReq
 		return nil, errcode.NewSkillhubRequestMissing()
 	}
 
-	return s.UnimplementedSkillhubServiceServer.ListVersions(ctx, in)
+	return s.listVersions(ctx, in)
 }
 
 // CreateVersion implements Interface. fino:req-fields 1=SkillId,2=Version,3=ExpectedDigest
@@ -316,7 +319,7 @@ func (s skillhubServer) PreviewImport(ctx context.Context, in *pb.PreviewImportR
 		return nil, errcode.NewPlatformBadRequest()
 	}
 
-	return s.UnimplementedSkillhubServiceServer.PreviewImport(ctx, in)
+	return s.previewImport(ctx, in)
 }
 
 // ImportSkill implements Interface. fino:req-fields 1=Source,2=TargetSkillId,3=ProjectPath,4=ExpectedSourceDigest,5=ExpectedTargetDigest,6=IncludedFiles,7=Version
@@ -331,7 +334,7 @@ func (s skillhubServer) ImportSkill(ctx context.Context, in *pb.ImportSkillReque
 		return nil, errcode.NewPlatformBadRequest()
 	}
 
-	return s.UnimplementedSkillhubServiceServer.ImportSkill(ctx, in)
+	return s.importSkill(ctx, in)
 }
 
 // ResolveSource implements Interface. fino:req-fields 1=Source

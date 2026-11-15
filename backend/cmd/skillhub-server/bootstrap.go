@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 
 	"github.com/fino-io/finokit/config"
 	"github.com/fino-io/finokit/logs"
@@ -100,7 +102,17 @@ func buildServer(deps infra) (pb.SkillhubServiceServer, error) {
 		SkillVersionRepo: skillVersionRepo,
 	})
 
+	dataRoot := os.Getenv("SKILLHUB_DATA_DIR")
+	if dataRoot == "" {
+		dataRoot = "skillhub-data"
+	}
+	dataRoot, err := filepath.Abs(dataRoot)
+	if err != nil {
+		return nil, err
+	}
+
 	return app.NewService(app.ServiceDeps{
+		Intake:      service.NewIntake(dataRoot, infrarepo.NewIntakeRepo(deps.DB)),
 		SkillhubSvc: skillhubService,
 	}), nil
 }

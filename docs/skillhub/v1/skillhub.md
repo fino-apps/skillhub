@@ -651,9 +651,9 @@ POST /skillhub/v1/install-commands:generate
 
 | 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
 |---|---|---|---|---|---|
-| `repositoryUrl` | `string` |  | 是 |  | 最大长度为 2048 |
-| `skillPath` | `string` |  | 否 |  | 空路径表示 Skill 位于仓库根目录。；最大长度为 1024 |
-| `ref` | `string` |  | 是 |  | 最大长度为 512 |
+| `repositoryUrl` | `string` |  | 否 |  | GitHub 来源仅在被选中时由应用层校验。 |
+| `skillPath` | `string` |  | 否 |  | 空路径表示 Skill 位于仓库根目录。 |
+| `ref` | `string` |  | 否 |  |  |
 
 ### `skillhub.v1.FileView`
 

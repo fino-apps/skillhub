@@ -5,7 +5,8 @@ import { defineConfig, loadEnv } from "vite";
 export default defineConfig(({ command, mode }) => {
   const frontendDir = fileURLToPath(new URL(".", import.meta.url));
   const frontendEnv = loadEnv(mode, frontendDir, "VITE_");
-  let apiBase = frontendEnv.VITE_API_BASE?.trim() || "";
+  const apiBase = frontendEnv.VITE_API_BASE?.trim() || "";
+  let backendTarget = "";
 
   if (command === "serve" && !apiBase) {
     const backendDir = fileURLToPath(new URL("../backend/", import.meta.url));
@@ -13,7 +14,7 @@ export default defineConfig(({ command, mode }) => {
     if (!port || !/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) {
       throw new Error("Set SERVER_HTTP_PORT (1-65535) in backend/.env before starting frontend development");
     }
-    apiBase = `http://127.0.0.1:${port}`;
+    backendTarget = `http://127.0.0.1:${port}`;
   }
 
   return {
@@ -23,6 +24,7 @@ export default defineConfig(({ command, mode }) => {
     plugins: [react()],
     server: {
       proxy: {
+        ...(backendTarget ? { "/skillhub": { target: backendTarget, changeOrigin: true } } : {}),
         "/monitor": {
           target: "http://127.0.0.1:3000",
           changeOrigin: true,

@@ -1,5 +1,6 @@
 package model
 
 type SkillVersionFilter struct {
-	IDs []SkillVersionID
+	IDs     []SkillVersionID
+	SkillID string
 }

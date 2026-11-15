@@ -82,6 +82,9 @@ func (m *SkillVersionDaoImpl) filteredQuery(ctx context.Context, filter model.Sk
 	if len(filter.IDs) > 0 {
 		tx = tx.Where("id in ?", filter.IDs)
 	}
+	if filter.SkillID != "" {
+		tx = tx.Where("skill_id = ?", filter.SkillID)
+	}
 	return tx
 }
 

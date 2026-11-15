@@ -239,10 +239,11 @@ message SkillLocation {
 }
 
 message GitHubSource {
-  string repository_url = 1 [(fino.validate) = {required: true max: 2048}];
+  // GitHub 来源仅在被选中时由应用层校验。
+  string repository_url = 1;
   // 空路径表示 Skill 位于仓库根目录。
-  string skill_path = 2 [(fino.validate) = {omitempty: true max: 1024}];
-  string ref = 3 [(fino.validate) = {required: true max: 512}];
+  string skill_path = 2;
+  string ref = 3;
 }
 
 message FileView {
@@ -345,7 +346,7 @@ message ImportSkillRequest {
   VersionInput version = 7 [(fino.validate) = {required: true}];
 }
 
-// GitHub 来源复制为个人 Skill 时，服务端保留仓库信息和解析到的 commit。
+// 本地来源保存完整快照；GitHub 来源保存仓库信息及解析到的 commit。
 message ImportSkillResponse {
   SkillView skill = 1;
   VersionView version = 2;

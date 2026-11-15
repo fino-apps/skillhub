@@ -300,36 +300,12 @@ func validateListFilesRequest(req *pb.ListFilesRequest) error {
 		return newRequestValidationError("location", err)
 	}
 
-	if err := requestValidator.Var(req.GetLocation().GetGithub().GetRepositoryUrl(), "required,max=2048"); err != nil {
-		return newRequestValidationError("location.github.repository_url", err)
-	}
-
-	if err := requestValidator.Var(req.GetLocation().GetGithub().GetSkillPath(), "omitempty,max=1024"); err != nil {
-		return newRequestValidationError("location.github.skill_path", err)
-	}
-
-	if err := requestValidator.Var(req.GetLocation().GetGithub().GetRef(), "required,max=512"); err != nil {
-		return newRequestValidationError("location.github.ref", err)
-	}
-
 	return nil
 }
 
 func validateGetFileRequest(req *pb.GetFileRequest) error {
 	if err := requestValidator.Var(req.GetLocation(), "required"); err != nil {
 		return newRequestValidationError("location", err)
-	}
-
-	if err := requestValidator.Var(req.GetLocation().GetGithub().GetRepositoryUrl(), "required,max=2048"); err != nil {
-		return newRequestValidationError("location.github.repository_url", err)
-	}
-
-	if err := requestValidator.Var(req.GetLocation().GetGithub().GetSkillPath(), "omitempty,max=1024"); err != nil {
-		return newRequestValidationError("location.github.skill_path", err)
-	}
-
-	if err := requestValidator.Var(req.GetLocation().GetGithub().GetRef(), "required,max=512"); err != nil {
-		return newRequestValidationError("location.github.ref", err)
 	}
 
 	if err := requestValidator.Var(req.GetPath(), "required,max=1024"); err != nil {
@@ -384,18 +360,6 @@ func validatePreviewImportRequest(req *pb.PreviewImportRequest) error {
 		return newRequestValidationError("source", err)
 	}
 
-	if err := requestValidator.Var(req.GetSource().GetGithub().GetRepositoryUrl(), "required,max=2048"); err != nil {
-		return newRequestValidationError("source.github.repository_url", err)
-	}
-
-	if err := requestValidator.Var(req.GetSource().GetGithub().GetSkillPath(), "omitempty,max=1024"); err != nil {
-		return newRequestValidationError("source.github.skill_path", err)
-	}
-
-	if err := requestValidator.Var(req.GetSource().GetGithub().GetRef(), "required,max=512"); err != nil {
-		return newRequestValidationError("source.github.ref", err)
-	}
-
 	if err := requestValidator.Var(req.GetTargetSkillId(), "omitempty,max=36,uuid"); err != nil {
 		return newRequestValidationError("target_skill_id", err)
 	}
@@ -410,18 +374,6 @@ func validatePreviewImportRequest(req *pb.PreviewImportRequest) error {
 func validateImportSkillRequest(req *pb.ImportSkillRequest) error {
 	if err := requestValidator.Var(req.GetSource(), "required"); err != nil {
 		return newRequestValidationError("source", err)
-	}
-
-	if err := requestValidator.Var(req.GetSource().GetGithub().GetRepositoryUrl(), "required,max=2048"); err != nil {
-		return newRequestValidationError("source.github.repository_url", err)
-	}
-
-	if err := requestValidator.Var(req.GetSource().GetGithub().GetSkillPath(), "omitempty,max=1024"); err != nil {
-		return newRequestValidationError("source.github.skill_path", err)
-	}
-
-	if err := requestValidator.Var(req.GetSource().GetGithub().GetRef(), "required,max=512"); err != nil {
-		return newRequestValidationError("source.github.ref", err)
 	}
 
 	if err := requestValidator.Var(req.GetTargetSkillId(), "omitempty,max=36,uuid"); err != nil {
@@ -472,36 +424,12 @@ func validateResolveSourceRequest(req *pb.ResolveSourceRequest) error {
 		return newRequestValidationError("source", err)
 	}
 
-	if err := requestValidator.Var(req.GetSource().GetRepositoryUrl(), "required,max=2048"); err != nil {
-		return newRequestValidationError("source.repository_url", err)
-	}
-
-	if err := requestValidator.Var(req.GetSource().GetSkillPath(), "omitempty,max=1024"); err != nil {
-		return newRequestValidationError("source.skill_path", err)
-	}
-
-	if err := requestValidator.Var(req.GetSource().GetRef(), "required,max=512"); err != nil {
-		return newRequestValidationError("source.ref", err)
-	}
-
 	return nil
 }
 
 func validateCompareSkillsRequest(req *pb.CompareSkillsRequest) error {
 	if err := requestValidator.Var(req.GetLeft(), "required"); err != nil {
 		return newRequestValidationError("left", err)
-	}
-
-	if err := requestValidator.Var(req.GetLeft().GetGithub().GetRepositoryUrl(), "required,max=2048"); err != nil {
-		return newRequestValidationError("left.github.repository_url", err)
-	}
-
-	if err := requestValidator.Var(req.GetLeft().GetGithub().GetSkillPath(), "omitempty,max=1024"); err != nil {
-		return newRequestValidationError("left.github.skill_path", err)
-	}
-
-	if err := requestValidator.Var(req.GetLeft().GetGithub().GetRef(), "required,max=512"); err != nil {
-		return newRequestValidationError("left.github.ref", err)
 	}
 
 	if err := requestValidator.Var(req.GetRight(), "required"); err != nil {

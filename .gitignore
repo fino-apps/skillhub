@@ -28,6 +28,7 @@ npm-debug.log*
 
 # Backend runtime logs and SQLite data
 /backend/logs/
+/backend/skillhub-data/
 /backend/*.db
 /backend/*.db-shm
 /backend/*.db-wal
