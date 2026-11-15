@@ -13,9 +13,11 @@
 .skillhub-list p { color: var(--muted); font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; margin: 6px 0 0; }
 .skillhub-library-item { border: 0; padding: 0; min-height: 0; background: transparent; color: var(--text); text-align: left; }
 .skillhub-library-item:hover { color: var(--accent); background: transparent; }
-.library-versions { margin-top: 12px; padding: 12px; background: var(--surface-muted); border-radius: 6px; font-size: 13px; }
-.library-versions ul { list-style: none; padding: 0; margin: 6px 0 0; }
-.library-versions li { display: flex; flex-wrap: wrap; gap: 12px; padding: 5px 0; }
+.library-versions { margin-top: 12px; font-size: 13px; }
+.library-version-row { display: flex; align-items: baseline; gap: 14px; }
+.library-version-label { flex: none; color: var(--muted); }
+.library-versions ul { list-style: none; padding: 0; margin: 0; flex: 1; min-width: 0; }
+.library-versions li { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 14px; padding: 3px 0; }
 .library-versions code { color: var(--muted); }
 .library-origin { overflow-wrap: anywhere; margin: 0 0 8px !important; }
 .skillhub-empty { padding: 36px 0; color: var(--muted); font-size: 14px; }
@@ -26,6 +28,7 @@
 .skillhub-hint, .intake-header p, .intake-preview > p, .github-preview p { color: var(--muted); font-size: 12px; line-height: 1.5; }
 .skillhub-alert { display: flex; justify-content: space-between; gap: 12px; color: var(--danger); font-size: 13px; margin-top: 14px; }
 .skillhub-dialog { width: min(960px, calc(100% - 32px)); max-height: min(85vh, 850px); padding: 0; border: 1px solid var(--line); border-radius: 12px; color: var(--text); background: var(--surface); box-shadow: 0 20px 70px #0004; }
+.skillhub-dialog-compact { width: min(620px, calc(100% - 32px)); }
 .skillhub-dialog::backdrop { background: #0008; }
 .dialog-header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--line); background: var(--surface); }
 .dialog-header h2 { font-size: 18px; margin: 0; }
@@ -74,7 +77,9 @@
 @media (max-width: 600px) { .skillhub-shell { margin-top: 28px; } .skillhub-heading { align-items: flex-start; flex-direction: column; } .dialog-body { padding: 16px; } .compare-sources, .compare-results, .github-form > div { grid-template-columns: 1fr; } .compare-files { max-height: 150px; } .skillhub-form-row { flex-direction: column; } }
 .compare-source select { height: 36px; padding: 0 10px; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
 .intake-choices input[type="checkbox"], .intake-files input[type="checkbox"] { width: 16px; height: 16px; margin: 0; flex: none; }
-.copy-command { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-muted); }
-.copy-command code { flex: 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
-.copy-command button { flex: none; padding: 0 12px; }
-@media (max-width: 520px) { .copy-command { flex-direction: column; } }
+.copy-hint { margin: 0 0 12px; }
+.copy-command { position: relative; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-muted); }
+.copy-command pre { max-height: 260px; margin: 0; padding: 14px 52px 14px 14px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; font-size: 12px; }
+.copy-command-button { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 32px; min-height: 32px; padding: 0; border: 0; background: transparent; color: var(--muted); }
+.copy-command-button:hover { background: var(--surface); color: var(--text); }
+.copy-command-button svg { width: 16px; height: 16px; }
