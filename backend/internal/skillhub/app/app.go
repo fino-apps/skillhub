@@ -360,7 +360,7 @@ func (s skillhubServer) CompareSkills(ctx context.Context, in *pb.CompareSkillsR
 		return nil, errcode.NewPlatformBadRequest()
 	}
 
-	return s.UnimplementedSkillhubServiceServer.CompareSkills(ctx, in)
+	return s.compareSkills(ctx, in)
 }
 
 // GetInstallCommands implements Interface. fino:req-fields 1=Skills,2=ProjectPath,3=Global

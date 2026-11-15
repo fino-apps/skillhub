@@ -45,8 +45,6 @@ export default function GitHubIntake({ onComplete }: { onComplete: () => void })
   }
 
   return <div className="github-intake">
-    <h2>收录公开 Skill</h2>
-    <p>填写 GitHub 仓库和 Skill 路径；仅保存来源及固定版本。</p>
     <form onSubmit={inspect} className="github-form">
       <label>仓库地址<input type="url" disabled={busy} value={source.repositoryUrl} onChange={(event) => change("repositoryUrl", event.target.value)} placeholder="https://github.com/owner/repo" required /></label>
       <div><label>仓库内路径<input disabled={busy} value={source.skillPath} onChange={(event) => change("skillPath", event.target.value)} placeholder="skills/example（根目录可留空）" /></label><label>分支或标签<input disabled={busy} value={source.ref} onChange={(event) => change("ref", event.target.value)} required /></label></div>

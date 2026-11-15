@@ -23,28 +23,36 @@ type GitHubPreview struct {
 
 var repositoryPattern = regexp.MustCompile(`^/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:\.git)?$`)
 
-// PreviewGitHub reads a public repository into a temporary directory and never executes its files.
-func PreviewGitHub(ctx context.Context, source GitHubSource) (GitHubPreview, error) {
+// CheckoutGitHub resolves a public repository into a temporary directory.
+// The caller must invoke cleanup after use; no repository code is executed.
+func CheckoutGitHub(ctx context.Context, source GitHubSource) (root, commit string, cleanup func(), err error) {
 	u, err := url.Parse(source.RepositoryURL)
 	if err != nil || u.Scheme != "https" || u.Host != "github.com" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || !repositoryPattern.MatchString(u.Path) {
-		return GitHubPreview{}, fmt.Errorf("invalid GitHub repository URL")
+		return "", "", nil, fmt.Errorf("invalid GitHub repository URL")
 	}
 	ref := strings.TrimSpace(source.Ref)
 	if ref == "" || len(ref) > 200 || strings.HasPrefix(ref, "-") || strings.ContainsAny(ref, " \t\r\n\\~^:?*[") || strings.Contains(ref, "..") {
-		return GitHubPreview{}, fmt.Errorf("invalid git reference")
+		return "", "", nil, fmt.Errorf("invalid git reference")
 	}
 	path := filepath.Clean(source.SkillPath)
 	if filepath.IsAbs(path) || path == ".." || strings.HasPrefix(path, ".."+string(filepath.Separator)) {
-		return GitHubPreview{}, fmt.Errorf("invalid skill path")
+		return "", "", nil, fmt.Errorf("invalid skill path")
 	}
 	temp, err := os.MkdirTemp("", "skillhub-github-")
 	if err != nil {
-		return GitHubPreview{}, err
+		return "", "", nil, err
 	}
-	defer os.RemoveAll(temp)
+	created := temp
+	remove := func() { _ = os.RemoveAll(created) }
+	cleanup = remove
+	defer func() {
+		if err != nil {
+			remove()
+		}
+	}()
 	temp, err = filepath.EvalSymlinks(temp)
 	if err != nil {
-		return GitHubPreview{}, err
+		return "", "", nil, err
 	}
 	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
@@ -57,23 +65,33 @@ func PreviewGitHub(ctx context.Context, source GitHubSource) (GitHubPreview, err
 		}
 		return strings.TrimSpace(string(out)), nil
 	}
-	if _, err := run("init", "-q", temp); err != nil {
-		return GitHubPreview{}, err
+	if _, err = run("init", "-q", temp); err != nil {
+		return "", "", nil, err
 	}
-	if _, err := run("-C", temp, "-c", "protocol.file.allow=never", "fetch", "-q", "--depth=1", source.RepositoryURL, ref); err != nil {
-		return GitHubPreview{}, err
+	if _, err = run("-C", temp, "-c", "protocol.file.allow=never", "fetch", "-q", "--depth=1", source.RepositoryURL, ref); err != nil {
+		return "", "", nil, err
 	}
-	commit, err := run("-C", temp, "rev-parse", "FETCH_HEAD^{commit}")
+	commit, err = run("-C", temp, "rev-parse", "FETCH_HEAD^{commit}")
+	if err != nil {
+		return "", "", nil, err
+	}
+	if _, err = run("-C", temp, "-c", "core.hooksPath=/dev/null", "checkout", "-q", "--detach", commit); err != nil {
+		return "", "", nil, err
+	}
+	root, err = filepath.EvalSymlinks(filepath.Join(temp, path))
+	if err != nil || !within(temp, root) {
+		return "", "", nil, fmt.Errorf("skill path is outside repository or unavailable")
+	}
+	return root, commit, cleanup, nil
+}
+
+// PreviewGitHub inspects a pinned repository without executing its files.
+func PreviewGitHub(ctx context.Context, source GitHubSource) (GitHubPreview, error) {
+	root, commit, cleanup, err := CheckoutGitHub(ctx, source)
 	if err != nil {
 		return GitHubPreview{}, err
 	}
-	if _, err := run("-C", temp, "-c", "core.hooksPath=/dev/null", "checkout", "-q", "--detach", commit); err != nil {
-		return GitHubPreview{}, err
-	}
-	root, err := filepath.EvalSymlinks(filepath.Join(temp, path))
-	if err != nil || !within(temp, root) {
-		return GitHubPreview{}, fmt.Errorf("skill path is outside repository or unavailable")
-	}
+	defer cleanup()
 	meta, ok, err := readSkill(root)
 	if err != nil || !ok || (len(meta.Name) > 64 || !validSkillName.MatchString(meta.Name)) {
 		return GitHubPreview{}, fmt.Errorf("invalid SKILL.md")

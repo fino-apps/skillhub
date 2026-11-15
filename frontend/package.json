@@ -15,6 +15,7 @@
     "idb-keyval": "^6.2.1",
     "mdast-util-from-markdown": "^2.0.3",
     "react": "19.0.0",
+    "react-diff-viewer-continued": "^4.4.0",
     "react-dom": "19.0.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.18.2",
@@ -25,10 +26,10 @@
     "postcss": "8.5.26"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^6.1.0",
     "@types/node": "22.15.29",
     "@types/react": "19.0.11",
     "@types/react-dom": "19.0.4",
+    "@vitejs/plugin-react": "^6.1.0",
     "typescript": "5.8.3",
     "vite": "^8.2.2"
   }

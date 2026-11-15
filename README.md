@@ -1,6 +1,6 @@
 # SkillHub
 
-SkillHub 是一个基于 Fino 的本地 Skill 管理项目。当前已生成 Go service、SQLite 仓储和 React 前端，并提供项目 Skill 扫描、本地和 GitHub 来源收录及初始版本查看；已有 Skill 的更新、版本恢复、线上比较、安装命令及标签筛选等业务接口仍待实现，不能将生成骨架视为完整产品。
+SkillHub 是一个基于 Fino 的本地 Skill 管理项目。当前已生成 Go service、SQLite 仓储和 React 前端，并提供项目 Skill 扫描、本地和 GitHub 来源收录及初始版本查看；支持本地、个人快照与 GitHub 来源的差异比对；已有 Skill 的更新、版本恢复、安装命令及标签筛选等业务接口仍待实现，不能将生成骨架视为完整产品。
 
 ## 本地运行
 
@@ -38,7 +38,11 @@ curl -fsS http://127.0.0.1:31101/skillhub/v1/projects:scan \
 
 扫描项目后勾选 Skill，预览文件并确认收录。疑似敏感文件默认不选；收录时会复制所选文件并创建初始版本。公开 Skill 填写 GitHub 仓库地址、仓库内路径及分支或标签，预览后只保存来源和解析到的 commit，不复制其文件。
 
-同名个人 Skill 或已收录的相同公开来源会提示冲突，不会自动覆盖；更新已有 Skill 和差异对比尚未实现。个人内容和快照默认保存在 `backend/skillhub-data/`，可用 `SKILLHUB_DATA_DIR` 更改；备份时请停止服务，并同时备份该目录与 SQLite 数据库。
+同名个人 Skill 或已收录的相同公开来源会提示冲突，不会自动覆盖；更新已有 Skill 尚未实现。个人内容和快照默认保存在 `backend/skillhub-data/`，可用 `SKILLHUB_DATA_DIR` 更改；备份时请停止服务，并同时备份该目录与 SQLite 数据库。
+
+## 比对 Skill
+
+在 Skill 库点击“比对 Skill”，选择本地目录或库中 Skill 的当前内容、历史版本。公开 Skill 按记录的 commit 从 GitHub 获取；比对不会修改源文件。单个变更文件最大 1 MiB，单次变更内容总量最大 8 MiB。
 
 ## 检查
 
