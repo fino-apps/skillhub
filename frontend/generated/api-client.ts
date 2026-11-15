@@ -250,6 +250,10 @@ export function compareSkills<TResponse = unknown>(payload: ApiRequest = {}, opt
   return requestApi<TResponse>(apiRoutes.compareSkills, payload, options);
 }
 
+export function getCopyCommand<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.getCopyCommand, payload, options);
+}
+
 export function getInstallCommands<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
   return requestApi<TResponse>(apiRoutes.getInstallCommands, payload, options);
 }

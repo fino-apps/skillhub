@@ -578,6 +578,32 @@ POST /skillhub/v1/skills:compare
 | `rightCommitSha` | `string` |  | 否 |  |  |
 
 
+## Get Copy Command
+
+### 请求路径
+
+```http
+GET /skillhub/v1/skills/{skill_id}/versions/{version_id}:copy-command
+```
+
+### 请求参数
+
+#### Path 参数
+
+| 参数名 | 参数类型 | 格式类型 | 说明 |
+|---|---|---|---|
+| `skill_id` | `string` |  | 最大长度为 36；UUID |
+| `version_id` | `string` |  | 最大长度为 36；UUID |
+
+### 返回值
+
+#### 返回对象
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `command` | `string` |  | 否 |  |  |
+
+
 ## Get Install Commands
 
 ### 请求路径

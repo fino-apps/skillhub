@@ -84,6 +84,10 @@ service SkillhubService {
     option (google.api.http) = {post: "/skillhub/v1/skills:compare" body: "*"};
   }
 
+  rpc GetCopyCommand(GetCopyCommandRequest) returns (GetCopyCommandResponse) {
+    option (google.api.http) = {get: "/skillhub/v1/skills/{skill_id}/versions/{version_id}:copy-command"};
+  }
+
   rpc GetInstallCommands(GetInstallCommandsRequest) returns (GetInstallCommandsResponse) {
     option (google.api.http) = {post: "/skillhub/v1/install-commands:generate" body: "*"};
   }
@@ -403,4 +407,13 @@ message GetInstallCommandsRequest {
 
 message GetInstallCommandsResponse {
   repeated string commands = 1;
+}
+
+message GetCopyCommandRequest {
+  string skill_id = 1 [(fino.validate) = {required: true max: 36 uuid: true}];
+  string version_id = 2 [(fino.validate) = {required: true max: 36 uuid: true}];
+}
+
+message GetCopyCommandResponse {
+  string command = 1;
 }

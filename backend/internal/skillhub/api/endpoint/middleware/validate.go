@@ -116,6 +116,8 @@ func validateRequest(request interface{}) error {
 		return validateResolveSourceRequest(request)
 	case *pb.CompareSkillsRequest:
 		return validateCompareSkillsRequest(request)
+	case *pb.GetCopyCommandRequest:
+		return validateGetCopyCommandRequest(request)
 	case *pb.GetInstallCommandsRequest:
 		return validateGetInstallCommandsRequest(request)
 	default:
@@ -434,6 +436,18 @@ func validateCompareSkillsRequest(req *pb.CompareSkillsRequest) error {
 
 	if err := requestValidator.Var(req.GetRight(), "required"); err != nil {
 		return newRequestValidationError("right", err)
+	}
+
+	return nil
+}
+
+func validateGetCopyCommandRequest(req *pb.GetCopyCommandRequest) error {
+	if err := requestValidator.Var(req.GetSkillId(), "required,max=36,uuid"); err != nil {
+		return newRequestValidationError("skill_id", err)
+	}
+
+	if err := requestValidator.Var(req.GetVersionId(), "required,max=36,uuid"); err != nil {
+		return newRequestValidationError("version_id", err)
 	}
 
 	return nil

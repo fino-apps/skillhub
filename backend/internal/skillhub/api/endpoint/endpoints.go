@@ -52,6 +52,7 @@ type Endpoints struct {
 	ImportSkillEndpoint        endpoint.Endpoint
 	ResolveSourceEndpoint      endpoint.Endpoint
 	CompareSkillsEndpoint      endpoint.Endpoint
+	GetCopyCommandEndpoint     endpoint.Endpoint
 	GetInstallCommandsEndpoint endpoint.Endpoint
 }
 
@@ -76,6 +77,7 @@ func NewEndpoints(service pb.SkillhubServiceServer) Endpoints {
 		ImportSkillEndpoint:        MakeImportSkillEndpoint(service),
 		ResolveSourceEndpoint:      MakeResolveSourceEndpoint(service),
 		CompareSkillsEndpoint:      MakeCompareSkillsEndpoint(service),
+		GetCopyCommandEndpoint:     MakeGetCopyCommandEndpoint(service),
 		GetInstallCommandsEndpoint: MakeGetInstallCommandsEndpoint(service),
 	}
 }
@@ -388,6 +390,23 @@ func MakeCompareSkillsEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	}
 }
 
+func MakeGetCopyCommandEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint GetCopyCommand")
+		}
+		req, ok := request.(*pb.GetCopyCommandRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected GetCopyCommand request type %T", request)
+		}
+		v, err := s.GetCopyCommand(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
 func MakeGetInstallCommandsEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		if s == nil {
@@ -428,6 +447,7 @@ func (e *Endpoints) WrapAll(middleware endpoint.Middleware) {
 	e.ImportSkillEndpoint = middleware(e.ImportSkillEndpoint)
 	e.ResolveSourceEndpoint = middleware(e.ResolveSourceEndpoint)
 	e.CompareSkillsEndpoint = middleware(e.CompareSkillsEndpoint)
+	e.GetCopyCommandEndpoint = middleware(e.GetCopyCommandEndpoint)
 	e.GetInstallCommandsEndpoint = middleware(e.GetInstallCommandsEndpoint)
 }
 
@@ -457,5 +477,6 @@ func (e *Endpoints) WrapAllLabeled(middleware LabeledMiddleware) {
 	e.ImportSkillEndpoint = middleware("ImportSkill", e.ImportSkillEndpoint)
 	e.ResolveSourceEndpoint = middleware("ResolveSource", e.ResolveSourceEndpoint)
 	e.CompareSkillsEndpoint = middleware("CompareSkills", e.CompareSkillsEndpoint)
+	e.GetCopyCommandEndpoint = middleware("GetCopyCommand", e.GetCopyCommandEndpoint)
 	e.GetInstallCommandsEndpoint = middleware("GetInstallCommands", e.GetInstallCommandsEndpoint)
 }

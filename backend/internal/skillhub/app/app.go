@@ -373,3 +373,14 @@ func (s skillhubServer) GetInstallCommands(ctx context.Context, in *pb.GetInstal
 
 	return s.getInstallCommands(ctx, in)
 }
+
+// GetCopyCommand implements Interface. fino:req-fields 1=SkillId,2=VersionId
+func (s skillhubServer) GetCopyCommand(ctx context.Context, in *pb.GetCopyCommandRequest) (*pb.GetCopyCommandResponse, error) {
+	logs.Ctx(ctx).Debugw("GetCopyCommand")
+	if in == nil {
+		logs.Ctx(ctx).Warnw("invalid get_copy_command request", "reason", "request_missing")
+		return nil, errcode.NewSkillhubRequestMissing()
+	}
+
+	return s.getCopyCommand(ctx, in)
+}

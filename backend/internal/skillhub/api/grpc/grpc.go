@@ -158,6 +158,12 @@ func MakeGRPCServer(endpoints endpoint.Endpoints) pb.SkillhubServiceServer {
 			EncodeGRPCCompareSkillsResponse,
 			serverOptions...,
 		),
+		getCopyCommand: grpctransport.NewServer(
+			endpoints.GetCopyCommandEndpoint,
+			DecodeGRPCGetCopyCommandRequest,
+			EncodeGRPCGetCopyCommandResponse,
+			serverOptions...,
+		),
 		getInstallCommands: grpctransport.NewServer(
 			endpoints.GetInstallCommandsEndpoint,
 			DecodeGRPCGetInstallCommandsRequest,
@@ -189,6 +195,7 @@ type grpcServer struct {
 	importSkill        grpctransport.Handler
 	resolveSource      grpctransport.Handler
 	compareSkills      grpctransport.Handler
+	getCopyCommand     grpctransport.Handler
 	getInstallCommands grpctransport.Handler
 }
 
@@ -338,6 +345,14 @@ func (s *grpcServer) CompareSkills(ctx context.Context, req *pb.CompareSkillsReq
 	return rep.(*pb.CompareSkillsResponse), nil
 }
 
+func (s *grpcServer) GetCopyCommand(ctx context.Context, req *pb.GetCopyCommandRequest) (*pb.GetCopyCommandResponse, error) {
+	_, rep, err := s.getCopyCommand.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.GetCopyCommandResponse), nil
+}
+
 func (s *grpcServer) GetInstallCommands(ctx context.Context, req *pb.GetInstallCommandsRequest) (*pb.GetInstallCommandsResponse, error) {
 	_, rep, err := s.getInstallCommands.ServeGRPC(ctx, req)
 	if err != nil {
@@ -474,6 +489,13 @@ func DecodeGRPCCompareSkillsRequest(_ context.Context, grpcReq interface{}) (int
 	return req, nil
 }
 
+// DecodeGRPCGetCopyCommandRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC GetCopyCommand request to a user-domain GetCopyCommand request. Primarily useful in a server.
+func DecodeGRPCGetCopyCommandRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.GetCopyCommandRequest)
+	return req, nil
+}
+
 // DecodeGRPCGetInstallCommandsRequest is a transport/grpc.DecodeRequestFunc that converts a
 // gRPC GetInstallCommands request to a user-domain GetInstallCommands request. Primarily useful in a server.
 func DecodeGRPCGetInstallCommandsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -606,6 +628,13 @@ func EncodeGRPCResolveSourceResponse(_ context.Context, response interface{}) (i
 // user-domain CompareSkills response to a gRPC CompareSkills reply. Primarily useful in a server.
 func EncodeGRPCCompareSkillsResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(*pb.CompareSkillsResponse)
+	return resp, nil
+}
+
+// EncodeGRPCGetCopyCommandResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain GetCopyCommand response to a gRPC GetCopyCommand reply. Primarily useful in a server.
+func EncodeGRPCGetCopyCommandResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.GetCopyCommandResponse)
 	return resp, nil
 }
 

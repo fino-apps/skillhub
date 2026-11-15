@@ -341,6 +341,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/skillhub.v1.CreateVersionResponse'
+  /skillhub/v1/skills/{skill_id}/versions/{version_id}:copy-command:
+    get:
+      operationId: GetCopyCommand
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            maxLength: 36
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            maxLength: 36
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.GetCopyCommandResponse'
   /skillhub/v1/skills/{skill_id}/versions/{version_id}:restore:
     post:
       operationId: RestoreVersion
@@ -549,6 +574,27 @@ components:
         size:
           type: string
           format: int64
+    skillhub.v1.GetCopyCommandRequest:
+      title: skillhub.v1.GetCopyCommandRequest
+      type: object
+      properties:
+        skillId:
+          type: string
+          format: uuid
+          maxLength: 36
+        versionId:
+          type: string
+          format: uuid
+          maxLength: 36
+      required:
+        - skillId
+        - versionId
+    skillhub.v1.GetCopyCommandResponse:
+      title: skillhub.v1.GetCopyCommandResponse
+      type: object
+      properties:
+        command:
+          type: string
     skillhub.v1.GetFileRequest:
       title: skillhub.v1.GetFileRequest
       type: object

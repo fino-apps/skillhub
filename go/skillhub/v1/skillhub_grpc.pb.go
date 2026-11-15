@@ -38,6 +38,7 @@ const (
 	SkillhubService_ImportSkill_FullMethodName        = "/skillhub.v1.SkillhubService/ImportSkill"
 	SkillhubService_ResolveSource_FullMethodName      = "/skillhub.v1.SkillhubService/ResolveSource"
 	SkillhubService_CompareSkills_FullMethodName      = "/skillhub.v1.SkillhubService/CompareSkills"
+	SkillhubService_GetCopyCommand_FullMethodName     = "/skillhub.v1.SkillhubService/GetCopyCommand"
 	SkillhubService_GetInstallCommands_FullMethodName = "/skillhub.v1.SkillhubService/GetInstallCommands"
 )
 
@@ -63,6 +64,7 @@ type SkillhubServiceClient interface {
 	ImportSkill(ctx context.Context, in *ImportSkillRequest, opts ...grpc.CallOption) (*ImportSkillResponse, error)
 	ResolveSource(ctx context.Context, in *ResolveSourceRequest, opts ...grpc.CallOption) (*ResolveSourceResponse, error)
 	CompareSkills(ctx context.Context, in *CompareSkillsRequest, opts ...grpc.CallOption) (*CompareSkillsResponse, error)
+	GetCopyCommand(ctx context.Context, in *GetCopyCommandRequest, opts ...grpc.CallOption) (*GetCopyCommandResponse, error)
 	GetInstallCommands(ctx context.Context, in *GetInstallCommandsRequest, opts ...grpc.CallOption) (*GetInstallCommandsResponse, error)
 }
 
@@ -236,6 +238,15 @@ func (c *skillhubServiceClient) CompareSkills(ctx context.Context, in *CompareSk
 	return out, nil
 }
 
+func (c *skillhubServiceClient) GetCopyCommand(ctx context.Context, in *GetCopyCommandRequest, opts ...grpc.CallOption) (*GetCopyCommandResponse, error) {
+	out := new(GetCopyCommandResponse)
+	err := c.cc.Invoke(ctx, SkillhubService_GetCopyCommand_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *skillhubServiceClient) GetInstallCommands(ctx context.Context, in *GetInstallCommandsRequest, opts ...grpc.CallOption) (*GetInstallCommandsResponse, error) {
 	out := new(GetInstallCommandsResponse)
 	err := c.cc.Invoke(ctx, SkillhubService_GetInstallCommands_FullMethodName, in, out, opts...)
@@ -267,6 +278,7 @@ type SkillhubServiceServer interface {
 	ImportSkill(context.Context, *ImportSkillRequest) (*ImportSkillResponse, error)
 	ResolveSource(context.Context, *ResolveSourceRequest) (*ResolveSourceResponse, error)
 	CompareSkills(context.Context, *CompareSkillsRequest) (*CompareSkillsResponse, error)
+	GetCopyCommand(context.Context, *GetCopyCommandRequest) (*GetCopyCommandResponse, error)
 	GetInstallCommands(context.Context, *GetInstallCommandsRequest) (*GetInstallCommandsResponse, error)
 	mustEmbedUnimplementedSkillhubServiceServer()
 }
@@ -328,6 +340,9 @@ func (UnimplementedSkillhubServiceServer) ResolveSource(context.Context, *Resolv
 }
 func (UnimplementedSkillhubServiceServer) CompareSkills(context.Context, *CompareSkillsRequest) (*CompareSkillsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CompareSkills not implemented")
+}
+func (UnimplementedSkillhubServiceServer) GetCopyCommand(context.Context, *GetCopyCommandRequest) (*GetCopyCommandResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCopyCommand not implemented")
 }
 func (UnimplementedSkillhubServiceServer) GetInstallCommands(context.Context, *GetInstallCommandsRequest) (*GetInstallCommandsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetInstallCommands not implemented")
@@ -669,6 +684,24 @@ func _SkillhubService_CompareSkills_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SkillhubService_GetCopyCommand_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCopyCommandRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SkillhubServiceServer).GetCopyCommand(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SkillhubService_GetCopyCommand_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SkillhubServiceServer).GetCopyCommand(ctx, req.(*GetCopyCommandRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SkillhubService_GetInstallCommands_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetInstallCommandsRequest)
 	if err := dec(in); err != nil {
@@ -765,6 +798,10 @@ var SkillhubService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CompareSkills",
 			Handler:    _SkillhubService_CompareSkills_Handler,
+		},
+		{
+			MethodName: "GetCopyCommand",
+			Handler:    _SkillhubService_GetCopyCommand_Handler,
 		},
 		{
 			MethodName: "GetInstallCommands",

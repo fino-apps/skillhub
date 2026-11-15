@@ -40,9 +40,9 @@ curl -fsS http://127.0.0.1:31101/skillhub/v1/projects:scan \
 
 同名个人 Skill 或已收录的相同公开来源会提示冲突，不会自动覆盖；更新已有 Skill 尚未实现。个人内容和快照默认保存在 `backend/skillhub-data/`，可用 `SKILLHUB_DATA_DIR` 更改；备份时请停止服务，并同时备份该目录与 SQLite 数据库。
 
-## 安装 Skill
+## 复制 Skill
 
-在 Skill 库展开条目，选择版本并点击“安装”。选择目标项目或全局作用域，复制生成的命令在终端执行。生成命令不会自动安装；个人 Skill 使用对应版本的本地快照，公开 Skill 锁定收录时的 commit。运行命令需要 Node.js 22.20 或更高版本及网络访问。
+在 Skill 库展开条目，选择版本并点击“复制命令”，然后在目标目录中运行命令。命令会创建 Skill 目录，不覆盖已有同名目录。个人 Skill 复制本机的版本快照；公开 Skill 使用 `npx tiged` 从记录的 GitHub commit 获取对应目录，需要 Node.js 和网络。
 
 ## 比对 Skill
 

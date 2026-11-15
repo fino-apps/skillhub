@@ -74,19 +74,7 @@
 @media (max-width: 600px) { .skillhub-shell { margin-top: 28px; } .skillhub-heading { align-items: flex-start; flex-direction: column; } .dialog-body { padding: 16px; } .compare-sources, .compare-results, .github-form > div { grid-template-columns: 1fr; } .compare-files { max-height: 150px; } .skillhub-form-row { flex-direction: column; } }
 .compare-source select { height: 36px; padding: 0 10px; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
 .intake-choices input[type="checkbox"], .intake-files input[type="checkbox"] { width: 16px; height: 16px; margin: 0; flex: none; }
-
-.install-skill { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-.install-skill span { color: var(--muted); font-size: 13px; }
-.install-scope { display: flex; gap: 20px; border: 0; padding: 0; margin: 0 0 16px; }
-.install-scope legend { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
-.install-scope label { display: flex; align-items: center; gap: 7px; font-size: 13px; }
-.install-scope input { width: 16px; height: 16px; margin: 0; }
-.install-path { display: grid; gap: 7px; font-size: 13px; font-weight: 700; margin-bottom: 16px; }
-.install-panel form > button { padding: 0 14px; }
-.install-command { display: flex; align-items: flex-start; gap: 12px; margin: 18px 0; padding: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-muted); }
-.install-command code { flex: 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
-.install-command button { flex: none; padding: 0 12px; }
-@media (max-width: 520px) { .install-command { flex-direction: column; } }
-.install-target code { color: var(--text); overflow-wrap: anywhere; }
-.install-confirm { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0; font-size: 13px; line-height: 1.5; }
-.install-confirm input { width: 16px; height: 16px; margin: 2px 0 0; flex: none; }
+.copy-command { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-muted); }
+.copy-command code { flex: 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
+.copy-command button { flex: none; padding: 0 12px; }
+@media (max-width: 520px) { .copy-command { flex-direction: column; } }

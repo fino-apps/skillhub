@@ -356,6 +356,20 @@ export const apiRoutes = {
       },
     },
   },
+  getCopyCommand: {
+    service: "SkillhubService",
+    rpc: "GetCopyCommand",
+    binding: "GetCopyCommand",
+    method: "GET",
+    path: "/skillhub/v1/skills/{skill_id}/versions/{version_id}:copy-command",
+    pathParams: ["skill_id", "version_id"],
+    queryParams: [],
+    body: "",
+    defaultPayload: {
+      skillId: "",
+      versionId: "",
+    },
+  },
   getInstallCommands: {
     service: "SkillhubService",
     rpc: "GetInstallCommands",

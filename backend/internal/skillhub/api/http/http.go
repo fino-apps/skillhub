@@ -442,6 +442,26 @@ func RegisterHttpHandler(router *mux.Router, endpoints endpoint.Endpoints, cfg *
 
 	{
 		route := httpmw.Route{
+			MethodName:  "GetCopyCommand",
+			BindingName: "GetCopyCommand",
+			Method:      "GET",
+			Path:        "/skillhub/v1/skills/{skill_id}/versions/{version_id}:copy-command",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.GetCopyCommandEndpoint,
+					DecodeHTTPGetCopyCommandRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
 			MethodName:  "GetInstallCommands",
 			BindingName: "GetInstallCommands",
 			Method:      "POST",
@@ -1153,6 +1173,32 @@ func DecodeHTTPCompareSkillsRequest(_ context.Context, r *http.Request) (interfa
 
 	queryParams := core.NewUrlQueryFrom(r.URL.Query())
 	_ = queryParams
+
+	return &req, nil
+}
+
+// DecodeHTTPGetCopyCommandRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded getcopycommand request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPGetCopyCommandRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.GetCopyCommandRequest
+	var err error
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	err = unmarshalPathParam(pathParams, &req.SkillId, "skill_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
+	}
+
+	err = unmarshalPathParam(pathParams, &req.VersionId, "version_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the version_id path parameter")
+	}
 
 	return &req, nil
 }
