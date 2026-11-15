@@ -2,62 +2,405 @@ syntax = "proto3";
 
 package skillhub.v1;
 
-import "skillhub/resource.proto";
-import "fino/options.proto";
+import "skillhub/skill.proto";
 import "fino/core/null.proto";
+import "fino/core/time.proto";
+import "fino/options.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/field_mask.proto";
 
 option go_package = "github.com/fino-io/skillhub/go/skillhub/v1;skillhub";
 
-// 参考 CRUD；替换为业务 RPC 时一并清理 Resource 模型、参数和 import。
 service SkillhubService {
-  rpc GetResource(GetResourceRequest) returns (Resource) {
-    option (google.api.http) = {get: "/skillhub/v1/resources/{id}"};
+  rpc ListSkills(ListSkillsRequest) returns (ListSkillsResponse) {
+    option (google.api.http) = {get: "/skillhub/v1/skills"};
   }
 
-  rpc ListResources(ListResourcesRequest) returns (ListResourcesResponse) {
-    option (google.api.http) = {get: "/skillhub/v1/resources"};
+  rpc ListSkillFilters(ListSkillFiltersRequest) returns (ListSkillFiltersResponse) {
+    option (google.api.http) = {get: "/skillhub/v1/skill-filters"};
   }
 
-  rpc CreateResource(CreateResourceRequest) returns (Resource) {
-    option (google.api.http) = {post: "/skillhub/v1/resources" body: "resource"};
+  rpc GetSkill(GetSkillRequest) returns (GetSkillResponse) {
+    option (google.api.http) = {get: "/skillhub/v1/skills/{skill_id}"};
   }
 
-  rpc UpdateResource(UpdateResourceRequest) returns (Resource) {
-    option (google.api.http) = {patch: "/skillhub/v1/resources/{resource.id}" body: "resource"};
+  rpc CreateSkill(CreateSkillRequest) returns (CreateSkillResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/skills" body: "skill"};
   }
 
-  rpc DeleteResource(DeleteResourceRequest) returns (fino.core.Null) {
-    option (google.api.http) = {delete: "/skillhub/v1/resources/{id}"};
+  rpc UpdateSkill(UpdateSkillRequest) returns (UpdateSkillResponse) {
+    option (google.api.http) = {patch: "/skillhub/v1/skills/{skill_id}" body: "skill"};
+  }
+
+  rpc DeleteSkill(DeleteSkillRequest) returns (fino.core.Null) {
+    option (google.api.http) = {delete: "/skillhub/v1/skills/{skill_id}"};
+  }
+
+  rpc ListVersions(ListVersionsRequest) returns (ListVersionsResponse) {
+    option (google.api.http) = {get: "/skillhub/v1/skills/{skill_id}/versions"};
+  }
+
+  rpc CreateVersion(CreateVersionRequest) returns (CreateVersionResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/skills/{skill_id}/versions" body: "version"};
+  }
+
+  rpc RestoreVersion(RestoreVersionRequest) returns (RestoreVersionResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/skills/{skill_id}/versions/{version_id}:restore" body: "*"};
+  }
+
+  rpc ListFiles(ListFilesRequest) returns (ListFilesResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/files:list" body: "*"};
+  }
+
+  rpc GetFile(GetFileRequest) returns (GetFileResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/files:get" body: "*"};
+  }
+
+  rpc PutFile(PutFileRequest) returns (PutFileResponse) {
+    option (google.api.http) = {put: "/skillhub/v1/skills/{skill_id}/files" body: "*"};
+  }
+
+  rpc DeleteFile(DeleteFileRequest) returns (fino.core.Null) {
+    option (google.api.http) = {delete: "/skillhub/v1/skills/{skill_id}/files"};
+  }
+
+  rpc ScanProject(ScanProjectRequest) returns (ScanProjectResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/projects:scan" body: "*"};
+  }
+
+  rpc PreviewImport(PreviewImportRequest) returns (PreviewImportResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/imports:preview" body: "*"};
+  }
+
+  rpc ImportSkill(ImportSkillRequest) returns (ImportSkillResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/imports" body: "*"};
+  }
+
+  rpc ResolveSource(ResolveSourceRequest) returns (ResolveSourceResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/sources:resolve" body: "*"};
+  }
+
+  rpc CompareSkills(CompareSkillsRequest) returns (CompareSkillsResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/skills:compare" body: "*"};
+  }
+
+  rpc GetInstallCommands(GetInstallCommandsRequest) returns (GetInstallCommandsResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/install-commands:generate" body: "*"};
   }
 }
 
-message GetResourceRequest {
-  string id = 1 [(fino.validate) = {required: true max: 128}];
+message ListSkillsRequest {
+  string keyword = 1 [(fino.validate) = {omitempty: true max: 1024}];
+  skillhub.SkillKind kind = 2;
+  string category = 3 [(fino.validate) = {omitempty: true max: 128}];
+  string tag = 4 [(fino.validate) = {omitempty: true max: 128}];
+  int32 page_size = 90 [(fino.validate) = {omitempty: true min: 1 max: 100}];
+  string page_token = 91 [(fino.validate) = {omitempty: true max: 512}];
 }
 
-message ListResourcesRequest {
-  int32 page_size = 90;
-  string page_token = 91;
-}
-
-message ListResourcesResponse {
-  repeated Resource resources = 1;
-
+message ListSkillsResponse {
+  repeated SkillView skills = 1;
   string next_page_token = 93;
 }
 
-message CreateResourceRequest {
-  Resource resource = 1 [(fino.validate) = {required: true}];
+message ListSkillFiltersRequest {}
+message ListSkillFiltersResponse {
+  repeated string categories = 1;
+  repeated string tags = 2;
 }
 
-message UpdateResourceRequest {
-  Resource resource = 1 [(fino.validate) = {required: true}];
+message SkillView {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  skillhub.SkillKind kind = 4;
+  string category = 5;
+  repeated string tags = 6;
+  string notes = 7;
+  string repository_url = 8;
+  string repository_path = 9;
+  string current_digest = 10;
+  string origin_commit_sha = 11;
 
+  fino.core.Timestamp create_time = 98;
+  fino.core.Timestamp update_time = 99;
+}
+
+message GetSkillRequest {
+  string skill_id = 1 [(fino.validate) = {required: true max: 36 uuid: true}];
+}
+
+message GetSkillResponse {
+  SkillView skill = 1;
+}
+
+// 应用层校验 kind；公开 Skill 必须提供 GitHub 仓库地址。
+message SkillInput {
+  string name = 1 [(fino.validate) = {required: true max: 64}];
+  string description = 2 [(fino.validate) = {required: true max: 1024}];
+  skillhub.SkillKind kind = 3;
+  string category = 4 [(fino.validate) = {omitempty: true max: 128}];
+  repeated string tags = 5 [(fino.validate) = {omitempty: true max: 100}];
+  string notes = 6 [(fino.validate) = {omitempty: true max: 4096}];
+  string repository_url = 7 [(fino.validate) = {omitempty: true max: 2048}];
+  string repository_path = 8 [(fino.validate) = {omitempty: true max: 1024}];
+}
+
+message CreateSkillRequest { SkillInput skill = 1 [(fino.validate) = {required: true}]; }
+message CreateSkillResponse {
+  SkillView skill = 1;
+}
+
+message UpdateSkillRequest {
+  string skill_id = 1 [(fino.validate) = {required: true max: 36 uuid: true}];
+  UpdateSkillInput skill = 2 [(fino.validate) = {required: true}];
   google.protobuf.FieldMask update_mask = 80;
 }
 
-message DeleteResourceRequest {
-  string id = 1 [(fino.validate) = {required: true}];
+// update_mask 指定需要更新的字段；来源类型和仓库地址不可更改。
+message UpdateSkillInput {
+  string name = 1 [(fino.validate) = {omitempty: true max: 64}];
+  string description = 2 [(fino.validate) = {omitempty: true max: 1024}];
+  string category = 3 [(fino.validate) = {omitempty: true max: 128}];
+  repeated string tags = 4 [(fino.validate) = {omitempty: true max: 100}];
+  string notes = 5 [(fino.validate) = {omitempty: true max: 4096}];
+}
+
+message UpdateSkillResponse {
+  SkillView skill = 1;
+}
+
+message DeleteSkillRequest {
+  string skill_id = 1 [(fino.validate) = {required: true max: 36 uuid: true}];
+  // 显式选择是否删除个人内容和快照；公开 Skill 只删除记录。
+  bool delete_content = 2;
+}
+
+message ListVersionsRequest {
+  string skill_id = 1 [(fino.validate) = {required: true max: 36 uuid: true}];
+  int32 page_size = 90 [(fino.validate) = {omitempty: true min: 1 max: 100}];
+  string page_token = 91 [(fino.validate) = {omitempty: true max: 512}];
+}
+
+message VersionView {
+  string id = 1;
+  string skill_id = 2;
+  string version = 3;
+  string notes = 4;
+  string digest = 5;
+  string source_ref = 6;
+  string commit_sha = 7;
+  fino.core.Timestamp create_time = 98;
+}
+
+message ListVersionsResponse {
+  repeated VersionView versions = 1;
+  string next_page_token = 93;
+}
+
+message VersionInput {
+  string version = 1 [(fino.validate) = {required: true max: 128}];
+  string notes = 2 [(fino.validate) = {omitempty: true max: 4096}];
+  // 公开 Skill 使用完整 commit，个人 Skill 创建当前内容快照。
+  string source_ref = 3 [(fino.validate) = {omitempty: true max: 512}];
+  string commit_sha = 4 [(fino.validate) = {omitempty: true max: 64}];
+}
+
+message CreateVersionRequest {
+  string skill_id = 1 [(fino.validate) = {required: true max: 36 uuid: true}];
+  VersionInput version = 2 [(fino.validate) = {required: true}];
+  // 个人快照要求匹配当前目录摘要；公开 Skill 留空。
+  string expected_digest = 3 [(fino.validate) = {omitempty: true max: 128}];
+}
+
+message CreateVersionResponse {
+  VersionView version = 1;
+}
+
+message RestoreVersionRequest {
+  string skill_id = 1 [(fino.validate) = {required: true max: 36 uuid: true}];
+  string version_id = 2 [(fino.validate) = {required: true max: 36 uuid: true}];
+  // 必须匹配当前内容摘要，防止预览后出现新的修改。
+  string expected_digest = 3 [(fino.validate) = {required: true max: 128}];
+}
+
+message RestoreVersionResponse {
+  SkillView skill = 1;
+  VersionView backup_version = 2;
+}
+
+// SkillLocation 选择管理库当前内容、历史版本、项目目录或 GitHub 的固定版本。
+message SkillLocation {
+  oneof location {
+    string current_skill_id = 1;
+    string version_id = 2;
+    string local_path = 3;
+    GitHubSource github = 4;
+  }
+}
+
+message GitHubSource {
+  string repository_url = 1 [(fino.validate) = {required: true max: 2048}];
+  // 空路径表示 Skill 位于仓库根目录。
+  string skill_path = 2 [(fino.validate) = {omitempty: true max: 1024}];
+  string ref = 3 [(fino.validate) = {required: true max: 512}];
+}
+
+message FileView {
+  string path = 1;
+  int64 size = 2;
+  bool binary = 3;
+  string digest = 4;
+  bool excluded = 5;
+  bool sensitive = 6;
+}
+
+message ListFilesRequest { SkillLocation location = 1 [(fino.validate) = {required: true}]; }
+message ListFilesResponse {
+  repeated FileView files = 1;
+  string digest = 2;
+  string resolved_commit_sha = 3;
+}
+
+message GetFileRequest {
+  SkillLocation location = 1 [(fino.validate) = {required: true}];
+  string path = 2 [(fino.validate) = {required: true max: 1024}];
+}
+
+message GetFileResponse {
+  FileView file = 1;
+  string text = 2;
+  string resolved_commit_sha = 3;
+}
+
+message PutFileRequest {
+  string skill_id = 1 [(fino.validate) = {required: true max: 36 uuid: true}];
+  string path = 2 [(fino.validate) = {required: true max: 1024}];
+  string text = 3;
+  // 编辑前个人 Skill 整个目录的摘要；新建文件同样需要。
+  string expected_digest = 4 [(fino.validate) = {required: true max: 128}];
+}
+
+message PutFileResponse {
+  FileView file = 1;
+  string current_digest = 2;
+}
+
+message DeleteFileRequest {
+  string skill_id = 1 [(fino.validate) = {required: true max: 36 uuid: true}];
+  string path = 2 [(fino.validate) = {required: true max: 1024}];
+  // 删除前个人 Skill 整个目录的摘要。
+  string expected_digest = 3 [(fino.validate) = {required: true max: 128}];
+}
+
+enum ProjectSkillStatus {
+  PROJECT_SKILL_STATUS_UNSPECIFIED = 0;
+  PROJECT_SKILL_STATUS_NEW = 1;
+  PROJECT_SKILL_STATUS_UNCHANGED = 2;
+  PROJECT_SKILL_STATUS_PROJECT_CHANGED = 3;
+  PROJECT_SKILL_STATUS_LIBRARY_CHANGED = 4;
+  PROJECT_SKILL_STATUS_CONFLICT = 5;
+  PROJECT_SKILL_STATUS_NO_BASELINE = 6;
+}
+
+message ScanProjectRequest { string project_path = 1 [(fino.validate) = {required: true max: 2048}]; }
+message ProjectSkillView {
+  string path = 1;
+  string name = 2;
+  string description = 3;
+  string digest = 4;
+  string skill_id = 5;
+  string base_version_id = 6;
+  string base_digest = 7;
+  ProjectSkillStatus status = 8;
+}
+
+message ScanProjectResponse {
+  repeated ProjectSkillView skills = 1;
+}
+
+message PreviewImportRequest {
+  SkillLocation source = 1 [(fino.validate) = {required: true}];
+  string target_skill_id = 2 [(fino.validate) = {omitempty: true max: 36 uuid: true}];
+  string project_path = 3 [(fino.validate) = {omitempty: true max: 2048}];
+}
+
+message PreviewImportResponse {
+  repeated FileView files = 1;
+  // 预览时完整源目录及目标当前目录的摘要。
+  string source_digest = 2;
+  string target_digest = 3;
+  string resolved_commit_sha = 4;
+  ProjectSkillStatus status = 5;
+}
+
+message ImportSkillRequest {
+  SkillLocation source = 1 [(fino.validate) = {required: true}];
+  string target_skill_id = 2 [(fino.validate) = {omitempty: true max: 36 uuid: true}];
+  string project_path = 3 [(fino.validate) = {omitempty: true max: 2048}];
+  // 匹配预览时的完整源目录摘要；导入已有 Skill 时也须匹配目标摘要。
+  string expected_source_digest = 4 [(fino.validate) = {required: true max: 128}];
+  string expected_target_digest = 5 [(fino.validate) = {omitempty: true max: 128}];
+  // 明确列出要复制的相对文件路径，必须包含 SKILL.md。
+  repeated string included_files = 6 [(fino.validate) = {required: true}];
+  VersionInput version = 7 [(fino.validate) = {required: true}];
+}
+
+// GitHub 来源复制为个人 Skill 时，服务端保留仓库信息和解析到的 commit。
+message ImportSkillResponse {
+  SkillView skill = 1;
+  VersionView version = 2;
+}
+
+message ResolveSourceRequest { GitHubSource source = 1 [(fino.validate) = {required: true}]; }
+message ResolveSourceResponse {
+  string commit_sha = 1;
+  string name = 2;
+  string description = 3;
+  string digest = 4;
+}
+
+message CompareSkillsRequest {
+  SkillLocation left = 1 [(fino.validate) = {required: true}];
+  SkillLocation right = 2 [(fino.validate) = {required: true}];
+}
+
+enum FileChangeKind {
+  FILE_CHANGE_KIND_UNSPECIFIED = 0;
+  FILE_CHANGE_KIND_ADDED = 1;
+  FILE_CHANGE_KIND_MODIFIED = 2;
+  FILE_CHANGE_KIND_DELETED = 3;
+}
+
+message FileChangeView {
+  string path = 1;
+  FileChangeKind kind = 2;
+  bool binary = 3;
+  string left_text = 4;
+  string right_text = 5;
+}
+
+message CompareSkillsResponse {
+  repeated FileChangeView files = 1;
+  string left_digest = 2;
+  string right_digest = 3;
+  string left_commit_sha = 4;
+  string right_commit_sha = 5;
+}
+
+// 每项的 ID 格式和归属由应用层校验。
+message InstallSelection {
+  string skill_id = 1;
+  string version_id = 2;
+}
+
+message GetInstallCommandsRequest {
+  repeated InstallSelection skills = 1 [(fino.validate) = {required: true max: 100}];
+  // 项目级安装命令须在此项目中执行；全局安装时可留空。
+  string project_path = 2 [(fino.validate) = {omitempty: true max: 2048}];
+  bool global = 3;
+}
+
+message GetInstallCommandsResponse {
+  repeated string commands = 1;
 }
