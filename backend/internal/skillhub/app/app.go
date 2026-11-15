@@ -371,5 +371,5 @@ func (s skillhubServer) GetInstallCommands(ctx context.Context, in *pb.GetInstal
 		return nil, errcode.NewSkillhubRequestMissing()
 	}
 
-	return s.UnimplementedSkillhubServiceServer.GetInstallCommands(ctx, in)
+	return s.getInstallCommands(ctx, in)
 }

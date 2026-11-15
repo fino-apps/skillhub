@@ -1,6 +1,6 @@
 # SkillHub
 
-SkillHub 是一个基于 Fino 的本地 Skill 管理项目。当前已生成 Go service、SQLite 仓储和 React 前端，并提供项目 Skill 扫描、本地和 GitHub 来源收录及初始版本查看；支持本地、个人快照与 GitHub 来源的差异比对；已有 Skill 的更新、版本恢复、安装命令及标签筛选等业务接口仍待实现，不能将生成骨架视为完整产品。
+SkillHub 是一个基于 Fino 的本地 Skill 管理项目。当前已生成 Go service、SQLite 仓储和 React 前端，并提供项目 Skill 扫描、本地和 GitHub 来源收录及初始版本查看；支持本地、个人快照与 GitHub 来源的差异比对；已有 Skill 的更新、版本恢复及标签筛选等业务接口仍待实现，不能将生成骨架视为完整产品。
 
 ## 本地运行
 
@@ -39,6 +39,10 @@ curl -fsS http://127.0.0.1:31101/skillhub/v1/projects:scan \
 扫描项目后勾选 Skill，预览文件并确认收录。疑似敏感文件默认不选；收录时会复制所选文件并创建初始版本。公开 Skill 填写 GitHub 仓库地址、仓库内路径及分支或标签，预览后只保存来源和解析到的 commit，不复制其文件。
 
 同名个人 Skill 或已收录的相同公开来源会提示冲突，不会自动覆盖；更新已有 Skill 尚未实现。个人内容和快照默认保存在 `backend/skillhub-data/`，可用 `SKILLHUB_DATA_DIR` 更改；备份时请停止服务，并同时备份该目录与 SQLite 数据库。
+
+## 安装 Skill
+
+在 Skill 库展开条目，选择版本并点击“安装”。选择目标项目或全局作用域，复制生成的命令在终端执行。生成命令不会自动安装；个人 Skill 使用对应版本的本地快照，公开 Skill 锁定收录时的 commit。运行命令需要 Node.js 22.20 或更高版本及网络访问。
 
 ## 比对 Skill
 
