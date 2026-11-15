@@ -82,9 +82,6 @@ func (m *SkillDaoImpl) filteredQuery(ctx context.Context, filter model.SkillFilt
 	if len(filter.IDs) > 0 {
 		tx = tx.Where("id in ?", filter.IDs)
 	}
-	if filter.Kind != 0 {
-		tx = tx.Where("kind = ?", filter.Kind)
-	}
 	if filter.Category != "" {
 		tx = tx.Where("category = ?", filter.Category)
 	}

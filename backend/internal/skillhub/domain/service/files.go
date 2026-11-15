@@ -1,0 +1,93 @@
+package service
+
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"io"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"sort"
+)
+
+// skillFile describes a file used for comparison.
+type skillFile struct {
+	Path   string
+	Size   int64
+	Digest string
+}
+
+// readSkillFiles returns a stable digest and file list without following links.
+func readSkillFiles(path string) ([]skillFile, string, error) {
+	if !filepath.IsAbs(path) {
+		return nil, "", fmt.Errorf("skill path must be absolute")
+	}
+	root, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return nil, "", err
+	}
+	info, err := os.Stat(root)
+	if err != nil || !info.IsDir() {
+		return nil, "", fmt.Errorf("skill path must be a directory")
+	}
+	if _, ok, err := readSkill(root); err != nil || !ok {
+		return nil, "", fmt.Errorf("invalid SKILL.md")
+	}
+	files := make([]skillFile, 0)
+	err = filepath.WalkDir(root, func(path string, entry fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if path == root {
+			return nil
+		}
+		rel, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+		if entry.Type()&os.ModeSymlink != 0 {
+			return fmt.Errorf("symbolic links are not supported: %s", rel)
+		}
+		if entry.IsDir() {
+			if entry.Name() == ".git" || entry.Name() == "node_modules" || entry.Name() == ".venv" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !entry.Type().IsRegular() {
+			return fmt.Errorf("unsupported file: %s", rel)
+		}
+		stat, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		if stat.Size() > 20*1024*1024 {
+			return fmt.Errorf("file too large: %s", rel)
+		}
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		hash := sha256.New()
+		_, readErr := io.Copy(hash, file)
+		closeErr := file.Close()
+		if readErr != nil {
+			return readErr
+		}
+		if closeErr != nil {
+			return closeErr
+		}
+		files = append(files, skillFile{Path: filepath.ToSlash(rel), Size: stat.Size(), Digest: hex.EncodeToString(hash.Sum(nil))})
+		return nil
+	})
+	if err != nil {
+		return nil, "", err
+	}
+	sort.Slice(files, func(i, j int) bool { return files[i].Path < files[j].Path })
+	hash := sha256.New()
+	for _, file := range files {
+		fmt.Fprintf(hash, "%s\x00%s\x00", file.Path, file.Digest)
+	}
+	return files, hex.EncodeToString(hash.Sum(nil)), nil
+}

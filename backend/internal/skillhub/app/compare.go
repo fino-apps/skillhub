@@ -16,9 +16,9 @@ type comparisonSource struct {
 	cleanup func()
 }
 
-func (s skillhubServer) publicVersion(ctx context.Context, skill *model.Skill, version *model.SkillVersion) (comparisonSource, error) {
+func (s skillhubServer) gitHubVersion(ctx context.Context, skill *model.Skill, version *model.SkillVersion) (comparisonSource, error) {
 	if skill.RepositoryUrl() == "" || version.CommitSha() == "" {
-		return comparisonSource{}, fmt.Errorf("public version has no pinned commit")
+		return comparisonSource{}, fmt.Errorf("version has no pinned commit")
 	}
 	path, commit, cleanup, err := service.CheckoutGitHub(ctx, service.GitHubSource{
 		RepositoryURL: skill.RepositoryUrl(), SkillPath: skill.RepositoryPath(), Ref: version.CommitSha(),
@@ -34,17 +34,10 @@ func (s skillhubServer) compareSource(ctx context.Context, location *pb.SkillLoc
 		path, commit, cleanup, err := service.CheckoutGitHub(ctx, githubSource(source))
 		return comparisonSource{path: path, commit: commit, cleanup: cleanup}, err
 	}
-	if s.intake == nil {
-		return comparisonSource{}, fmt.Errorf("storage unavailable")
-	}
 	if id := location.GetCurrentSkillId(); id != "" {
 		skill, err := s.skillhubSvc.GetSkill(ctx, model.SkillID(id))
 		if err != nil {
 			return comparisonSource{}, err
-		}
-		if skill.ContentPath() != "" {
-			path, err := s.intake.StoredPath(skill.ContentPath())
-			return comparisonSource{path: path}, err
 		}
 		versions, err := s.skillhubSvc.ListSkillVersions(ctx, model.ListSkillVersionQuery{Filter: model.SkillVersionFilter{SkillID: id}, PageSize: 1, SkipTotalCount: true})
 		if err != nil {
@@ -53,22 +46,18 @@ func (s skillhubServer) compareSource(ctx context.Context, location *pb.SkillLoc
 		if len(versions.Items) == 0 {
 			return comparisonSource{}, fmt.Errorf("skill has no versions")
 		}
-		return s.publicVersion(ctx, skill, versions.Items[0])
+		return s.gitHubVersion(ctx, skill, versions.Items[0])
 	}
 	if id := location.GetVersionId(); id != "" {
 		version, err := s.skillhubSvc.GetSkillVersion(ctx, model.SkillVersionID(id))
 		if err != nil {
 			return comparisonSource{}, err
 		}
-		if version.SnapshotPath() != "" {
-			path, err := s.intake.StoredPath(version.SnapshotPath())
-			return comparisonSource{path: path}, err
-		}
 		skill, err := s.skillhubSvc.GetSkill(ctx, model.SkillID(version.SkillId()))
 		if err != nil {
 			return comparisonSource{}, err
 		}
-		return s.publicVersion(ctx, skill, version)
+		return s.gitHubVersion(ctx, skill, version)
 	}
 	return comparisonSource{}, fmt.Errorf("source missing")
 }

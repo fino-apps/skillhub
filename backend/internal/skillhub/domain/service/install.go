@@ -2,51 +2,31 @@ package service
 
 import (
 	"fmt"
-	"net/url"
-	"os"
-	"path/filepath"
 	"regexp"
-	"strings"
 )
 
 var commitPattern = regexp.MustCompile(`^[0-9a-f]{40}$`)
 
-// InstallCommand produces a POSIX shell command; it does not execute it.
-func InstallCommand(snapshotPath, repositoryURL, commit, name, projectPath string, global bool) (string, error) {
-	if name == "" || len(name) > 64 || !validSkillName.MatchString(name) {
-		return "", fmt.Errorf("invalid skill name")
+// InstallCommand generates a command to run in the target project.
+func InstallCommand(repository, path, commit, name string, global bool) (string, error) {
+	repository, err := NormalizeRepository(repository)
+	if err != nil {
+		return "", err
 	}
-	var source string
-	if snapshotPath != "" {
-		if !filepath.IsAbs(snapshotPath) {
-			return "", fmt.Errorf("snapshot path must be absolute")
-		}
-		info, err := os.Stat(snapshotPath)
-		if err != nil || !info.IsDir() {
-			return "", fmt.Errorf("snapshot unavailable")
-		}
-		source = snapshotPath
-	} else {
-		u, err := url.Parse(repositoryURL)
-		if err != nil || u.Scheme != "https" || u.Host != "github.com" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || !repositoryPattern.MatchString(u.Path) || !commitPattern.MatchString(commit) {
-			return "", fmt.Errorf("invalid pinned GitHub source")
-		}
-		source = strings.TrimSuffix(strings.TrimPrefix(u.Path, "/"), ".git") + "@" + commit
+	path, err = repositoryPath(path)
+	if err != nil {
+		return "", err
 	}
-	command := "npx skills add " + shellQuote(source) + " --skill " + shellQuote(name) + " -a codex --copy"
+	if !commitPattern.MatchString(commit) || len(name) > 64 || !validSkillName.MatchString(name) {
+		return "", fmt.Errorf("invalid version or skill name")
+	}
+	source := repository + "#" + commit
+	if path != "" {
+		source = repository + "/tree/" + commit + "/" + path
+	}
+	command := "npx skills@1.8.1 add '" + source + "' --skill '" + name + "' -a codex --copy"
 	if global {
-		return command + " -g", nil
+		command += " -g"
 	}
-	if !filepath.IsAbs(projectPath) {
-		return "", fmt.Errorf("project path must be absolute")
-	}
-	info, err := os.Stat(projectPath)
-	if err != nil || !info.IsDir() {
-		return "", fmt.Errorf("project path must be an existing directory")
-	}
-	return "cd -- " + shellQuote(projectPath) + " && " + command, nil
-}
-
-func shellQuote(value string) string {
-	return "'" + strings.ReplaceAll(value, "'", "'\\''") + "'"
+	return command, nil
 }

@@ -33,7 +33,6 @@ import (
 	"github.com/json-iterator/go"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/protobuf/encoding/protojson"
-	protobuf "google.golang.org/protobuf/types/known/fieldmaskpb"
 
 	// this service api
 	"github.com/fino-io/gokit/transport"
@@ -102,26 +101,6 @@ func RegisterHttpHandler(router *mux.Router, endpoints endpoint.Endpoints, cfg *
 
 	{
 		route := httpmw.Route{
-			MethodName:  "ListSkillFilters",
-			BindingName: "ListSkillFilters",
-			Method:      "GET",
-			Path:        "/skillhub/v1/skill-filters",
-		}
-		router.Methods(route.Method).Path(route.Path).Handler(
-			httpmw.WrapRoute(
-				route,
-				httptransport.NewServer(
-					endpoints.ListSkillFiltersEndpoint,
-					DecodeHTTPListSkillFiltersRequest,
-					encodeResponse,
-					serverOptions...,
-				),
-			),
-		)
-	}
-
-	{
-		route := httpmw.Route{
 			MethodName:  "GetSkill",
 			BindingName: "GetSkill",
 			Method:      "GET",
@@ -142,30 +121,10 @@ func RegisterHttpHandler(router *mux.Router, endpoints endpoint.Endpoints, cfg *
 
 	{
 		route := httpmw.Route{
-			MethodName:  "CreateSkill",
-			BindingName: "CreateSkill",
-			Method:      "POST",
-			Path:        "/skillhub/v1/skills",
-		}
-		router.Methods(route.Method).Path(route.Path).Handler(
-			httpmw.WrapRoute(
-				route,
-				httptransport.NewServer(
-					endpoints.CreateSkillEndpoint,
-					DecodeHTTPCreateSkillRequest,
-					encodeResponse,
-					serverOptions...,
-				),
-			),
-		)
-	}
-
-	{
-		route := httpmw.Route{
 			MethodName:  "UpdateSkill",
 			BindingName: "UpdateSkill",
-			Method:      "PATCH",
-			Path:        "/skillhub/v1/skills/{skill_id}",
+			Method:      "PUT",
+			Path:        "/skillhub/v1/skills/{skill_id}/metadata",
 		}
 		router.Methods(route.Method).Path(route.Path).Handler(
 			httpmw.WrapRoute(
@@ -242,106 +201,6 @@ func RegisterHttpHandler(router *mux.Router, endpoints endpoint.Endpoints, cfg *
 
 	{
 		route := httpmw.Route{
-			MethodName:  "RestoreVersion",
-			BindingName: "RestoreVersion",
-			Method:      "POST",
-			Path:        "/skillhub/v1/skills/{skill_id}/versions/{version_id}:restore",
-		}
-		router.Methods(route.Method).Path(route.Path).Handler(
-			httpmw.WrapRoute(
-				route,
-				httptransport.NewServer(
-					endpoints.RestoreVersionEndpoint,
-					DecodeHTTPRestoreVersionRequest,
-					encodeResponse,
-					serverOptions...,
-				),
-			),
-		)
-	}
-
-	{
-		route := httpmw.Route{
-			MethodName:  "ListFiles",
-			BindingName: "ListFiles",
-			Method:      "POST",
-			Path:        "/skillhub/v1/files:list",
-		}
-		router.Methods(route.Method).Path(route.Path).Handler(
-			httpmw.WrapRoute(
-				route,
-				httptransport.NewServer(
-					endpoints.ListFilesEndpoint,
-					DecodeHTTPListFilesRequest,
-					encodeResponse,
-					serverOptions...,
-				),
-			),
-		)
-	}
-
-	{
-		route := httpmw.Route{
-			MethodName:  "GetFile",
-			BindingName: "GetFile",
-			Method:      "POST",
-			Path:        "/skillhub/v1/files:get",
-		}
-		router.Methods(route.Method).Path(route.Path).Handler(
-			httpmw.WrapRoute(
-				route,
-				httptransport.NewServer(
-					endpoints.GetFileEndpoint,
-					DecodeHTTPGetFileRequest,
-					encodeResponse,
-					serverOptions...,
-				),
-			),
-		)
-	}
-
-	{
-		route := httpmw.Route{
-			MethodName:  "PutFile",
-			BindingName: "PutFile",
-			Method:      "PUT",
-			Path:        "/skillhub/v1/skills/{skill_id}/files",
-		}
-		router.Methods(route.Method).Path(route.Path).Handler(
-			httpmw.WrapRoute(
-				route,
-				httptransport.NewServer(
-					endpoints.PutFileEndpoint,
-					DecodeHTTPPutFileRequest,
-					encodeResponse,
-					serverOptions...,
-				),
-			),
-		)
-	}
-
-	{
-		route := httpmw.Route{
-			MethodName:  "DeleteFile",
-			BindingName: "DeleteFile",
-			Method:      "DELETE",
-			Path:        "/skillhub/v1/skills/{skill_id}/files",
-		}
-		router.Methods(route.Method).Path(route.Path).Handler(
-			httpmw.WrapRoute(
-				route,
-				httptransport.NewServer(
-					endpoints.DeleteFileEndpoint,
-					DecodeHTTPDeleteFileRequest,
-					encodeResponse,
-					serverOptions...,
-				),
-			),
-		)
-	}
-
-	{
-		route := httpmw.Route{
 			MethodName:  "ScanProject",
 			BindingName: "ScanProject",
 			Method:      "POST",
@@ -402,26 +261,6 @@ func RegisterHttpHandler(router *mux.Router, endpoints endpoint.Endpoints, cfg *
 
 	{
 		route := httpmw.Route{
-			MethodName:  "ResolveSource",
-			BindingName: "ResolveSource",
-			Method:      "POST",
-			Path:        "/skillhub/v1/sources:resolve",
-		}
-		router.Methods(route.Method).Path(route.Path).Handler(
-			httpmw.WrapRoute(
-				route,
-				httptransport.NewServer(
-					endpoints.ResolveSourceEndpoint,
-					DecodeHTTPResolveSourceRequest,
-					encodeResponse,
-					serverOptions...,
-				),
-			),
-		)
-	}
-
-	{
-		route := httpmw.Route{
 			MethodName:  "CompareSkills",
 			BindingName: "CompareSkills",
 			Method:      "POST",
@@ -442,28 +281,8 @@ func RegisterHttpHandler(router *mux.Router, endpoints endpoint.Endpoints, cfg *
 
 	{
 		route := httpmw.Route{
-			MethodName:  "GetCopyCommand",
-			BindingName: "GetCopyCommand",
-			Method:      "GET",
-			Path:        "/skillhub/v1/skills/{skill_id}/versions/{version_id}:copy-command",
-		}
-		router.Methods(route.Method).Path(route.Path).Handler(
-			httpmw.WrapRoute(
-				route,
-				httptransport.NewServer(
-					endpoints.GetCopyCommandEndpoint,
-					DecodeHTTPGetCopyCommandRequest,
-					encodeResponse,
-					serverOptions...,
-				),
-			),
-		)
-	}
-
-	{
-		route := httpmw.Route{
-			MethodName:  "GetInstallCommands",
-			BindingName: "GetInstallCommands",
+			MethodName:  "GetInstallCommand",
+			BindingName: "GetInstallCommand",
 			Method:      "POST",
 			Path:        "/skillhub/v1/install-commands:generate",
 		}
@@ -471,8 +290,8 @@ func RegisterHttpHandler(router *mux.Router, endpoints endpoint.Endpoints, cfg *
 			httpmw.WrapRoute(
 				route,
 				httptransport.NewServer(
-					endpoints.GetInstallCommandsEndpoint,
-					DecodeHTTPGetInstallCommandsRequest,
+					endpoints.GetInstallCommandEndpoint,
+					DecodeHTTPGetInstallCommandRequest,
 					encodeResponse,
 					serverOptions...,
 				),
@@ -617,24 +436,9 @@ func DecodeHTTPListSkillsRequest(_ context.Context, r *http.Request) (interface{
 	queryParams := core.NewUrlQueryFrom(r.URL.Query())
 	_ = queryParams
 
-	err = unmarshalQueryParam(queryParams, &req.Keyword, "keyword")
-	if err != nil && !core.IsNotFoundError(err) {
-		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the keyword query parameter")
-	}
-
-	err = unmarshalQueryParam(queryParams, &req.Kind, "kind")
-	if err != nil && !core.IsNotFoundError(err) {
-		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the kind query parameter")
-	}
-
 	err = unmarshalQueryParam(queryParams, &req.Category, "category")
 	if err != nil && !core.IsNotFoundError(err) {
 		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the category query parameter")
-	}
-
-	err = unmarshalQueryParam(queryParams, &req.Tag, "tag")
-	if err != nil && !core.IsNotFoundError(err) {
-		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the tag query parameter")
 	}
 
 	err = unmarshalQueryParam(queryParams, &req.PageSize, "pageSize")
@@ -647,20 +451,6 @@ func DecodeHTTPListSkillsRequest(_ context.Context, r *http.Request) (interface{
 		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the pageToken query parameter")
 	}
 
-	return &req, nil
-}
-
-// DecodeHTTPListSkillFiltersRequest is a transport/http.DecodeRequestFunc that
-// decodes a JSON-encoded listskillfilters request from the HTTP request
-// body. Primarily useful in a server.
-func DecodeHTTPListSkillFiltersRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req pb.ListSkillFiltersRequest
-
-	pathParams := mux.Vars(r)
-	_ = pathParams
-
-	queryParams := core.NewUrlQueryFrom(r.URL.Query())
-	_ = queryParams
 	return &req, nil
 }
 
@@ -681,37 +471,6 @@ func DecodeHTTPGetSkillRequest(_ context.Context, r *http.Request) (interface{},
 	if err != nil && !core.IsNotFoundError(err) {
 		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
 	}
-
-	return &req, nil
-}
-
-// DecodeHTTPCreateSkillRequest is a transport/http.DecodeRequestFunc that
-// decodes a JSON-encoded createskill request from the HTTP request
-// body. Primarily useful in a server.
-func DecodeHTTPCreateSkillRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req pb.CreateSkillRequest
-
-	buf, err := readHTTPBody(r)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(buf) > 0 {
-		req.Skill = &pb.SkillInput{}
-
-		if err = protojson.Unmarshal(buf, req.Skill); err != nil {
-			return nil, nhttp.WrapError(err,
-				http.StatusBadRequest,
-				"cannot parse request body as JSON",
-			)
-		}
-	}
-
-	pathParams := mux.Vars(r)
-	_ = pathParams
-
-	queryParams := core.NewUrlQueryFrom(r.URL.Query())
-	_ = queryParams
 
 	return &req, nil
 }
@@ -749,26 +508,6 @@ func DecodeHTTPUpdateSkillRequest(_ context.Context, r *http.Request) (interface
 		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
 	}
 
-	updateMaskInitialized := false
-	if req.UpdateMask == nil {
-		updateMaskInitialized = true
-		req.UpdateMask = &protobuf.FieldMask{}
-	}
-
-	err = unmarshalQueryParam(queryParams, &req.UpdateMask.Paths, "updateMask")
-	if err == nil {
-		req.UpdateMask.Paths = strings.Split(strings.Join(req.UpdateMask.Paths, ","), ",")
-	}
-	if err != nil {
-		if core.IsNotFoundError(err) {
-			if updateMaskInitialized {
-				req.UpdateMask = nil
-			}
-		} else {
-			return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the updateMask query parameter")
-		}
-	}
-
 	return &req, nil
 }
 
@@ -788,11 +527,6 @@ func DecodeHTTPDeleteSkillRequest(_ context.Context, r *http.Request) (interface
 	err = unmarshalPathParam(pathParams, &req.SkillId, "skill_id")
 	if err != nil && !core.IsNotFoundError(err) {
 		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
-	}
-
-	err = unmarshalQueryParam(queryParams, &req.DeleteContent, "deleteContent")
-	if err != nil && !core.IsNotFoundError(err) {
-		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the deleteContent query parameter")
 	}
 
 	return &req, nil
@@ -860,173 +594,6 @@ func DecodeHTTPCreateVersionRequest(_ context.Context, r *http.Request) (interfa
 	err = unmarshalPathParam(pathParams, &req.SkillId, "skill_id")
 	if err != nil && !core.IsNotFoundError(err) {
 		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
-	}
-
-	err = unmarshalQueryParam(queryParams, &req.ExpectedDigest, "expectedDigest")
-	if err != nil && !core.IsNotFoundError(err) {
-		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the expectedDigest query parameter")
-	}
-
-	return &req, nil
-}
-
-// DecodeHTTPRestoreVersionRequest is a transport/http.DecodeRequestFunc that
-// decodes a JSON-encoded restoreversion request from the HTTP request
-// body. Primarily useful in a server.
-func DecodeHTTPRestoreVersionRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req pb.RestoreVersionRequest
-
-	buf, err := readHTTPBody(r)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(buf) > 0 {
-		if err = protojson.Unmarshal(buf, &req); err != nil {
-			return nil, nhttp.WrapError(err,
-				http.StatusBadRequest,
-				"cannot parse request body as JSON",
-			)
-		}
-	}
-
-	pathParams := mux.Vars(r)
-	_ = pathParams
-
-	queryParams := core.NewUrlQueryFrom(r.URL.Query())
-	_ = queryParams
-
-	err = unmarshalPathParam(pathParams, &req.SkillId, "skill_id")
-	if err != nil && !core.IsNotFoundError(err) {
-		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
-	}
-
-	err = unmarshalPathParam(pathParams, &req.VersionId, "version_id")
-	if err != nil && !core.IsNotFoundError(err) {
-		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the version_id path parameter")
-	}
-
-	return &req, nil
-}
-
-// DecodeHTTPListFilesRequest is a transport/http.DecodeRequestFunc that
-// decodes a JSON-encoded listfiles request from the HTTP request
-// body. Primarily useful in a server.
-func DecodeHTTPListFilesRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req pb.ListFilesRequest
-
-	buf, err := readHTTPBody(r)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(buf) > 0 {
-		if err = protojson.Unmarshal(buf, &req); err != nil {
-			return nil, nhttp.WrapError(err,
-				http.StatusBadRequest,
-				"cannot parse request body as JSON",
-			)
-		}
-	}
-
-	pathParams := mux.Vars(r)
-	_ = pathParams
-
-	queryParams := core.NewUrlQueryFrom(r.URL.Query())
-	_ = queryParams
-
-	return &req, nil
-}
-
-// DecodeHTTPGetFileRequest is a transport/http.DecodeRequestFunc that
-// decodes a JSON-encoded getfile request from the HTTP request
-// body. Primarily useful in a server.
-func DecodeHTTPGetFileRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req pb.GetFileRequest
-
-	buf, err := readHTTPBody(r)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(buf) > 0 {
-		if err = protojson.Unmarshal(buf, &req); err != nil {
-			return nil, nhttp.WrapError(err,
-				http.StatusBadRequest,
-				"cannot parse request body as JSON",
-			)
-		}
-	}
-
-	pathParams := mux.Vars(r)
-	_ = pathParams
-
-	queryParams := core.NewUrlQueryFrom(r.URL.Query())
-	_ = queryParams
-
-	return &req, nil
-}
-
-// DecodeHTTPPutFileRequest is a transport/http.DecodeRequestFunc that
-// decodes a JSON-encoded putfile request from the HTTP request
-// body. Primarily useful in a server.
-func DecodeHTTPPutFileRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req pb.PutFileRequest
-
-	buf, err := readHTTPBody(r)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(buf) > 0 {
-		if err = protojson.Unmarshal(buf, &req); err != nil {
-			return nil, nhttp.WrapError(err,
-				http.StatusBadRequest,
-				"cannot parse request body as JSON",
-			)
-		}
-	}
-
-	pathParams := mux.Vars(r)
-	_ = pathParams
-
-	queryParams := core.NewUrlQueryFrom(r.URL.Query())
-	_ = queryParams
-
-	err = unmarshalPathParam(pathParams, &req.SkillId, "skill_id")
-	if err != nil && !core.IsNotFoundError(err) {
-		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
-	}
-
-	return &req, nil
-}
-
-// DecodeHTTPDeleteFileRequest is a transport/http.DecodeRequestFunc that
-// decodes a JSON-encoded deletefile request from the HTTP request
-// body. Primarily useful in a server.
-func DecodeHTTPDeleteFileRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req pb.DeleteFileRequest
-	var err error
-
-	pathParams := mux.Vars(r)
-	_ = pathParams
-
-	queryParams := core.NewUrlQueryFrom(r.URL.Query())
-	_ = queryParams
-
-	err = unmarshalPathParam(pathParams, &req.SkillId, "skill_id")
-	if err != nil && !core.IsNotFoundError(err) {
-		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
-	}
-
-	err = unmarshalQueryParam(queryParams, &req.Path, "path")
-	if err != nil && !core.IsNotFoundError(err) {
-		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the path query parameter")
-	}
-
-	err = unmarshalQueryParam(queryParams, &req.ExpectedDigest, "expectedDigest")
-	if err != nil && !core.IsNotFoundError(err) {
-		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the expectedDigest query parameter")
 	}
 
 	return &req, nil
@@ -1119,35 +686,6 @@ func DecodeHTTPImportSkillRequest(_ context.Context, r *http.Request) (interface
 	return &req, nil
 }
 
-// DecodeHTTPResolveSourceRequest is a transport/http.DecodeRequestFunc that
-// decodes a JSON-encoded resolvesource request from the HTTP request
-// body. Primarily useful in a server.
-func DecodeHTTPResolveSourceRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req pb.ResolveSourceRequest
-
-	buf, err := readHTTPBody(r)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(buf) > 0 {
-		if err = protojson.Unmarshal(buf, &req); err != nil {
-			return nil, nhttp.WrapError(err,
-				http.StatusBadRequest,
-				"cannot parse request body as JSON",
-			)
-		}
-	}
-
-	pathParams := mux.Vars(r)
-	_ = pathParams
-
-	queryParams := core.NewUrlQueryFrom(r.URL.Query())
-	_ = queryParams
-
-	return &req, nil
-}
-
 // DecodeHTTPCompareSkillsRequest is a transport/http.DecodeRequestFunc that
 // decodes a JSON-encoded compareskills request from the HTTP request
 // body. Primarily useful in a server.
@@ -1177,37 +715,11 @@ func DecodeHTTPCompareSkillsRequest(_ context.Context, r *http.Request) (interfa
 	return &req, nil
 }
 
-// DecodeHTTPGetCopyCommandRequest is a transport/http.DecodeRequestFunc that
-// decodes a JSON-encoded getcopycommand request from the HTTP request
+// DecodeHTTPGetInstallCommandRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded getinstallcommand request from the HTTP request
 // body. Primarily useful in a server.
-func DecodeHTTPGetCopyCommandRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req pb.GetCopyCommandRequest
-	var err error
-
-	pathParams := mux.Vars(r)
-	_ = pathParams
-
-	queryParams := core.NewUrlQueryFrom(r.URL.Query())
-	_ = queryParams
-
-	err = unmarshalPathParam(pathParams, &req.SkillId, "skill_id")
-	if err != nil && !core.IsNotFoundError(err) {
-		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
-	}
-
-	err = unmarshalPathParam(pathParams, &req.VersionId, "version_id")
-	if err != nil && !core.IsNotFoundError(err) {
-		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the version_id path parameter")
-	}
-
-	return &req, nil
-}
-
-// DecodeHTTPGetInstallCommandsRequest is a transport/http.DecodeRequestFunc that
-// decodes a JSON-encoded getinstallcommands request from the HTTP request
-// body. Primarily useful in a server.
-func DecodeHTTPGetInstallCommandsRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req pb.GetInstallCommandsRequest
+func DecodeHTTPGetInstallCommandRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.GetInstallCommandRequest
 
 	buf, err := readHTTPBody(r)
 	if err != nil {

@@ -1,6 +1,6 @@
 {
   "title": "skillhub.SkillVersion",
-  "description": "SkillVersion 指向个人不可变快照或公开来源的固定 commit。",
+  "description": "SkillVersion 指向 GitHub 的固定 commit。",
   "type": "object",
   "properties": {
     "commitSha": {
@@ -10,10 +10,10 @@
       "type": "string",
       "format": "date-time"
     },
-    "digest": {
+    "id": {
       "type": "string"
     },
-    "id": {
+    "name": {
       "type": "string"
     },
     "notes": {
@@ -22,18 +22,12 @@
     "skillId": {
       "type": "string"
     },
-    "snapshotPath": {
-      "type": "string"
-    },
     "sourceRef": {
       "type": "string"
     },
     "updateTime": {
       "type": "string",
       "format": "date-time"
-    },
-    "version": {
-      "type": "string"
     }
   }
 }

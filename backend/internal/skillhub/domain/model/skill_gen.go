@@ -10,42 +10,32 @@ import (
 
 	"github.com/fino-io/core/go/fino/core"
 	"github.com/fino-io/finokit/pagination"
-	pb "github.com/fino-io/skillhub/go/skillhub"
 	"github.com/google/uuid"
 )
 
 type SkillID string
 
 type CreateSkillInput struct {
-	Name            string
-	Description     string
-	Kind            pb.SkillKind
-	Category        string
-	Notes           string
-	ContentPath     string
-	RepositoryUrl   string
-	RepositoryPath  string
-	CurrentDigest   string
-	OriginCommitSha string
-	CreateTime      *core.Timestamp
-	UpdateTime      *core.Timestamp
-	Tags            []string
+	Name           string
+	Description    string
+	Category       string
+	Notes          string
+	RepositoryUrl  string
+	RepositoryPath string
+	CreateTime     *core.Timestamp
+	UpdateTime     *core.Timestamp
 }
 
 type UpdateSkillInput struct {
-	Name            string
-	Description     string
-	Kind            pb.SkillKind
-	Category        string
-	Notes           string
-	ContentPath     string
-	RepositoryUrl   string
-	RepositoryPath  string
-	CurrentDigest   string
-	OriginCommitSha string
-	CreateTime      *core.Timestamp
-	UpdateTime      *core.Timestamp
-	UpdateMask      []string
+	Name           string
+	Description    string
+	Category       string
+	Notes          string
+	RepositoryUrl  string
+	RepositoryPath string
+	CreateTime     *core.Timestamp
+	UpdateTime     *core.Timestamp
+	UpdateMask     []string
 }
 
 type ListSkillQuery struct {
@@ -58,35 +48,27 @@ type ListSkillQuery struct {
 type ListSkillResult = pagination.Page[*Skill]
 
 type SkillSnapshot struct {
-	ID              SkillID
-	Name            string
-	Description     string
-	Kind            pb.SkillKind
-	Category        string
-	Notes           string
-	ContentPath     string
-	RepositoryUrl   string
-	RepositoryPath  string
-	CurrentDigest   string
-	OriginCommitSha string
-	CreateTime      *core.Timestamp
-	UpdateTime      *core.Timestamp
+	ID             SkillID
+	Name           string
+	Description    string
+	Category       string
+	Notes          string
+	RepositoryUrl  string
+	RepositoryPath string
+	CreateTime     *core.Timestamp
+	UpdateTime     *core.Timestamp
 }
 
 type Skill struct {
-	id              SkillID
-	name            string
-	description     string
-	kind            pb.SkillKind
-	category        string
-	notes           string
-	contentPath     string
-	repositoryUrl   string
-	repositoryPath  string
-	currentDigest   string
-	originCommitSha string
-	createTime      *core.Timestamp
-	updateTime      *core.Timestamp
+	id             SkillID
+	name           string
+	description    string
+	category       string
+	notes          string
+	repositoryUrl  string
+	repositoryPath string
+	createTime     *core.Timestamp
+	updateTime     *core.Timestamp
 }
 
 func NewSkill(input CreateSkillInput) (*Skill, error) {
@@ -104,37 +86,29 @@ func NewSkill(input CreateSkillInput) (*Skill, error) {
 	}
 
 	return &Skill{
-		id:              SkillID(id.String()),
-		name:            input.Name,
-		description:     input.Description,
-		kind:            input.Kind,
-		category:        input.Category,
-		notes:           input.Notes,
-		contentPath:     input.ContentPath,
-		repositoryUrl:   input.RepositoryUrl,
-		repositoryPath:  input.RepositoryPath,
-		currentDigest:   input.CurrentDigest,
-		originCommitSha: input.OriginCommitSha,
-		createTime:      input.CreateTime,
-		updateTime:      input.UpdateTime,
+		id:             SkillID(id.String()),
+		name:           input.Name,
+		description:    input.Description,
+		category:       input.Category,
+		notes:          input.Notes,
+		repositoryUrl:  input.RepositoryUrl,
+		repositoryPath: input.RepositoryPath,
+		createTime:     input.CreateTime,
+		updateTime:     input.UpdateTime,
 	}, nil
 }
 
 func RebuildSkill(snapshot SkillSnapshot) *Skill {
 	return &Skill{
-		id:              snapshot.ID,
-		name:            snapshot.Name,
-		description:     snapshot.Description,
-		kind:            snapshot.Kind,
-		category:        snapshot.Category,
-		notes:           snapshot.Notes,
-		contentPath:     snapshot.ContentPath,
-		repositoryUrl:   snapshot.RepositoryUrl,
-		repositoryPath:  snapshot.RepositoryPath,
-		currentDigest:   snapshot.CurrentDigest,
-		originCommitSha: snapshot.OriginCommitSha,
-		createTime:      snapshot.CreateTime,
-		updateTime:      snapshot.UpdateTime,
+		id:             snapshot.ID,
+		name:           snapshot.Name,
+		description:    snapshot.Description,
+		category:       snapshot.Category,
+		notes:          snapshot.Notes,
+		repositoryUrl:  snapshot.RepositoryUrl,
+		repositoryPath: snapshot.RepositoryPath,
+		createTime:     snapshot.CreateTime,
+		updateTime:     snapshot.UpdateTime,
 	}
 }
 
@@ -154,22 +128,14 @@ func (e *Skill) ApplyUpdate(input UpdateSkillInput) error {
 			updated.name = input.Name
 		case "description":
 			updated.description = input.Description
-		case "kind":
-			updated.kind = input.Kind
 		case "category":
 			updated.category = input.Category
 		case "notes":
 			updated.notes = input.Notes
-		case "contentPath":
-			updated.contentPath = input.ContentPath
 		case "repositoryUrl":
 			updated.repositoryUrl = input.RepositoryUrl
 		case "repositoryPath":
 			updated.repositoryPath = input.RepositoryPath
-		case "currentDigest":
-			updated.currentDigest = input.CurrentDigest
-		case "originCommitSha":
-			updated.originCommitSha = input.OriginCommitSha
 		case "createTime":
 			updated.createTime = input.CreateTime
 		case "updateTime":
@@ -189,19 +155,15 @@ func (e *Skill) Snapshot() SkillSnapshot {
 	}
 
 	return SkillSnapshot{
-		ID:              e.id,
-		Name:            e.name,
-		Description:     e.description,
-		Kind:            e.kind,
-		Category:        e.category,
-		Notes:           e.notes,
-		ContentPath:     e.contentPath,
-		RepositoryUrl:   e.repositoryUrl,
-		RepositoryPath:  e.repositoryPath,
-		CurrentDigest:   e.currentDigest,
-		OriginCommitSha: e.originCommitSha,
-		CreateTime:      e.createTime,
-		UpdateTime:      e.updateTime,
+		ID:             e.id,
+		Name:           e.name,
+		Description:    e.description,
+		Category:       e.category,
+		Notes:          e.notes,
+		RepositoryUrl:  e.repositoryUrl,
+		RepositoryPath: e.repositoryPath,
+		CreateTime:     e.createTime,
+		UpdateTime:     e.updateTime,
 	}
 }
 
@@ -229,14 +191,6 @@ func (e *Skill) Description() string {
 	return e.description
 }
 
-func (e *Skill) Kind() pb.SkillKind {
-	if e == nil {
-		var zero pb.SkillKind
-		return zero
-	}
-	return e.kind
-}
-
 func (e *Skill) Category() string {
 	if e == nil {
 		var zero string
@@ -253,14 +207,6 @@ func (e *Skill) Notes() string {
 	return e.notes
 }
 
-func (e *Skill) ContentPath() string {
-	if e == nil {
-		var zero string
-		return zero
-	}
-	return e.contentPath
-}
-
 func (e *Skill) RepositoryUrl() string {
 	if e == nil {
 		var zero string
@@ -275,22 +221,6 @@ func (e *Skill) RepositoryPath() string {
 		return zero
 	}
 	return e.repositoryPath
-}
-
-func (e *Skill) CurrentDigest() string {
-	if e == nil {
-		var zero string
-		return zero
-	}
-	return e.currentDigest
-}
-
-func (e *Skill) OriginCommitSha() string {
-	if e == nil {
-		var zero string
-		return zero
-	}
-	return e.originCommitSha
 }
 
 func (e *Skill) CreateTime() *core.Timestamp {

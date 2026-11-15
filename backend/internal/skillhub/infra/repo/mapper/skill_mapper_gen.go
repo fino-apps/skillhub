@@ -17,19 +17,15 @@ func SkillToRecord(entity *model.Skill) *pmodel.Skill {
 
 	snapshot := entity.Snapshot()
 	return &pmodel.Skill{
-		ID:              snapshot.ID,
-		Name:            snapshot.Name,
-		Description:     snapshot.Description,
-		Kind:            snapshot.Kind,
-		Category:        snapshot.Category,
-		Notes:           snapshot.Notes,
-		ContentPath:     snapshot.ContentPath,
-		RepositoryUrl:   snapshot.RepositoryUrl,
-		RepositoryPath:  snapshot.RepositoryPath,
-		CurrentDigest:   snapshot.CurrentDigest,
-		OriginCommitSha: snapshot.OriginCommitSha,
-		CreateTime:      snapshot.CreateTime,
-		UpdateTime:      snapshot.UpdateTime,
+		ID:             snapshot.ID,
+		Name:           snapshot.Name,
+		Description:    snapshot.Description,
+		Category:       snapshot.Category,
+		Notes:          snapshot.Notes,
+		RepositoryUrl:  snapshot.RepositoryUrl,
+		RepositoryPath: snapshot.RepositoryPath,
+		CreateTime:     snapshot.CreateTime,
+		UpdateTime:     snapshot.UpdateTime,
 	}
 }
 
@@ -39,19 +35,15 @@ func RecordToSkill(record *pmodel.Skill) *model.Skill {
 	}
 
 	return model.RebuildSkill(model.SkillSnapshot{
-		ID:              record.ID,
-		Name:            record.Name,
-		Description:     record.Description,
-		Kind:            record.Kind,
-		Category:        record.Category,
-		Notes:           record.Notes,
-		ContentPath:     record.ContentPath,
-		RepositoryUrl:   record.RepositoryUrl,
-		RepositoryPath:  record.RepositoryPath,
-		CurrentDigest:   record.CurrentDigest,
-		OriginCommitSha: record.OriginCommitSha,
-		CreateTime:      record.CreateTime,
-		UpdateTime:      record.UpdateTime,
+		ID:             record.ID,
+		Name:           record.Name,
+		Description:    record.Description,
+		Category:       record.Category,
+		Notes:          record.Notes,
+		RepositoryUrl:  record.RepositoryUrl,
+		RepositoryPath: record.RepositoryPath,
+		CreateTime:     record.CreateTime,
+		UpdateTime:     record.UpdateTime,
 	})
 }
 
@@ -76,22 +68,14 @@ func SkillFields(snapshot model.SkillSnapshot, updateMask []string) map[string]i
 			fields["name"] = snapshot.Name
 		case "description":
 			fields["description"] = snapshot.Description
-		case "kind":
-			fields["kind"] = snapshot.Kind
 		case "category":
 			fields["category"] = snapshot.Category
 		case "notes":
 			fields["notes"] = snapshot.Notes
-		case "contentPath":
-			fields["content_path"] = snapshot.ContentPath
 		case "repositoryUrl":
 			fields["repository_url"] = snapshot.RepositoryUrl
 		case "repositoryPath":
 			fields["repository_path"] = snapshot.RepositoryPath
-		case "currentDigest":
-			fields["current_digest"] = snapshot.CurrentDigest
-		case "originCommitSha":
-			fields["origin_commit_sha"] = snapshot.OriginCommitSha
 		case "createTime":
 			fields["create_time"] = snapshot.CreateTime
 		case "updateTime":

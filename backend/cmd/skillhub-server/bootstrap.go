@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 
 	"github.com/fino-io/finokit/config"
 	"github.com/fino-io/finokit/logs"
@@ -78,16 +76,8 @@ func buildServer(deps infra) (pb.SkillhubServiceServer, error) {
 		return nil, err
 	}
 
-	projectSkillRepo := infrarepo.NewProjectSkillRepo(infrarepo.ProjectSkillRepoDeps{
-		ProjectSkillDao: dao.NewProjectSkillDaoImpl(deps.DB),
-		PageTokenCodec:  deps.Pagination,
-	})
 	skillRepo := infrarepo.NewSkillRepo(infrarepo.SkillRepoDeps{
 		SkillDao:       dao.NewSkillDaoImpl(deps.DB),
-		PageTokenCodec: deps.Pagination,
-	})
-	skillTagRepo := infrarepo.NewSkillTagRepo(infrarepo.SkillTagRepoDeps{
-		SkillTagDao:    dao.NewSkillTagDaoImpl(deps.DB),
 		PageTokenCodec: deps.Pagination,
 	})
 	skillVersionRepo := infrarepo.NewSkillVersionRepo(infrarepo.SkillVersionRepoDeps{
@@ -96,23 +86,13 @@ func buildServer(deps infra) (pb.SkillhubServiceServer, error) {
 	})
 
 	skillhubService := service.NewSkillhubService(service.ServiceDeps{
-		ProjectSkillRepo: projectSkillRepo,
+
 		SkillRepo:        skillRepo,
-		SkillTagRepo:     skillTagRepo,
 		SkillVersionRepo: skillVersionRepo,
 	})
 
-	dataRoot := os.Getenv("SKILLHUB_DATA_DIR")
-	if dataRoot == "" {
-		dataRoot = "skillhub-data"
-	}
-	dataRoot, err := filepath.Abs(dataRoot)
-	if err != nil {
-		return nil, err
-	}
-
 	return app.NewService(app.ServiceDeps{
-		Intake:      service.NewIntake(dataRoot, infrarepo.NewIntakeRepo(deps.DB)),
+		Catalog:     infrarepo.NewCatalogRepo(deps.DB),
 		SkillhubSvc: skillhubService,
 	}), nil
 }

@@ -17,16 +17,14 @@ func SkillVersionToRecord(entity *model.SkillVersion) *pmodel.SkillVersion {
 
 	snapshot := entity.Snapshot()
 	return &pmodel.SkillVersion{
-		ID:           snapshot.ID,
-		SkillId:      snapshot.SkillId,
-		Version:      snapshot.Version,
-		Notes:        snapshot.Notes,
-		Digest:       snapshot.Digest,
-		SnapshotPath: snapshot.SnapshotPath,
-		SourceRef:    snapshot.SourceRef,
-		CommitSha:    snapshot.CommitSha,
-		CreateTime:   snapshot.CreateTime,
-		UpdateTime:   snapshot.UpdateTime,
+		ID:         snapshot.ID,
+		SkillId:    snapshot.SkillId,
+		Name:       snapshot.Name,
+		Notes:      snapshot.Notes,
+		SourceRef:  snapshot.SourceRef,
+		CommitSha:  snapshot.CommitSha,
+		CreateTime: snapshot.CreateTime,
+		UpdateTime: snapshot.UpdateTime,
 	}
 }
 
@@ -36,16 +34,14 @@ func RecordToSkillVersion(record *pmodel.SkillVersion) *model.SkillVersion {
 	}
 
 	return model.RebuildSkillVersion(model.SkillVersionSnapshot{
-		ID:           record.ID,
-		SkillId:      record.SkillId,
-		Version:      record.Version,
-		Notes:        record.Notes,
-		Digest:       record.Digest,
-		SnapshotPath: record.SnapshotPath,
-		SourceRef:    record.SourceRef,
-		CommitSha:    record.CommitSha,
-		CreateTime:   record.CreateTime,
-		UpdateTime:   record.UpdateTime,
+		ID:         record.ID,
+		SkillId:    record.SkillId,
+		Name:       record.Name,
+		Notes:      record.Notes,
+		SourceRef:  record.SourceRef,
+		CommitSha:  record.CommitSha,
+		CreateTime: record.CreateTime,
+		UpdateTime: record.UpdateTime,
 	})
 }
 
@@ -68,14 +64,10 @@ func SkillVersionFields(snapshot model.SkillVersionSnapshot, updateMask []string
 		switch path {
 		case "skillId":
 			fields["skill_id"] = snapshot.SkillId
-		case "version":
-			fields["version"] = snapshot.Version
+		case "name":
+			fields["name"] = snapshot.Name
 		case "notes":
 			fields["notes"] = snapshot.Notes
-		case "digest":
-			fields["digest"] = snapshot.Digest
-		case "snapshotPath":
-			fields["snapshot_path"] = snapshot.SnapshotPath
 		case "sourceRef":
 			fields["source_ref"] = snapshot.SourceRef
 		case "commitSha":

@@ -1,11 +1,50 @@
 import { useEffect, useState, type FormEvent } from "react";
 import ReactDiffViewer from "react-diff-viewer-continued";
-import { compareSkills, listVersions } from "@/generated/api-client";
+import { compareSkills, listVersions, scanProject } from "@/generated/api-client";
 
-type Skill = { id: string; name: string; kind?: string };
-type Version = { id: string; version: string };
+type Skill = { id: string; name: string };
+type Version = { id: string; sourceRef: string; commitSha: string };
 type Source = { skillId: string; versionId: string; path: string };
-type Change = { path: string; kind: string; binary?: boolean; leftText?: string; rightText?: string };
+export type Change = { path: string; kind: string; binary?: boolean; leftText?: string; rightText?: string };
+
+function LocalSource({ path, onChange }: { path: string; onChange: (path: string) => void }) {
+  const [found, setFound] = useState<{ path: string; name: string }[]>([]);
+  const [base, setBase] = useState("");
+  const [scanning, setScanning] = useState(false);
+  const [feedback, setFeedback] = useState("");
+
+  async function scan() {
+    const projectPath = path.trim();
+    if (!projectPath) return;
+    setScanning(true);
+    setFeedback("");
+    setFound([]);
+    try {
+      const result = await scanProject<{ skills?: { path: string; name: string }[] }>({ projectPath });
+      const skills = result.skills ?? [];
+      setFound(skills);
+      setBase(projectPath);
+      if (!skills.length) setFeedback("这个目录下没有找到 Skill。");
+    } catch {
+      setFeedback("无法扫描，请检查本机目录路径。");
+    } finally {
+      setScanning(false);
+    }
+  }
+
+  return <div className="compare-local">
+    <label>本机项目或 Skill 目录<input value={path} onChange={(event) => { onChange(event.target.value); setFound([]); setFeedback(""); }} placeholder="/path/to/project" required disabled={scanning} /></label>
+    <button type="button" className="secondary" disabled={scanning || !path.trim()} onClick={() => void scan()}>{scanning ? "扫描中…" : "扫描项目"}</button>
+    {found.length > 0 && <label>选择 Skill<select defaultValue="" onChange={(event) => {
+      const relative = event.target.value;
+      if (relative) onChange(relative === "." ? base : `${base.replace(/\/$/, "")}/${relative}`);
+    }}>
+      <option value="" disabled>选择扫描结果</option>
+      {found.map((skill) => <option key={skill.path} value={skill.path}>{skill.name}</option>)}
+    </select></label>}
+    {feedback && <p className="skillhub-hint" role="status">{feedback}</p>}
+  </div>;
+}
 
 function SourcePicker({ label, skills, value, onChange, disabled }: { label: string; skills: Skill[]; value: Source; onChange: (source: Source) => void; disabled: boolean }) {
   const [versions, setVersions] = useState<Version[]>([]);
@@ -35,7 +74,7 @@ function SourcePicker({ label, skills, value, onChange, disabled }: { label: str
       <option value="">本地目录</option>
       {skills.map((skill) => <option key={skill.id} value={skill.id}>{skill.name}</option>)}
     </select></label>
-    {value.skillId ? <label>版本<select value={value.versionId} onChange={(event) => onChange({ ...value, versionId: event.target.value })}><option value="">当前内容</option>{versions.map((version) => <option key={version.id} value={version.id}>{version.version}</option>)}</select></label> : <label>目录路径<input value={value.path} onChange={(event) => onChange({ ...value, path: event.target.value })} placeholder="/path/to/skill" required /></label>}
+    {value.skillId ? <label>版本<select value={value.versionId} onChange={(event) => onChange({ ...value, versionId: event.target.value })}><option value="">最近收录版本</option>{versions.map((version) => <option key={version.id} value={version.id}>{version.sourceRef} · {version.commitSha.slice(0, 8)}</option>)}</select></label> : <LocalSource path={value.path} onChange={(path) => onChange({ ...value, path })} />}
     {error && <span role="alert" className="intake-error">{error}</span>}
   </fieldset>;
 }
@@ -50,9 +89,32 @@ export default function ComparePanel({ skills }: { skills: Skill[] }) {
   const [left, setLeft] = useState<Source>({ skillId: "", versionId: "", path: "" });
   const [right, setRight] = useState<Source>({ skillId: "", versionId: "", path: "" });
   const [changes, setChanges] = useState<Change[] | null>(null);
-  const [selectedPath, setSelectedPath] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true); setError(""); setChanges(null);
+    try {
+      const result = await compareSkills<{ files?: Change[] }>({ left: location(left), right: location(right) });
+      setChanges(result.files ?? []);
+    } catch (reason) {
+      setError(reason instanceof Error && reason.message !== "bad request" ? reason.message : "无法比对，请检查目录及文件大小。");
+    } finally { setBusy(false); }
+  }
+
+  return <div className="compare-panel">
+    <form onSubmit={submit}>
+      <div className="compare-sources"><SourcePicker label="原始版本" skills={skills} value={left} disabled={busy} onChange={(value) => { setLeft(value); setChanges(null); }} /><SourcePicker label="目标版本" skills={skills} value={right} disabled={busy} onChange={(value) => { setRight(value); setChanges(null); }} /></div>
+      <button type="submit" disabled={busy}>{busy ? "比对中…" : "开始比对"}</button>
+    </form>
+    {error && <p className="intake-error" role="alert">{error}</p>}
+    {changes && <CompareResults files={changes} />}
+  </div>;
+}
+
+export function CompareResults({ files }: { files: Change[] }) {
+  const [selectedPath, setSelectedPath] = useState(files[0]?.path ?? "");
   const [dark, setDark] = useState(document.documentElement.dataset.theme === "dark");
 
   useEffect(() => {
@@ -61,25 +123,10 @@ export default function ComparePanel({ skills }: { skills: Skill[] }) {
     return () => observer.disconnect();
   }, []);
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setBusy(true); setError(""); setChanges(null);
-    try {
-      const result = await compareSkills<{ files?: Change[] }>({ left: location(left), right: location(right) });
-      const files = result.files ?? [];
-      setChanges(files); setSelectedPath(files[0]?.path ?? "");
-    } catch (reason) {
-      setError(reason instanceof Error && reason.message !== "bad request" ? reason.message : "无法比对，请检查目录及文件大小。");
-    } finally { setBusy(false); }
-  }
-
-  const selected = changes?.find((file) => file.path === selectedPath);
-  return <div className="compare-panel">
-    <form onSubmit={submit}>
-      <div className="compare-sources"><SourcePicker label="原始版本" skills={skills} value={left} disabled={busy} onChange={(value) => { setLeft(value); setChanges(null); }} /><SourcePicker label="目标版本" skills={skills} value={right} disabled={busy} onChange={(value) => { setRight(value); setChanges(null); }} /></div>
-      <button type="submit" disabled={busy}>{busy ? "比对中…" : "开始比对"}</button>
-    </form>
-    {error && <p className="intake-error" role="alert">{error}</p>}
-    {changes && (changes.length === 0 ? <p className="skillhub-empty">两个 Skill 内容一致。</p> : <div className="compare-results"><div className="compare-files">{changes.map((file) => <button type="button" key={file.path} className={selectedPath === file.path ? "is-selected" : ""} onClick={() => setSelectedPath(file.path)}><span>{file.kind.endsWith("ADDED") ? "+" : file.kind.endsWith("DELETED") ? "−" : "~"}</span>{file.path}</button>)}</div><div className="compare-content">{selected?.binary ? <p>二进制文件已变化。</p> : selected && <ReactDiffViewer oldValue={selected.leftText ?? ""} newValue={selected.rightText ?? ""} splitView={false} useDarkTheme={dark} />}</div></div>)}
+  if (!files.length) return <p className="skillhub-empty">两个 Skill 内容一致。</p>;
+  const selected = files.find((file) => file.path === selectedPath) ?? files[0];
+  return <div className="compare-results">
+    <div className="compare-files">{files.map((file) => <button type="button" key={file.path} className={selected.path === file.path ? "is-selected" : ""} onClick={() => setSelectedPath(file.path)}><span>{file.kind.endsWith("ADDED") ? "+" : file.kind.endsWith("DELETED") ? "−" : "~"}</span>{file.path}</button>)}</div>
+    <div className="compare-content">{selected.binary ? <p>二进制文件已变化。</p> : <ReactDiffViewer oldValue={selected.leftText ?? ""} newValue={selected.rightText ?? ""} splitView={false} useDarkTheme={dark} />}</div>
   </div>;
 }

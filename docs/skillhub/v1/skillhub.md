@@ -43,10 +43,7 @@ GET /skillhub/v1/skills
 
 | 参数名 | 参数类型 | 格式类型 | 是否必须 | 默认值 | 说明 |
 |---|---|---|---|---|---|
-| `keyword` | `string` |  | 否 |  | 最大长度为 1024 |
-| `kind` | `skillhub.SkillKind` |  | 否 |  |  |
 | `category` | `string` |  | 否 |  | 最大长度为 128 |
-| `tag` | `string` |  | 否 |  | 最大长度为 128 |
 | `pageSize` | `integer` | `Int32` | 否 |  | 最小值为 1；最大值为 100 |
 | `pageToken` | `string` |  | 否 |  | 最大长度为 512 |
 
@@ -58,26 +55,6 @@ GET /skillhub/v1/skills
 |---|---|---|---|---|---|
 | `skills` | `Array<skillhub.v1.SkillView>` |  | 否 |  |  |
 | `nextPageToken` | `string` |  | 否 |  |  |
-
-
-## List Skill Filters
-
-### 请求路径
-
-```http
-GET /skillhub/v1/skill-filters
-```
-
-### 请求参数
-
-### 返回值
-
-#### 返回对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `categories` | `Array<string>` |  | 否 |  |  |
-| `tags` | `Array<string>` |  | 否 |  |  |
 
 
 ## Get Skill
@@ -105,44 +82,12 @@ GET /skillhub/v1/skills/{skill_id}
 | `skill` | `skillhub.v1.SkillView` |  | 否 |  |  |
 
 
-## Create Skill
-
-### 请求路径
-
-```http
-POST /skillhub/v1/skills
-```
-
-### 请求参数
-
-#### Body 请求对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `name` | `string` |  | 是 |  | 最大长度为 64 |
-| `description` | `string` |  | 是 |  | 最大长度为 1024 |
-| `kind` | `skillhub.SkillKind` |  | 否 |  |  |
-| `category` | `string` |  | 否 |  | 最大长度为 128 |
-| `tags` | `Array<string>` |  | 否 |  | 最大长度为 100 |
-| `notes` | `string` |  | 否 |  | 最大长度为 4096 |
-| `repositoryUrl` | `string` |  | 否 |  | 最大长度为 2048 |
-| `repositoryPath` | `string` |  | 否 |  | 最大长度为 1024 |
-
-### 返回值
-
-#### 返回对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `skill` | `skillhub.v1.SkillView` |  | 否 |  |  |
-
-
 ## Update Skill
 
 ### 请求路径
 
 ```http
-PATCH /skillhub/v1/skills/{skill_id}
+PUT /skillhub/v1/skills/{skill_id}/metadata
 ```
 
 ### 请求参数
@@ -153,18 +98,10 @@ PATCH /skillhub/v1/skills/{skill_id}
 |---|---|---|---|
 | `skill_id` | `string` |  | 最大长度为 36；UUID |
 
-#### Query 参数
-
-| 参数名 | 参数类型 | 格式类型 | 是否必须 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `updateMask` | `string` | `FieldMask` | 否 |  |  |
-
 #### Body 请求对象
 
 | 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
 |---|---|---|---|---|---|
-| `name` | `string` |  | 否 |  | 最大长度为 64 |
-| `description` | `string` |  | 否 |  | 最大长度为 1024 |
 | `category` | `string` |  | 否 |  | 最大长度为 128 |
 | `tags` | `Array<string>` |  | 否 |  | 最大长度为 100 |
 | `notes` | `string` |  | 否 |  | 最大长度为 4096 |
@@ -193,12 +130,6 @@ DELETE /skillhub/v1/skills/{skill_id}
 | 参数名 | 参数类型 | 格式类型 | 说明 |
 |---|---|---|---|
 | `skill_id` | `string` |  | 最大长度为 36；UUID |
-
-#### Query 参数
-
-| 参数名 | 参数类型 | 格式类型 | 是否必须 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `deleteContent` | `boolean` |  | 否 |  | 显式选择是否删除个人内容和快照；公开 Skill 只删除记录。 |
 
 ### 返回值
 
@@ -256,20 +187,13 @@ POST /skillhub/v1/skills/{skill_id}/versions
 |---|---|---|---|
 | `skill_id` | `string` |  | 最大长度为 36；UUID |
 
-#### Query 参数
-
-| 参数名 | 参数类型 | 格式类型 | 是否必须 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `expectedDigest` | `string` |  | 否 |  | 个人快照要求匹配当前目录摘要；公开 Skill 留空。；最大长度为 128 |
-
 #### Body 请求对象
 
 | 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
 |---|---|---|---|---|---|
-| `version` | `string` |  | 是 |  | 最大长度为 128 |
+| `sourceRef` | `string` |  | 是 |  | 最大长度为 200 |
+| `commitSha` | `string` |  | 是 |  | 最小长度为 40；最大长度为 40 |
 | `notes` | `string` |  | 否 |  | 最大长度为 4096 |
-| `sourceRef` | `string` |  | 否 |  | 公开 Skill 使用完整 commit，个人 Skill 创建当前内容快照。；最大长度为 512 |
-| `commitSha` | `string` |  | 否 |  | 最大长度为 64 |
 
 ### 返回值
 
@@ -278,158 +202,6 @@ POST /skillhub/v1/skills/{skill_id}/versions
 | 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
 |---|---|---|---|---|---|
 | `version` | `skillhub.v1.VersionView` |  | 否 |  |  |
-
-
-## Restore Version
-
-### 请求路径
-
-```http
-POST /skillhub/v1/skills/{skill_id}/versions/{version_id}:restore
-```
-
-### 请求参数
-
-#### Path 参数
-
-| 参数名 | 参数类型 | 格式类型 | 说明 |
-|---|---|---|---|
-| `skill_id` | `string` |  | 最大长度为 36；UUID |
-| `version_id` | `string` |  | 最大长度为 36；UUID |
-
-#### Body 请求对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `expectedDigest` | `string` |  | 是 |  | 必须匹配当前内容摘要，防止预览后出现新的修改。；最大长度为 128 |
-
-### 返回值
-
-#### 返回对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `skill` | `skillhub.v1.SkillView` |  | 否 |  |  |
-| `backupVersion` | `skillhub.v1.VersionView` |  | 否 |  |  |
-
-
-## List Files
-
-### 请求路径
-
-```http
-POST /skillhub/v1/files:list
-```
-
-### 请求参数
-
-#### Body 请求对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `location` | `skillhub.v1.SkillLocation` |  | 是 |  |  |
-
-### 返回值
-
-#### 返回对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `files` | `Array<skillhub.v1.FileView>` |  | 否 |  |  |
-| `digest` | `string` |  | 否 |  |  |
-| `resolvedCommitSha` | `string` |  | 否 |  |  |
-
-
-## Get File
-
-### 请求路径
-
-```http
-POST /skillhub/v1/files:get
-```
-
-### 请求参数
-
-#### Body 请求对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `location` | `skillhub.v1.SkillLocation` |  | 是 |  |  |
-| `path` | `string` |  | 是 |  | 最大长度为 1024 |
-
-### 返回值
-
-#### 返回对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `file` | `skillhub.v1.FileView` |  | 否 |  |  |
-| `text` | `string` |  | 否 |  |  |
-| `resolvedCommitSha` | `string` |  | 否 |  |  |
-
-
-## Put File
-
-### 请求路径
-
-```http
-PUT /skillhub/v1/skills/{skill_id}/files
-```
-
-### 请求参数
-
-#### Path 参数
-
-| 参数名 | 参数类型 | 格式类型 | 说明 |
-|---|---|---|---|
-| `skill_id` | `string` |  | 最大长度为 36；UUID |
-
-#### Body 请求对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `path` | `string` |  | 是 |  | 最大长度为 1024 |
-| `text` | `string` |  | 否 |  |  |
-| `expectedDigest` | `string` |  | 是 |  | 编辑前个人 Skill 整个目录的摘要；新建文件同样需要。；最大长度为 128 |
-
-### 返回值
-
-#### 返回对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `file` | `skillhub.v1.FileView` |  | 否 |  |  |
-| `currentDigest` | `string` |  | 否 |  |  |
-
-
-## Delete File
-
-### 请求路径
-
-```http
-DELETE /skillhub/v1/skills/{skill_id}/files
-```
-
-### 请求参数
-
-#### Path 参数
-
-| 参数名 | 参数类型 | 格式类型 | 说明 |
-|---|---|---|---|
-| `skill_id` | `string` |  | 最大长度为 36；UUID |
-
-#### Query 参数
-
-| 参数名 | 参数类型 | 格式类型 | 是否必须 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `path` | `string` |  | 是 |  | 最大长度为 1024 |
-| `expectedDigest` | `string` |  | 是 |  | 删除前个人 Skill 整个目录的摘要。；最大长度为 128 |
-
-### 返回值
-
-#### 返回对象
-
-对象为空
 
 
 ## Scan Project
@@ -454,7 +226,7 @@ POST /skillhub/v1/projects:scan
 
 | 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
 |---|---|---|---|---|---|
-| `skills` | `Array<skillhub.v1.ProjectSkillView>` |  | 否 |  |  |
+| `skills` | `Array<skillhub.v1.SkillCandidate>` |  | 否 |  |  |
 
 
 ## Preview Import
@@ -471,9 +243,8 @@ POST /skillhub/v1/imports:preview
 
 | 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
 |---|---|---|---|---|---|
-| `source` | `skillhub.v1.SkillLocation` |  | 是 |  |  |
-| `targetSkillId` | `string` |  | 否 |  | 最大长度为 36；UUID |
-| `projectPath` | `string` |  | 否 |  | 最大长度为 2048 |
+| `source` | `skillhub.v1.GitHubSource` |  | 是 |  |  |
+| `scanCollection` | `boolean` |  | 否 |  | 扫描仓库的 skills/ 集合。 |
 
 ### 返回值
 
@@ -481,11 +252,8 @@ POST /skillhub/v1/imports:preview
 
 | 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
 |---|---|---|---|---|---|
-| `files` | `Array<skillhub.v1.FileView>` |  | 否 |  |  |
-| `sourceDigest` | `string` |  | 否 |  | 预览时完整源目录及目标当前目录的摘要。 |
-| `targetDigest` | `string` |  | 否 |  |  |
 | `resolvedCommitSha` | `string` |  | 否 |  |  |
-| `status` | `skillhub.v1.ProjectSkillStatus` |  | 否 |  |  |
+| `skills` | `Array<skillhub.v1.SkillCandidate>` |  | 否 |  |  |
 
 
 ## Import Skill
@@ -502,13 +270,10 @@ POST /skillhub/v1/imports
 
 | 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
 |---|---|---|---|---|---|
-| `source` | `skillhub.v1.SkillLocation` |  | 是 |  |  |
-| `targetSkillId` | `string` |  | 否 |  | 最大长度为 36；UUID |
-| `projectPath` | `string` |  | 否 |  | 最大长度为 2048 |
-| `expectedSourceDigest` | `string` |  | 是 |  | 匹配预览时的完整源目录摘要；导入已有 Skill 时也须匹配目标摘要。；最大长度为 128 |
-| `expectedTargetDigest` | `string` |  | 否 |  | 最大长度为 128 |
-| `includedFiles` | `Array<string>` |  | 是 |  | 明确列出要复制的相对文件路径，必须包含 SKILL.md。 |
-| `version` | `skillhub.v1.VersionInput` |  | 是 |  |  |
+| `repositoryUrl` | `string` |  | 是 |  | 最大长度为 2048 |
+| `sourceRef` | `string` |  | 是 |  | 最大长度为 200 |
+| `commitSha` | `string` |  | 是 |  | 最小长度为 40；最大长度为 40 |
+| `skillPaths` | `Array<string>` |  | 是 |  | 最大长度为 100 |
 
 ### 返回值
 
@@ -516,36 +281,8 @@ POST /skillhub/v1/imports
 
 | 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
 |---|---|---|---|---|---|
-| `skill` | `skillhub.v1.SkillView` |  | 否 |  |  |
-| `version` | `skillhub.v1.VersionView` |  | 否 |  |  |
-
-
-## Resolve Source
-
-### 请求路径
-
-```http
-POST /skillhub/v1/sources:resolve
-```
-
-### 请求参数
-
-#### Body 请求对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `source` | `skillhub.v1.GitHubSource` |  | 是 |  |  |
-
-### 返回值
-
-#### 返回对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `commitSha` | `string` |  | 否 |  |  |
-| `name` | `string` |  | 否 |  |  |
-| `description` | `string` |  | 否 |  |  |
-| `digest` | `string` |  | 否 |  |  |
+| `addedCount` | `integer` | `Int32` | 否 |  |  |
+| `existingCount` | `integer` | `Int32` | 否 |  |  |
 
 
 ## Compare Skills
@@ -578,33 +315,7 @@ POST /skillhub/v1/skills:compare
 | `rightCommitSha` | `string` |  | 否 |  |  |
 
 
-## Get Copy Command
-
-### 请求路径
-
-```http
-GET /skillhub/v1/skills/{skill_id}/versions/{version_id}:copy-command
-```
-
-### 请求参数
-
-#### Path 参数
-
-| 参数名 | 参数类型 | 格式类型 | 说明 |
-|---|---|---|---|
-| `skill_id` | `string` |  | 最大长度为 36；UUID |
-| `version_id` | `string` |  | 最大长度为 36；UUID |
-
-### 返回值
-
-#### 返回对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `command` | `string` |  | 否 |  |  |
-
-
-## Get Install Commands
+## Get Install Command
 
 ### 请求路径
 
@@ -618,8 +329,8 @@ POST /skillhub/v1/install-commands:generate
 
 | 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
 |---|---|---|---|---|---|
-| `skills` | `Array<skillhub.v1.InstallSelection>` |  | 是 |  | 最大长度为 100 |
-| `projectPath` | `string` |  | 否 |  | 项目级安装命令须在此项目中执行；全局安装时可留空。；最大长度为 2048 |
+| `skillId` | `string` |  | 是 |  | 最大长度为 36；UUID |
+| `versionId` | `string` |  | 是 |  | 最大长度为 36；UUID |
 | `global` | `boolean` |  | 否 |  |  |
 
 ### 返回值
@@ -628,7 +339,7 @@ POST /skillhub/v1/install-commands:generate
 
 | 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
 |---|---|---|---|---|---|
-| `commands` | `Array<string>` |  | 否 |  |  |
+| `command` | `string` |  | 否 |  |  |
 
 
 ## 数据模型
@@ -640,14 +351,11 @@ POST /skillhub/v1/install-commands:generate
 | `id` | `string` |  | 否 |  |  |
 | `name` | `string` |  | 否 |  |  |
 | `description` | `string` |  | 否 |  |  |
-| `kind` | `skillhub.SkillKind` |  | 否 |  |  |
 | `category` | `string` |  | 否 |  |  |
 | `tags` | `Array<string>` |  | 否 |  |  |
 | `notes` | `string` |  | 否 |  |  |
 | `repositoryUrl` | `string` |  | 否 |  |  |
 | `repositoryPath` | `string` |  | 否 |  |  |
-| `currentDigest` | `string` |  | 否 |  |  |
-| `originCommitSha` | `string` |  | 否 |  |  |
 | `createTime` | `string` | `Timestamp` | 否 |  |  |
 | `updateTime` | `string` | `Timestamp` | 否 |  |  |
 
@@ -657,12 +365,27 @@ POST /skillhub/v1/install-commands:generate
 |---|---|---|---|---|---|
 | `id` | `string` |  | 否 |  |  |
 | `skillId` | `string` |  | 否 |  |  |
-| `version` | `string` |  | 否 |  |  |
+| `name` | `string` |  | 否 |  |  |
 | `notes` | `string` |  | 否 |  |  |
-| `digest` | `string` |  | 否 |  |  |
 | `sourceRef` | `string` |  | 否 |  |  |
 | `commitSha` | `string` |  | 否 |  |  |
 | `createTime` | `string` | `Timestamp` | 否 |  |  |
+
+### `skillhub.v1.SkillCandidate`
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `path` | `string` |  | 否 |  |  |
+| `name` | `string` |  | 否 |  |  |
+| `description` | `string` |  | 否 |  |  |
+
+### `skillhub.v1.GitHubSource`
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `repositoryUrl` | `string` |  | 否 |  | 必须是 GitHub HTTPS 仓库地址。 |
+| `skillPath` | `string` |  | 否 |  | 空路径表示 Skill 位于仓库根目录。 |
+| `ref` | `string` |  | 否 |  |  |
 
 ### `skillhub.v1.SkillLocation`
 
@@ -672,47 +395,6 @@ POST /skillhub/v1/install-commands:generate
 | `versionId` | `string` |  | 否 |  |  |
 | `localPath` | `string` |  | 否 |  |  |
 | `github` | `skillhub.v1.GitHubSource` |  | 否 |  |  |
-
-### `skillhub.v1.GitHubSource`
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `repositoryUrl` | `string` |  | 否 |  | GitHub 来源仅在被选中时由应用层校验。 |
-| `skillPath` | `string` |  | 否 |  | 空路径表示 Skill 位于仓库根目录。 |
-| `ref` | `string` |  | 否 |  |  |
-
-### `skillhub.v1.FileView`
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `path` | `string` |  | 否 |  |  |
-| `size` | `integer` | `Int64` | 否 |  |  |
-| `binary` | `boolean` |  | 否 |  |  |
-| `digest` | `string` |  | 否 |  |  |
-| `excluded` | `boolean` |  | 否 |  |  |
-| `sensitive` | `boolean` |  | 否 |  |  |
-
-### `skillhub.v1.ProjectSkillView`
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `path` | `string` |  | 否 |  |  |
-| `name` | `string` |  | 否 |  |  |
-| `description` | `string` |  | 否 |  |  |
-| `digest` | `string` |  | 否 |  |  |
-| `skillId` | `string` |  | 否 |  |  |
-| `baseVersionId` | `string` |  | 否 |  |  |
-| `baseDigest` | `string` |  | 否 |  |  |
-| `status` | `skillhub.v1.ProjectSkillStatus` |  | 否 |  |  |
-
-### `skillhub.v1.VersionInput`
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `version` | `string` |  | 是 |  | 最大长度为 128 |
-| `notes` | `string` |  | 否 |  | 最大长度为 4096 |
-| `sourceRef` | `string` |  | 否 |  | 公开 Skill 使用完整 commit，个人 Skill 创建当前内容快照。；最大长度为 512 |
-| `commitSha` | `string` |  | 否 |  | 最大长度为 64 |
 
 ### `skillhub.v1.FileChangeView`
 
@@ -724,41 +406,8 @@ POST /skillhub/v1/install-commands:generate
 | `leftText` | `string` |  | 否 |  |  |
 | `rightText` | `string` |  | 否 |  |  |
 
-### `skillhub.v1.InstallSelection`
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `skillId` | `string` |  | 否 |  |  |
-| `versionId` | `string` |  | 否 |  |  |
-
 
 ## 枚举
-
-<a id="skillhub-skillkind"></a>
-
-### `skillhub.SkillKind`
-
-SkillKind 区分由管理库维护的 Skill 和只记录来源的公开 Skill。
-
-| 枚举值 | 数值 | 说明 |
-|---|---:|---|
-| `SKILL_KIND_UNSPECIFIED` | 0 |  |
-| `SKILL_KIND_PERSONAL` | 1 |  |
-| `SKILL_KIND_PUBLIC` | 2 |  |
-
-<a id="skillhub-v1-projectskillstatus"></a>
-
-### `skillhub.v1.ProjectSkillStatus`
-
-| 枚举值 | 数值 | 说明 |
-|---|---:|---|
-| `PROJECT_SKILL_STATUS_UNSPECIFIED` | 0 |  |
-| `PROJECT_SKILL_STATUS_NEW` | 1 |  |
-| `PROJECT_SKILL_STATUS_UNCHANGED` | 2 |  |
-| `PROJECT_SKILL_STATUS_PROJECT_CHANGED` | 3 |  |
-| `PROJECT_SKILL_STATUS_LIBRARY_CHANGED` | 4 |  |
-| `PROJECT_SKILL_STATUS_CONFLICT` | 5 |  |
-| `PROJECT_SKILL_STATUS_NO_BASELINE` | 6 |  |
 
 <a id="skillhub-v1-filechangekind"></a>
 

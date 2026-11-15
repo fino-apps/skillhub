@@ -16,9 +16,6 @@ func migrateSchema(provider db.Provider) error {
 	if provider == nil {
 		return fmt.Errorf("db provider is nil")
 	}
-	if err := dao.AutoMigrateProjectSkill(provider); err != nil {
-		return fmt.Errorf("migrate project_skill schema: %w", err)
-	}
 	if err := dao.AutoMigrateSkill(provider); err != nil {
 		return fmt.Errorf("migrate skill schema: %w", err)
 	}

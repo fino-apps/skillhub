@@ -16,33 +16,17 @@ type FileDifference struct {
 	Binary                          bool
 }
 
-// StoredPath resolves a managed snapshot without allowing paths outside the data root.
-func (i *Intake) StoredPath(path string) (string, error) {
-	if path == "" || filepath.IsAbs(path) {
-		return "", fmt.Errorf("invalid stored path")
-	}
-	root, err := filepath.EvalSymlinks(i.root)
-	if err != nil {
-		return "", err
-	}
-	resolved, err := filepath.EvalSymlinks(filepath.Join(root, path))
-	if err != nil || !within(root, resolved) {
-		return "", fmt.Errorf("stored path unavailable")
-	}
-	return resolved, nil
-}
-
 // CompareDirectories compares complete Skill directories without changing either source.
 func CompareDirectories(left, right string) ([]FileDifference, string, string, error) {
-	leftFiles, leftDigest, err := PreviewLocalSkill(left)
+	leftFiles, leftDigest, err := readSkillFiles(left)
 	if err != nil {
 		return nil, "", "", err
 	}
-	rightFiles, rightDigest, err := PreviewLocalSkill(right)
+	rightFiles, rightDigest, err := readSkillFiles(right)
 	if err != nil {
 		return nil, "", "", err
 	}
-	leftMap, rightMap := make(map[string]ImportFile), make(map[string]ImportFile)
+	leftMap, rightMap := make(map[string]skillFile), make(map[string]skillFile)
 	paths := make(map[string]bool)
 	for _, file := range leftFiles {
 		leftMap[file.Path] = file

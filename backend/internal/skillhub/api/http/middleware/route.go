@@ -36,12 +36,8 @@ func bindingMiddleware(route Route) []Middleware {
 	switch route.BindingName {
 	case "ListSkills":
 		return listSkillsMiddleware(route)
-	case "ListSkillFilters":
-		return listSkillFiltersMiddleware(route)
 	case "GetSkill":
 		return getSkillMiddleware(route)
-	case "CreateSkill":
-		return createSkillMiddleware(route)
 	case "UpdateSkill":
 		return updateSkillMiddleware(route)
 	case "DeleteSkill":
@@ -50,28 +46,16 @@ func bindingMiddleware(route Route) []Middleware {
 		return listVersionsMiddleware(route)
 	case "CreateVersion":
 		return createVersionMiddleware(route)
-	case "RestoreVersion":
-		return restoreVersionMiddleware(route)
-	case "ListFiles":
-		return listFilesMiddleware(route)
-	case "GetFile":
-		return getFileMiddleware(route)
-	case "PutFile":
-		return putFileMiddleware(route)
-	case "DeleteFile":
-		return deleteFileMiddleware(route)
 	case "ScanProject":
 		return scanProjectMiddleware(route)
 	case "PreviewImport":
 		return previewImportMiddleware(route)
 	case "ImportSkill":
 		return importSkillMiddleware(route)
-	case "ResolveSource":
-		return resolveSourceMiddleware(route)
 	case "CompareSkills":
 		return compareSkillsMiddleware(route)
-	case "GetInstallCommands":
-		return getInstallCommandsMiddleware(route)
+	case "GetInstallCommand":
+		return getInstallCommandMiddleware(route)
 	default:
 		return nil
 	}
@@ -81,15 +65,7 @@ func listSkillsMiddleware(Route) []Middleware {
 	return nil
 }
 
-func listSkillFiltersMiddleware(Route) []Middleware {
-	return nil
-}
-
 func getSkillMiddleware(Route) []Middleware {
-	return nil
-}
-
-func createSkillMiddleware(Route) []Middleware {
 	return nil
 }
 
@@ -109,26 +85,6 @@ func createVersionMiddleware(Route) []Middleware {
 	return nil
 }
 
-func restoreVersionMiddleware(Route) []Middleware {
-	return nil
-}
-
-func listFilesMiddleware(Route) []Middleware {
-	return nil
-}
-
-func getFileMiddleware(Route) []Middleware {
-	return nil
-}
-
-func putFileMiddleware(Route) []Middleware {
-	return nil
-}
-
-func deleteFileMiddleware(Route) []Middleware {
-	return nil
-}
-
 func scanProjectMiddleware(Route) []Middleware {
 	return nil
 }
@@ -141,14 +97,10 @@ func importSkillMiddleware(Route) []Middleware {
 	return nil
 }
 
-func resolveSourceMiddleware(Route) []Middleware {
-	return nil
-}
-
 func compareSkillsMiddleware(Route) []Middleware {
 	return nil
 }
 
-func getInstallCommandsMiddleware(Route) []Middleware {
+func getInstallCommandMiddleware(Route) []Middleware {
 	return nil
 }

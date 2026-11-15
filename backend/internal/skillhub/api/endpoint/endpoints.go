@@ -34,51 +34,33 @@ import (
 // single type that implements the Service interface. For example, you might
 // construct individual endpoints using transport/http.NewClient, combine them into an Endpoints, and return it to the caller as a Service.
 type Endpoints struct {
-	ListSkillsEndpoint         endpoint.Endpoint
-	ListSkillFiltersEndpoint   endpoint.Endpoint
-	GetSkillEndpoint           endpoint.Endpoint
-	CreateSkillEndpoint        endpoint.Endpoint
-	UpdateSkillEndpoint        endpoint.Endpoint
-	DeleteSkillEndpoint        endpoint.Endpoint
-	ListVersionsEndpoint       endpoint.Endpoint
-	CreateVersionEndpoint      endpoint.Endpoint
-	RestoreVersionEndpoint     endpoint.Endpoint
-	ListFilesEndpoint          endpoint.Endpoint
-	GetFileEndpoint            endpoint.Endpoint
-	PutFileEndpoint            endpoint.Endpoint
-	DeleteFileEndpoint         endpoint.Endpoint
-	ScanProjectEndpoint        endpoint.Endpoint
-	PreviewImportEndpoint      endpoint.Endpoint
-	ImportSkillEndpoint        endpoint.Endpoint
-	ResolveSourceEndpoint      endpoint.Endpoint
-	CompareSkillsEndpoint      endpoint.Endpoint
-	GetCopyCommandEndpoint     endpoint.Endpoint
-	GetInstallCommandsEndpoint endpoint.Endpoint
+	ListSkillsEndpoint        endpoint.Endpoint
+	GetSkillEndpoint          endpoint.Endpoint
+	UpdateSkillEndpoint       endpoint.Endpoint
+	DeleteSkillEndpoint       endpoint.Endpoint
+	ListVersionsEndpoint      endpoint.Endpoint
+	CreateVersionEndpoint     endpoint.Endpoint
+	ScanProjectEndpoint       endpoint.Endpoint
+	PreviewImportEndpoint     endpoint.Endpoint
+	ImportSkillEndpoint       endpoint.Endpoint
+	CompareSkillsEndpoint     endpoint.Endpoint
+	GetInstallCommandEndpoint endpoint.Endpoint
 }
 
 // NewEndpoints adapts each service method to an endpoint.
 func NewEndpoints(service pb.SkillhubServiceServer) Endpoints {
 	return Endpoints{
-		ListSkillsEndpoint:         MakeListSkillsEndpoint(service),
-		ListSkillFiltersEndpoint:   MakeListSkillFiltersEndpoint(service),
-		GetSkillEndpoint:           MakeGetSkillEndpoint(service),
-		CreateSkillEndpoint:        MakeCreateSkillEndpoint(service),
-		UpdateSkillEndpoint:        MakeUpdateSkillEndpoint(service),
-		DeleteSkillEndpoint:        MakeDeleteSkillEndpoint(service),
-		ListVersionsEndpoint:       MakeListVersionsEndpoint(service),
-		CreateVersionEndpoint:      MakeCreateVersionEndpoint(service),
-		RestoreVersionEndpoint:     MakeRestoreVersionEndpoint(service),
-		ListFilesEndpoint:          MakeListFilesEndpoint(service),
-		GetFileEndpoint:            MakeGetFileEndpoint(service),
-		PutFileEndpoint:            MakePutFileEndpoint(service),
-		DeleteFileEndpoint:         MakeDeleteFileEndpoint(service),
-		ScanProjectEndpoint:        MakeScanProjectEndpoint(service),
-		PreviewImportEndpoint:      MakePreviewImportEndpoint(service),
-		ImportSkillEndpoint:        MakeImportSkillEndpoint(service),
-		ResolveSourceEndpoint:      MakeResolveSourceEndpoint(service),
-		CompareSkillsEndpoint:      MakeCompareSkillsEndpoint(service),
-		GetCopyCommandEndpoint:     MakeGetCopyCommandEndpoint(service),
-		GetInstallCommandsEndpoint: MakeGetInstallCommandsEndpoint(service),
+		ListSkillsEndpoint:        MakeListSkillsEndpoint(service),
+		GetSkillEndpoint:          MakeGetSkillEndpoint(service),
+		UpdateSkillEndpoint:       MakeUpdateSkillEndpoint(service),
+		DeleteSkillEndpoint:       MakeDeleteSkillEndpoint(service),
+		ListVersionsEndpoint:      MakeListVersionsEndpoint(service),
+		CreateVersionEndpoint:     MakeCreateVersionEndpoint(service),
+		ScanProjectEndpoint:       MakeScanProjectEndpoint(service),
+		PreviewImportEndpoint:     MakePreviewImportEndpoint(service),
+		ImportSkillEndpoint:       MakeImportSkillEndpoint(service),
+		CompareSkillsEndpoint:     MakeCompareSkillsEndpoint(service),
+		GetInstallCommandEndpoint: MakeGetInstallCommandEndpoint(service),
 	}
 }
 
@@ -101,23 +83,6 @@ func MakeListSkillsEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	}
 }
 
-func MakeListSkillFiltersEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		if s == nil {
-			return nil, fmt.Errorf("nil service for endpoint ListSkillFilters")
-		}
-		req, ok := request.(*pb.ListSkillFiltersRequest)
-		if !ok {
-			return nil, fmt.Errorf("unexpected ListSkillFilters request type %T", request)
-		}
-		v, err := s.ListSkillFilters(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-		return v, nil
-	}
-}
-
 func MakeGetSkillEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		if s == nil {
@@ -128,23 +93,6 @@ func MakeGetSkillEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 			return nil, fmt.Errorf("unexpected GetSkill request type %T", request)
 		}
 		v, err := s.GetSkill(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-		return v, nil
-	}
-}
-
-func MakeCreateSkillEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		if s == nil {
-			return nil, fmt.Errorf("nil service for endpoint CreateSkill")
-		}
-		req, ok := request.(*pb.CreateSkillRequest)
-		if !ok {
-			return nil, fmt.Errorf("unexpected CreateSkill request type %T", request)
-		}
-		v, err := s.CreateSkill(ctx, req)
 		if err != nil {
 			return nil, err
 		}
@@ -220,91 +168,6 @@ func MakeCreateVersionEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	}
 }
 
-func MakeRestoreVersionEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		if s == nil {
-			return nil, fmt.Errorf("nil service for endpoint RestoreVersion")
-		}
-		req, ok := request.(*pb.RestoreVersionRequest)
-		if !ok {
-			return nil, fmt.Errorf("unexpected RestoreVersion request type %T", request)
-		}
-		v, err := s.RestoreVersion(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-		return v, nil
-	}
-}
-
-func MakeListFilesEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		if s == nil {
-			return nil, fmt.Errorf("nil service for endpoint ListFiles")
-		}
-		req, ok := request.(*pb.ListFilesRequest)
-		if !ok {
-			return nil, fmt.Errorf("unexpected ListFiles request type %T", request)
-		}
-		v, err := s.ListFiles(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-		return v, nil
-	}
-}
-
-func MakeGetFileEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		if s == nil {
-			return nil, fmt.Errorf("nil service for endpoint GetFile")
-		}
-		req, ok := request.(*pb.GetFileRequest)
-		if !ok {
-			return nil, fmt.Errorf("unexpected GetFile request type %T", request)
-		}
-		v, err := s.GetFile(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-		return v, nil
-	}
-}
-
-func MakePutFileEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		if s == nil {
-			return nil, fmt.Errorf("nil service for endpoint PutFile")
-		}
-		req, ok := request.(*pb.PutFileRequest)
-		if !ok {
-			return nil, fmt.Errorf("unexpected PutFile request type %T", request)
-		}
-		v, err := s.PutFile(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-		return v, nil
-	}
-}
-
-func MakeDeleteFileEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		if s == nil {
-			return nil, fmt.Errorf("nil service for endpoint DeleteFile")
-		}
-		req, ok := request.(*pb.DeleteFileRequest)
-		if !ok {
-			return nil, fmt.Errorf("unexpected DeleteFile request type %T", request)
-		}
-		v, err := s.DeleteFile(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-		return v, nil
-	}
-}
-
 func MakeScanProjectEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		if s == nil {
@@ -356,23 +219,6 @@ func MakeImportSkillEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	}
 }
 
-func MakeResolveSourceEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		if s == nil {
-			return nil, fmt.Errorf("nil service for endpoint ResolveSource")
-		}
-		req, ok := request.(*pb.ResolveSourceRequest)
-		if !ok {
-			return nil, fmt.Errorf("unexpected ResolveSource request type %T", request)
-		}
-		v, err := s.ResolveSource(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-		return v, nil
-	}
-}
-
 func MakeCompareSkillsEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		if s == nil {
@@ -390,33 +236,16 @@ func MakeCompareSkillsEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	}
 }
 
-func MakeGetCopyCommandEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+func MakeGetInstallCommandEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		if s == nil {
-			return nil, fmt.Errorf("nil service for endpoint GetCopyCommand")
+			return nil, fmt.Errorf("nil service for endpoint GetInstallCommand")
 		}
-		req, ok := request.(*pb.GetCopyCommandRequest)
+		req, ok := request.(*pb.GetInstallCommandRequest)
 		if !ok {
-			return nil, fmt.Errorf("unexpected GetCopyCommand request type %T", request)
+			return nil, fmt.Errorf("unexpected GetInstallCommand request type %T", request)
 		}
-		v, err := s.GetCopyCommand(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-		return v, nil
-	}
-}
-
-func MakeGetInstallCommandsEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		if s == nil {
-			return nil, fmt.Errorf("nil service for endpoint GetInstallCommands")
-		}
-		req, ok := request.(*pb.GetInstallCommandsRequest)
-		if !ok {
-			return nil, fmt.Errorf("unexpected GetInstallCommands request type %T", request)
-		}
-		v, err := s.GetInstallCommands(ctx, req)
+		v, err := s.GetInstallCommand(ctx, req)
 		if err != nil {
 			return nil, err
 		}
@@ -430,25 +259,16 @@ func (e *Endpoints) WrapAll(middleware endpoint.Middleware) {
 		return
 	}
 	e.ListSkillsEndpoint = middleware(e.ListSkillsEndpoint)
-	e.ListSkillFiltersEndpoint = middleware(e.ListSkillFiltersEndpoint)
 	e.GetSkillEndpoint = middleware(e.GetSkillEndpoint)
-	e.CreateSkillEndpoint = middleware(e.CreateSkillEndpoint)
 	e.UpdateSkillEndpoint = middleware(e.UpdateSkillEndpoint)
 	e.DeleteSkillEndpoint = middleware(e.DeleteSkillEndpoint)
 	e.ListVersionsEndpoint = middleware(e.ListVersionsEndpoint)
 	e.CreateVersionEndpoint = middleware(e.CreateVersionEndpoint)
-	e.RestoreVersionEndpoint = middleware(e.RestoreVersionEndpoint)
-	e.ListFilesEndpoint = middleware(e.ListFilesEndpoint)
-	e.GetFileEndpoint = middleware(e.GetFileEndpoint)
-	e.PutFileEndpoint = middleware(e.PutFileEndpoint)
-	e.DeleteFileEndpoint = middleware(e.DeleteFileEndpoint)
 	e.ScanProjectEndpoint = middleware(e.ScanProjectEndpoint)
 	e.PreviewImportEndpoint = middleware(e.PreviewImportEndpoint)
 	e.ImportSkillEndpoint = middleware(e.ImportSkillEndpoint)
-	e.ResolveSourceEndpoint = middleware(e.ResolveSourceEndpoint)
 	e.CompareSkillsEndpoint = middleware(e.CompareSkillsEndpoint)
-	e.GetCopyCommandEndpoint = middleware(e.GetCopyCommandEndpoint)
-	e.GetInstallCommandsEndpoint = middleware(e.GetInstallCommandsEndpoint)
+	e.GetInstallCommandEndpoint = middleware(e.GetInstallCommandEndpoint)
 }
 
 // LabeledMiddleware receives the endpoint name.
@@ -460,23 +280,14 @@ func (e *Endpoints) WrapAllLabeled(middleware LabeledMiddleware) {
 		return
 	}
 	e.ListSkillsEndpoint = middleware("ListSkills", e.ListSkillsEndpoint)
-	e.ListSkillFiltersEndpoint = middleware("ListSkillFilters", e.ListSkillFiltersEndpoint)
 	e.GetSkillEndpoint = middleware("GetSkill", e.GetSkillEndpoint)
-	e.CreateSkillEndpoint = middleware("CreateSkill", e.CreateSkillEndpoint)
 	e.UpdateSkillEndpoint = middleware("UpdateSkill", e.UpdateSkillEndpoint)
 	e.DeleteSkillEndpoint = middleware("DeleteSkill", e.DeleteSkillEndpoint)
 	e.ListVersionsEndpoint = middleware("ListVersions", e.ListVersionsEndpoint)
 	e.CreateVersionEndpoint = middleware("CreateVersion", e.CreateVersionEndpoint)
-	e.RestoreVersionEndpoint = middleware("RestoreVersion", e.RestoreVersionEndpoint)
-	e.ListFilesEndpoint = middleware("ListFiles", e.ListFilesEndpoint)
-	e.GetFileEndpoint = middleware("GetFile", e.GetFileEndpoint)
-	e.PutFileEndpoint = middleware("PutFile", e.PutFileEndpoint)
-	e.DeleteFileEndpoint = middleware("DeleteFile", e.DeleteFileEndpoint)
 	e.ScanProjectEndpoint = middleware("ScanProject", e.ScanProjectEndpoint)
 	e.PreviewImportEndpoint = middleware("PreviewImport", e.PreviewImportEndpoint)
 	e.ImportSkillEndpoint = middleware("ImportSkill", e.ImportSkillEndpoint)
-	e.ResolveSourceEndpoint = middleware("ResolveSource", e.ResolveSourceEndpoint)
 	e.CompareSkillsEndpoint = middleware("CompareSkills", e.CompareSkillsEndpoint)
-	e.GetCopyCommandEndpoint = middleware("GetCopyCommand", e.GetCopyCommandEndpoint)
-	e.GetInstallCommandsEndpoint = middleware("GetInstallCommands", e.GetInstallCommandsEndpoint)
+	e.GetInstallCommandEndpoint = middleware("GetInstallCommand", e.GetInstallCommandEndpoint)
 }

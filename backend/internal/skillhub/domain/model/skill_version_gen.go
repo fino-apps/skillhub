@@ -16,28 +16,24 @@ import (
 type SkillVersionID string
 
 type CreateSkillVersionInput struct {
-	SkillId      string
-	Version      string
-	Notes        string
-	Digest       string
-	SnapshotPath string
-	SourceRef    string
-	CommitSha    string
-	CreateTime   *core.Timestamp
-	UpdateTime   *core.Timestamp
+	SkillId    string
+	Name       string
+	Notes      string
+	SourceRef  string
+	CommitSha  string
+	CreateTime *core.Timestamp
+	UpdateTime *core.Timestamp
 }
 
 type UpdateSkillVersionInput struct {
-	SkillId      string
-	Version      string
-	Notes        string
-	Digest       string
-	SnapshotPath string
-	SourceRef    string
-	CommitSha    string
-	CreateTime   *core.Timestamp
-	UpdateTime   *core.Timestamp
-	UpdateMask   []string
+	SkillId    string
+	Name       string
+	Notes      string
+	SourceRef  string
+	CommitSha  string
+	CreateTime *core.Timestamp
+	UpdateTime *core.Timestamp
+	UpdateMask []string
 }
 
 type ListSkillVersionQuery struct {
@@ -50,29 +46,25 @@ type ListSkillVersionQuery struct {
 type ListSkillVersionResult = pagination.Page[*SkillVersion]
 
 type SkillVersionSnapshot struct {
-	ID           SkillVersionID
-	SkillId      string
-	Version      string
-	Notes        string
-	Digest       string
-	SnapshotPath string
-	SourceRef    string
-	CommitSha    string
-	CreateTime   *core.Timestamp
-	UpdateTime   *core.Timestamp
+	ID         SkillVersionID
+	SkillId    string
+	Name       string
+	Notes      string
+	SourceRef  string
+	CommitSha  string
+	CreateTime *core.Timestamp
+	UpdateTime *core.Timestamp
 }
 
 type SkillVersion struct {
-	id           SkillVersionID
-	skillId      string
-	version      string
-	notes        string
-	digest       string
-	snapshotPath string
-	sourceRef    string
-	commitSha    string
-	createTime   *core.Timestamp
-	updateTime   *core.Timestamp
+	id         SkillVersionID
+	skillId    string
+	name       string
+	notes      string
+	sourceRef  string
+	commitSha  string
+	createTime *core.Timestamp
+	updateTime *core.Timestamp
 }
 
 func NewSkillVersion(input CreateSkillVersionInput) (*SkillVersion, error) {
@@ -90,31 +82,27 @@ func NewSkillVersion(input CreateSkillVersionInput) (*SkillVersion, error) {
 	}
 
 	return &SkillVersion{
-		id:           SkillVersionID(id.String()),
-		skillId:      input.SkillId,
-		version:      input.Version,
-		notes:        input.Notes,
-		digest:       input.Digest,
-		snapshotPath: input.SnapshotPath,
-		sourceRef:    input.SourceRef,
-		commitSha:    input.CommitSha,
-		createTime:   input.CreateTime,
-		updateTime:   input.UpdateTime,
+		id:         SkillVersionID(id.String()),
+		skillId:    input.SkillId,
+		name:       input.Name,
+		notes:      input.Notes,
+		sourceRef:  input.SourceRef,
+		commitSha:  input.CommitSha,
+		createTime: input.CreateTime,
+		updateTime: input.UpdateTime,
 	}, nil
 }
 
 func RebuildSkillVersion(snapshot SkillVersionSnapshot) *SkillVersion {
 	return &SkillVersion{
-		id:           snapshot.ID,
-		skillId:      snapshot.SkillId,
-		version:      snapshot.Version,
-		notes:        snapshot.Notes,
-		digest:       snapshot.Digest,
-		snapshotPath: snapshot.SnapshotPath,
-		sourceRef:    snapshot.SourceRef,
-		commitSha:    snapshot.CommitSha,
-		createTime:   snapshot.CreateTime,
-		updateTime:   snapshot.UpdateTime,
+		id:         snapshot.ID,
+		skillId:    snapshot.SkillId,
+		name:       snapshot.Name,
+		notes:      snapshot.Notes,
+		sourceRef:  snapshot.SourceRef,
+		commitSha:  snapshot.CommitSha,
+		createTime: snapshot.CreateTime,
+		updateTime: snapshot.UpdateTime,
 	}
 }
 
@@ -132,14 +120,10 @@ func (e *SkillVersion) ApplyUpdate(input UpdateSkillVersionInput) error {
 		switch path {
 		case "skillId":
 			updated.skillId = input.SkillId
-		case "version":
-			updated.version = input.Version
+		case "name":
+			updated.name = input.Name
 		case "notes":
 			updated.notes = input.Notes
-		case "digest":
-			updated.digest = input.Digest
-		case "snapshotPath":
-			updated.snapshotPath = input.SnapshotPath
 		case "sourceRef":
 			updated.sourceRef = input.SourceRef
 		case "commitSha":
@@ -163,16 +147,14 @@ func (e *SkillVersion) Snapshot() SkillVersionSnapshot {
 	}
 
 	return SkillVersionSnapshot{
-		ID:           e.id,
-		SkillId:      e.skillId,
-		Version:      e.version,
-		Notes:        e.notes,
-		Digest:       e.digest,
-		SnapshotPath: e.snapshotPath,
-		SourceRef:    e.sourceRef,
-		CommitSha:    e.commitSha,
-		CreateTime:   e.createTime,
-		UpdateTime:   e.updateTime,
+		ID:         e.id,
+		SkillId:    e.skillId,
+		Name:       e.name,
+		Notes:      e.notes,
+		SourceRef:  e.sourceRef,
+		CommitSha:  e.commitSha,
+		CreateTime: e.createTime,
+		UpdateTime: e.updateTime,
 	}
 }
 
@@ -192,12 +174,12 @@ func (e *SkillVersion) SkillId() string {
 	return e.skillId
 }
 
-func (e *SkillVersion) Version() string {
+func (e *SkillVersion) Name() string {
 	if e == nil {
 		var zero string
 		return zero
 	}
-	return e.version
+	return e.name
 }
 
 func (e *SkillVersion) Notes() string {
@@ -206,22 +188,6 @@ func (e *SkillVersion) Notes() string {
 		return zero
 	}
 	return e.notes
-}
-
-func (e *SkillVersion) Digest() string {
-	if e == nil {
-		var zero string
-		return zero
-	}
-	return e.digest
-}
-
-func (e *SkillVersion) SnapshotPath() string {
-	if e == nil {
-		var zero string
-		return zero
-	}
-	return e.snapshotPath
 }
 
 func (e *SkillVersion) SourceRef() string {

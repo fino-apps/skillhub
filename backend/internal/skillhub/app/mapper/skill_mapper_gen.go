@@ -12,31 +12,12 @@ import (
 	inputpb "github.com/fino-io/skillhub/go/skillhub/v1"
 )
 
-func ToCreateSkillInput(in *inputpb.SkillInput) (model.CreateSkillInput, error) {
-	if in == nil {
-		return model.CreateSkillInput{}, fmt.Errorf("skill input is nil")
-	}
-
-	return model.CreateSkillInput{
-		Name:           in.GetName(),
-		Description:    in.GetDescription(),
-		Kind:           in.GetKind(),
-		Category:       in.GetCategory(),
-		Tags:           in.GetTags(),
-		Notes:          in.GetNotes(),
-		RepositoryUrl:  in.GetRepositoryUrl(),
-		RepositoryPath: in.GetRepositoryPath(),
-	}, nil
-}
-
 func ToUpdateSkillInput(in *inputpb.UpdateSkillInput, updateMask []string) (model.UpdateSkillInput, error) {
 	if in == nil {
 		return model.UpdateSkillInput{}, fmt.Errorf("skill input is nil")
 	}
 	if len(updateMask) == 1 && updateMask[0] == "*" {
 		updateMask = []string{
-			"name",
-			"description",
 			"category",
 			"notes",
 		}
@@ -46,8 +27,6 @@ func ToUpdateSkillInput(in *inputpb.UpdateSkillInput, updateMask []string) (mode
 	}
 	for _, path := range updateMask {
 		switch path {
-		case "name":
-		case "description":
 		case "category":
 		case "notes":
 		default:
@@ -56,11 +35,9 @@ func ToUpdateSkillInput(in *inputpb.UpdateSkillInput, updateMask []string) (mode
 	}
 
 	return model.UpdateSkillInput{
-		UpdateMask:  updateMask,
-		Name:        in.GetName(),
-		Description: in.GetDescription(),
-		Category:    in.GetCategory(),
-		Notes:       in.GetNotes(),
+		UpdateMask: updateMask,
+		Category:   in.GetCategory(),
+		Notes:      in.GetNotes(),
 	}, nil
 }
 
@@ -79,18 +56,15 @@ func ToSkillView(entity *model.Skill) *inputpb.SkillView {
 	}
 
 	return &inputpb.SkillView{
-		Id:              string(entity.ID()),
-		Name:            entity.Name(),
-		Description:     entity.Description(),
-		Kind:            entity.Kind(),
-		Category:        entity.Category(),
-		Notes:           entity.Notes(),
-		RepositoryUrl:   entity.RepositoryUrl(),
-		RepositoryPath:  entity.RepositoryPath(),
-		CurrentDigest:   entity.CurrentDigest(),
-		OriginCommitSha: entity.OriginCommitSha(),
-		CreateTime:      entity.CreateTime(),
-		UpdateTime:      entity.UpdateTime(),
+		Id:             string(entity.ID()),
+		Name:           entity.Name(),
+		Description:    entity.Description(),
+		Category:       entity.Category(),
+		Notes:          entity.Notes(),
+		RepositoryUrl:  entity.RepositoryUrl(),
+		RepositoryPath: entity.RepositoryPath(),
+		CreateTime:     entity.CreateTime(),
+		UpdateTime:     entity.UpdateTime(),
 	}
 }
 
@@ -107,25 +81,25 @@ func ToSkillViews(entities []*model.Skill) []*inputpb.SkillView {
 	return items
 }
 
-func ToProjectSkillView(entity *model.Skill) *inputpb.ProjectSkillView {
+func ToSkillCandidate(entity *model.Skill) *inputpb.SkillCandidate {
 	if entity == nil {
 		return nil
 	}
 
-	return &inputpb.ProjectSkillView{
+	return &inputpb.SkillCandidate{
 		Name:        entity.Name(),
 		Description: entity.Description(),
 	}
 }
 
-func ToProjectSkillViews(entities []*model.Skill) []*inputpb.ProjectSkillView {
+func ToSkillCandidates(entities []*model.Skill) []*inputpb.SkillCandidate {
 	if len(entities) == 0 {
 		return nil
 	}
 
-	items := make([]*inputpb.ProjectSkillView, 0, len(entities))
+	items := make([]*inputpb.SkillCandidate, 0, len(entities))
 	for _, entity := range entities {
-		items = append(items, ToProjectSkillView(entity))
+		items = append(items, ToSkillCandidate(entity))
 	}
 
 	return items

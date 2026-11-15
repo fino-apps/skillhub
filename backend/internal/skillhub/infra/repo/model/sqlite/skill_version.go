@@ -12,16 +12,14 @@ import (
 )
 
 type SkillVersion struct {
-	ID           domainmodel.SkillVersionID `gorm:"type:char(36);primaryKey;comment:主键"`
-	SkillId      string                     `gorm:"type:text;not null;uniqueIndex:idx_skill_version;comment:Skill ID"`
-	Version      string                     `gorm:"type:text;not null;uniqueIndex:idx_skill_version;comment:版本标识"`
-	Notes        string                     `gorm:"type:text;not null;comment:版本说明"`
-	Digest       string                     `gorm:"type:text;not null;comment:目录内容摘要"`
-	SnapshotPath string                     `gorm:"type:text;not null;comment:个人快照在数据目录内的相对路径"`
-	SourceRef    string                     `gorm:"type:text;not null;comment:公开来源的分支或 tag"`
-	CommitSha    string                     `gorm:"type:text;not null;comment:公开来源解析出的完整 commit"`
-	CreateTime   *core.Timestamp            `gorm:"type:datetime;not null;comment:创建时间"`
-	UpdateTime   *core.Timestamp            `gorm:"type:datetime;not null;comment:最后更新时间"`
+	ID         domainmodel.SkillVersionID `gorm:"type:char(36);primaryKey;comment:主键"`
+	SkillId    string                     `gorm:"type:text;not null;uniqueIndex:idx_skill_commit;comment:Skill ID"`
+	Name       string                     `gorm:"type:text;not null;comment:该 commit 中的 Skill 名称"`
+	Notes      string                     `gorm:"type:text;not null;comment:版本说明"`
+	SourceRef  string                     `gorm:"type:text;not null;comment:用户选择的 Git 引用"`
+	CommitSha  string                     `gorm:"type:text;not null;uniqueIndex:idx_skill_commit;comment:完整 commit SHA"`
+	CreateTime *core.Timestamp            `gorm:"type:datetime;not null;comment:创建时间"`
+	UpdateTime *core.Timestamp            `gorm:"type:datetime;not null;comment:最后更新时间"`
 }
 
 func (SkillVersion) TableName() string {

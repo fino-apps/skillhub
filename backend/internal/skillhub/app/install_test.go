@@ -2,8 +2,6 @@ package app
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/model"
@@ -25,12 +23,11 @@ func (s installService) GetSkillVersion(context.Context, model.SkillVersionID) (
 }
 
 func TestInstallCommandsRejectsVersionFromAnotherSkill(t *testing.T) {
-	root := t.TempDir()
-	if err := os.Mkdir(filepath.Join(root, "snapshot"), 0700); err != nil {
-		t.Fatal(err)
-	}
-	srv := skillhubServer{skillhubSvc: installService{skill: model.RebuildSkill(model.SkillSnapshot{ID: "one", Name: "sample"}), version: model.RebuildSkillVersion(model.SkillVersionSnapshot{SkillId: "other", SnapshotPath: "snapshot"})}, intake: service.NewIntake(root, nil)}
-	_, err := srv.getInstallCommands(context.Background(), &pb.GetInstallCommandsRequest{Global: true, Skills: []*pb.InstallSelection{{SkillId: "one", VersionId: "v1"}}})
+	srv := skillhubServer{skillhubSvc: installService{
+		skill:   model.RebuildSkill(model.SkillSnapshot{ID: "one", Name: "sample"}),
+		version: model.RebuildSkillVersion(model.SkillVersionSnapshot{SkillId: "other"}),
+	}}
+	_, err := srv.getInstallCommand(context.Background(), &pb.GetInstallCommandRequest{Global: true, SkillId: "one", VersionId: "v1"})
 	if err == nil {
 		t.Fatal("expected mismatched version to be rejected")
 	}

@@ -3,7 +3,7 @@
 .skillhub-heading { justify-content: space-between; margin-bottom: 24px; }
 .skillhub-heading h1 { font-size: 26px; margin: 0; letter-spacing: -.03em; }
 .skillhub-count, .skillhub-tag { color: var(--muted); font-size: 12px; border: 1px solid var(--line); border-radius: 20px; padding: 4px 9px; white-space: nowrap; }
-.library-actions button, .skillhub-more, .skillhub-form button, .intake-header button, .intake-preview > button, .github-form > button, .github-preview > button, .compare-panel form > button { padding: 0 14px; white-space: nowrap; }
+.library-actions button, .skillhub-more, .github-form > button, .github-preview > button, .compare-panel form > button { padding: 0 14px; white-space: nowrap; }
 .skillhub-search { display: flex; align-items: center; gap: 10px; color: var(--muted); border: 1px solid var(--line); border-radius: 7px; padding: 0 12px; }
 .skillhub-search > span:first-child { font-size: 22px; line-height: 1; }
 .skillhub-search input { width: 100%; border: 0; background: transparent; padding: 10px 0; min-width: 0; }
@@ -19,13 +19,12 @@
 .library-versions ul { list-style: none; padding: 0; margin: 0; flex: 1; min-width: 0; }
 .library-versions li { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 14px; padding: 3px 0; }
 .library-versions code { color: var(--muted); }
-.library-origin { overflow-wrap: anywhere; margin: 0 0 8px !important; }
 .skillhub-empty { padding: 36px 0; color: var(--muted); font-size: 14px; }
 .skillhub-empty strong { color: var(--text); }
 .skillhub-text-button { min-height: 0; padding: 0; border: 0; background: transparent; color: var(--accent); font-size: 13px; }
 .skillhub-text-button:hover { background: transparent; text-decoration: underline; }
 .skillhub-more { margin-top: 16px; }
-.skillhub-hint, .intake-header p, .intake-preview > p, .github-preview p { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.skillhub-hint, .github-preview p { color: var(--muted); font-size: 12px; line-height: 1.5; }
 .skillhub-alert { display: flex; justify-content: space-between; gap: 12px; color: var(--danger); font-size: 13px; margin-top: 14px; }
 .skillhub-dialog { width: min(960px, calc(100% - 32px)); max-height: min(85vh, 850px); padding: 0; border: 1px solid var(--line); border-radius: 12px; color: var(--text); background: var(--surface); box-shadow: 0 20px 70px #0004; }
 .skillhub-dialog-compact { width: min(620px, calc(100% - 32px)); }
@@ -35,34 +34,29 @@
 .dialog-close { min-height: 32px; width: 32px; padding: 0; border: 0; background: transparent; color: var(--muted); font-size: 24px; font-weight: 400; }
 .dialog-close:hover { background: var(--surface-muted); }
 .dialog-body { padding: 22px; }
-.source-tabs { display: flex; gap: 20px; border-bottom: 1px solid var(--line); }
-.source-tabs button { border: 0; border-radius: 0; min-height: 36px; padding: 0 2px; background: transparent; color: var(--muted); }
-.source-tabs button[aria-selected="true"] { color: var(--accent); border-bottom: 2px solid var(--accent); }
-.source-tabs button:hover { background: transparent; color: var(--accent); }
-.skillhub-form { margin-top: 18px; }
-.skillhub-form label, .github-form label, .compare-source label { display: grid; gap: 6px; font-size: 13px; font-weight: 700; min-width: 0; }
-.skillhub-form-row { display: flex; gap: 8px; margin-top: 8px; }
-.skillhub-form input { flex: 1; min-width: 0; }
-.intake-panel { border-top: 1px solid var(--line); margin-top: 22px; padding-top: 18px; }
-.intake-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.intake-choices { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; }
-.intake-choices label, .intake-files label { display: flex; gap: 7px; align-items: center; font-size: 13px; }
-.intake-preview { margin-top: 20px; }
-.intake-preview h3 { font-size: 15px; margin: 0; }
-.intake-item { border-top: 1px solid var(--line); padding: 12px 0; }
-.intake-files { display: grid; gap: 6px; max-height: 180px; overflow: auto; margin-top: 8px; }
-.intake-files span, .github-preview li { overflow-wrap: anywhere; }
-.intake-files em { color: var(--danger); font-size: 12px; font-style: normal; white-space: nowrap; }
 .intake-error { color: var(--danger); font-size: 13px; }
-.intake-success { color: var(--ok); font-size: 13px; }
-.github-intake { padding-top: 18px; }
 .github-form { display: grid; gap: 12px; }
 .github-form > div { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
-.github-form input { min-width: 0; width: 100%; }
+.github-form input:not([type="checkbox"]), .github-form textarea, .version-notes input { min-width: 0; width: 100%; }
 .github-form > button { justify-self: start; }
 .github-preview { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 16px; }
 .github-preview code { overflow-wrap: anywhere; }
-.github-preview details { font-size: 13px; margin: 12px 0; }
+.github-form label, .version-notes, .compare-source label { display: grid; gap: 6px; font-size: 13px; font-weight: 700; min-width: 0; }
+.github-form .github-checkbox, .github-checkbox { display: flex; align-items: start; gap: 8px; font-size: 13px; }
+.github-checkbox input { width: 16px; height: 16px; margin: 2px 0 0; flex: none; }
+.github-candidates { list-style: none; margin: 12px 0; padding: 0; max-height: 280px; overflow: auto; }
+.github-candidates li { padding: 8px 0; overflow-wrap: anywhere; }
+.github-candidates li + li { border-top: 1px solid var(--line); }
+.github-candidates small, .candidate-description { color: var(--muted); font-weight: 400; }
+.candidate-description { display: block; }
+.version-notes { margin: 14px 0; }
+.compare-local { display: grid; gap: 8px; margin-top: 10px; }
+.compare-local button { justify-self: start; }
+.library-tags, .library-version-heading { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.library-tags .skillhub-tag { white-space: normal; overflow-wrap: anywhere; }
+.library-version-heading { margin-bottom: 8px; }
+.library-notes { white-space: pre-wrap; }
+
 .compare-sources { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
 .compare-source { border: 1px solid var(--line); border-radius: 8px; padding: 14px; min-width: 0; }
 .compare-source legend { color: var(--muted); font-size: 12px; padding: 0 5px; }
@@ -74,9 +68,8 @@
 .compare-files button.is-selected, .compare-files button:hover { background: var(--surface-muted); border-color: var(--line); }
 .compare-content { overflow: auto; min-width: 0; max-height: 500px; font-size: 12px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-@media (max-width: 600px) { .skillhub-shell { margin-top: 28px; } .skillhub-heading { align-items: flex-start; flex-direction: column; } .dialog-body { padding: 16px; } .compare-sources, .compare-results, .github-form > div { grid-template-columns: 1fr; } .compare-files { max-height: 150px; } .skillhub-form-row { flex-direction: column; } }
+@media (max-width: 600px) { .skillhub-shell { margin-top: 28px; } .skillhub-heading { align-items: flex-start; flex-direction: column; } .dialog-body { padding: 16px; } .compare-sources, .compare-results, .github-form > div { grid-template-columns: 1fr; } .compare-files { max-height: 150px; } .library-version-row { flex-wrap: wrap; } }
 .compare-source select { height: 36px; padding: 0 10px; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
-.intake-choices input[type="checkbox"], .intake-files input[type="checkbox"] { width: 16px; height: 16px; margin: 0; flex: none; }
 .copy-hint { margin: 0 0 12px; }
 .copy-command { position: relative; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-muted); }
 .copy-command pre { max-height: 260px; margin: 0; padding: 14px 52px 14px 14px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; font-size: 12px; }

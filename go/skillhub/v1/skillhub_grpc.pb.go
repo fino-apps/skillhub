@@ -20,26 +20,17 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	SkillhubService_ListSkills_FullMethodName         = "/skillhub.v1.SkillhubService/ListSkills"
-	SkillhubService_ListSkillFilters_FullMethodName   = "/skillhub.v1.SkillhubService/ListSkillFilters"
-	SkillhubService_GetSkill_FullMethodName           = "/skillhub.v1.SkillhubService/GetSkill"
-	SkillhubService_CreateSkill_FullMethodName        = "/skillhub.v1.SkillhubService/CreateSkill"
-	SkillhubService_UpdateSkill_FullMethodName        = "/skillhub.v1.SkillhubService/UpdateSkill"
-	SkillhubService_DeleteSkill_FullMethodName        = "/skillhub.v1.SkillhubService/DeleteSkill"
-	SkillhubService_ListVersions_FullMethodName       = "/skillhub.v1.SkillhubService/ListVersions"
-	SkillhubService_CreateVersion_FullMethodName      = "/skillhub.v1.SkillhubService/CreateVersion"
-	SkillhubService_RestoreVersion_FullMethodName     = "/skillhub.v1.SkillhubService/RestoreVersion"
-	SkillhubService_ListFiles_FullMethodName          = "/skillhub.v1.SkillhubService/ListFiles"
-	SkillhubService_GetFile_FullMethodName            = "/skillhub.v1.SkillhubService/GetFile"
-	SkillhubService_PutFile_FullMethodName            = "/skillhub.v1.SkillhubService/PutFile"
-	SkillhubService_DeleteFile_FullMethodName         = "/skillhub.v1.SkillhubService/DeleteFile"
-	SkillhubService_ScanProject_FullMethodName        = "/skillhub.v1.SkillhubService/ScanProject"
-	SkillhubService_PreviewImport_FullMethodName      = "/skillhub.v1.SkillhubService/PreviewImport"
-	SkillhubService_ImportSkill_FullMethodName        = "/skillhub.v1.SkillhubService/ImportSkill"
-	SkillhubService_ResolveSource_FullMethodName      = "/skillhub.v1.SkillhubService/ResolveSource"
-	SkillhubService_CompareSkills_FullMethodName      = "/skillhub.v1.SkillhubService/CompareSkills"
-	SkillhubService_GetCopyCommand_FullMethodName     = "/skillhub.v1.SkillhubService/GetCopyCommand"
-	SkillhubService_GetInstallCommands_FullMethodName = "/skillhub.v1.SkillhubService/GetInstallCommands"
+	SkillhubService_ListSkills_FullMethodName        = "/skillhub.v1.SkillhubService/ListSkills"
+	SkillhubService_GetSkill_FullMethodName          = "/skillhub.v1.SkillhubService/GetSkill"
+	SkillhubService_UpdateSkill_FullMethodName       = "/skillhub.v1.SkillhubService/UpdateSkill"
+	SkillhubService_DeleteSkill_FullMethodName       = "/skillhub.v1.SkillhubService/DeleteSkill"
+	SkillhubService_ListVersions_FullMethodName      = "/skillhub.v1.SkillhubService/ListVersions"
+	SkillhubService_CreateVersion_FullMethodName     = "/skillhub.v1.SkillhubService/CreateVersion"
+	SkillhubService_ScanProject_FullMethodName       = "/skillhub.v1.SkillhubService/ScanProject"
+	SkillhubService_PreviewImport_FullMethodName     = "/skillhub.v1.SkillhubService/PreviewImport"
+	SkillhubService_ImportSkill_FullMethodName       = "/skillhub.v1.SkillhubService/ImportSkill"
+	SkillhubService_CompareSkills_FullMethodName     = "/skillhub.v1.SkillhubService/CompareSkills"
+	SkillhubService_GetInstallCommand_FullMethodName = "/skillhub.v1.SkillhubService/GetInstallCommand"
 )
 
 // SkillhubServiceClient is the client API for SkillhubService service.
@@ -47,25 +38,16 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SkillhubServiceClient interface {
 	ListSkills(ctx context.Context, in *ListSkillsRequest, opts ...grpc.CallOption) (*ListSkillsResponse, error)
-	ListSkillFilters(ctx context.Context, in *ListSkillFiltersRequest, opts ...grpc.CallOption) (*ListSkillFiltersResponse, error)
 	GetSkill(ctx context.Context, in *GetSkillRequest, opts ...grpc.CallOption) (*GetSkillResponse, error)
-	CreateSkill(ctx context.Context, in *CreateSkillRequest, opts ...grpc.CallOption) (*CreateSkillResponse, error)
 	UpdateSkill(ctx context.Context, in *UpdateSkillRequest, opts ...grpc.CallOption) (*UpdateSkillResponse, error)
 	DeleteSkill(ctx context.Context, in *DeleteSkillRequest, opts ...grpc.CallOption) (*core.Null, error)
 	ListVersions(ctx context.Context, in *ListVersionsRequest, opts ...grpc.CallOption) (*ListVersionsResponse, error)
 	CreateVersion(ctx context.Context, in *CreateVersionRequest, opts ...grpc.CallOption) (*CreateVersionResponse, error)
-	RestoreVersion(ctx context.Context, in *RestoreVersionRequest, opts ...grpc.CallOption) (*RestoreVersionResponse, error)
-	ListFiles(ctx context.Context, in *ListFilesRequest, opts ...grpc.CallOption) (*ListFilesResponse, error)
-	GetFile(ctx context.Context, in *GetFileRequest, opts ...grpc.CallOption) (*GetFileResponse, error)
-	PutFile(ctx context.Context, in *PutFileRequest, opts ...grpc.CallOption) (*PutFileResponse, error)
-	DeleteFile(ctx context.Context, in *DeleteFileRequest, opts ...grpc.CallOption) (*core.Null, error)
 	ScanProject(ctx context.Context, in *ScanProjectRequest, opts ...grpc.CallOption) (*ScanProjectResponse, error)
 	PreviewImport(ctx context.Context, in *PreviewImportRequest, opts ...grpc.CallOption) (*PreviewImportResponse, error)
 	ImportSkill(ctx context.Context, in *ImportSkillRequest, opts ...grpc.CallOption) (*ImportSkillResponse, error)
-	ResolveSource(ctx context.Context, in *ResolveSourceRequest, opts ...grpc.CallOption) (*ResolveSourceResponse, error)
 	CompareSkills(ctx context.Context, in *CompareSkillsRequest, opts ...grpc.CallOption) (*CompareSkillsResponse, error)
-	GetCopyCommand(ctx context.Context, in *GetCopyCommandRequest, opts ...grpc.CallOption) (*GetCopyCommandResponse, error)
-	GetInstallCommands(ctx context.Context, in *GetInstallCommandsRequest, opts ...grpc.CallOption) (*GetInstallCommandsResponse, error)
+	GetInstallCommand(ctx context.Context, in *GetInstallCommandRequest, opts ...grpc.CallOption) (*GetInstallCommandResponse, error)
 }
 
 type skillhubServiceClient struct {
@@ -85,27 +67,9 @@ func (c *skillhubServiceClient) ListSkills(ctx context.Context, in *ListSkillsRe
 	return out, nil
 }
 
-func (c *skillhubServiceClient) ListSkillFilters(ctx context.Context, in *ListSkillFiltersRequest, opts ...grpc.CallOption) (*ListSkillFiltersResponse, error) {
-	out := new(ListSkillFiltersResponse)
-	err := c.cc.Invoke(ctx, SkillhubService_ListSkillFilters_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *skillhubServiceClient) GetSkill(ctx context.Context, in *GetSkillRequest, opts ...grpc.CallOption) (*GetSkillResponse, error) {
 	out := new(GetSkillResponse)
 	err := c.cc.Invoke(ctx, SkillhubService_GetSkill_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *skillhubServiceClient) CreateSkill(ctx context.Context, in *CreateSkillRequest, opts ...grpc.CallOption) (*CreateSkillResponse, error) {
-	out := new(CreateSkillResponse)
-	err := c.cc.Invoke(ctx, SkillhubService_CreateSkill_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -148,51 +112,6 @@ func (c *skillhubServiceClient) CreateVersion(ctx context.Context, in *CreateVer
 	return out, nil
 }
 
-func (c *skillhubServiceClient) RestoreVersion(ctx context.Context, in *RestoreVersionRequest, opts ...grpc.CallOption) (*RestoreVersionResponse, error) {
-	out := new(RestoreVersionResponse)
-	err := c.cc.Invoke(ctx, SkillhubService_RestoreVersion_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *skillhubServiceClient) ListFiles(ctx context.Context, in *ListFilesRequest, opts ...grpc.CallOption) (*ListFilesResponse, error) {
-	out := new(ListFilesResponse)
-	err := c.cc.Invoke(ctx, SkillhubService_ListFiles_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *skillhubServiceClient) GetFile(ctx context.Context, in *GetFileRequest, opts ...grpc.CallOption) (*GetFileResponse, error) {
-	out := new(GetFileResponse)
-	err := c.cc.Invoke(ctx, SkillhubService_GetFile_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *skillhubServiceClient) PutFile(ctx context.Context, in *PutFileRequest, opts ...grpc.CallOption) (*PutFileResponse, error) {
-	out := new(PutFileResponse)
-	err := c.cc.Invoke(ctx, SkillhubService_PutFile_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *skillhubServiceClient) DeleteFile(ctx context.Context, in *DeleteFileRequest, opts ...grpc.CallOption) (*core.Null, error) {
-	out := new(core.Null)
-	err := c.cc.Invoke(ctx, SkillhubService_DeleteFile_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *skillhubServiceClient) ScanProject(ctx context.Context, in *ScanProjectRequest, opts ...grpc.CallOption) (*ScanProjectResponse, error) {
 	out := new(ScanProjectResponse)
 	err := c.cc.Invoke(ctx, SkillhubService_ScanProject_FullMethodName, in, out, opts...)
@@ -220,15 +139,6 @@ func (c *skillhubServiceClient) ImportSkill(ctx context.Context, in *ImportSkill
 	return out, nil
 }
 
-func (c *skillhubServiceClient) ResolveSource(ctx context.Context, in *ResolveSourceRequest, opts ...grpc.CallOption) (*ResolveSourceResponse, error) {
-	out := new(ResolveSourceResponse)
-	err := c.cc.Invoke(ctx, SkillhubService_ResolveSource_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *skillhubServiceClient) CompareSkills(ctx context.Context, in *CompareSkillsRequest, opts ...grpc.CallOption) (*CompareSkillsResponse, error) {
 	out := new(CompareSkillsResponse)
 	err := c.cc.Invoke(ctx, SkillhubService_CompareSkills_FullMethodName, in, out, opts...)
@@ -238,18 +148,9 @@ func (c *skillhubServiceClient) CompareSkills(ctx context.Context, in *CompareSk
 	return out, nil
 }
 
-func (c *skillhubServiceClient) GetCopyCommand(ctx context.Context, in *GetCopyCommandRequest, opts ...grpc.CallOption) (*GetCopyCommandResponse, error) {
-	out := new(GetCopyCommandResponse)
-	err := c.cc.Invoke(ctx, SkillhubService_GetCopyCommand_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *skillhubServiceClient) GetInstallCommands(ctx context.Context, in *GetInstallCommandsRequest, opts ...grpc.CallOption) (*GetInstallCommandsResponse, error) {
-	out := new(GetInstallCommandsResponse)
-	err := c.cc.Invoke(ctx, SkillhubService_GetInstallCommands_FullMethodName, in, out, opts...)
+func (c *skillhubServiceClient) GetInstallCommand(ctx context.Context, in *GetInstallCommandRequest, opts ...grpc.CallOption) (*GetInstallCommandResponse, error) {
+	out := new(GetInstallCommandResponse)
+	err := c.cc.Invoke(ctx, SkillhubService_GetInstallCommand_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -261,25 +162,16 @@ func (c *skillhubServiceClient) GetInstallCommands(ctx context.Context, in *GetI
 // for forward compatibility
 type SkillhubServiceServer interface {
 	ListSkills(context.Context, *ListSkillsRequest) (*ListSkillsResponse, error)
-	ListSkillFilters(context.Context, *ListSkillFiltersRequest) (*ListSkillFiltersResponse, error)
 	GetSkill(context.Context, *GetSkillRequest) (*GetSkillResponse, error)
-	CreateSkill(context.Context, *CreateSkillRequest) (*CreateSkillResponse, error)
 	UpdateSkill(context.Context, *UpdateSkillRequest) (*UpdateSkillResponse, error)
 	DeleteSkill(context.Context, *DeleteSkillRequest) (*core.Null, error)
 	ListVersions(context.Context, *ListVersionsRequest) (*ListVersionsResponse, error)
 	CreateVersion(context.Context, *CreateVersionRequest) (*CreateVersionResponse, error)
-	RestoreVersion(context.Context, *RestoreVersionRequest) (*RestoreVersionResponse, error)
-	ListFiles(context.Context, *ListFilesRequest) (*ListFilesResponse, error)
-	GetFile(context.Context, *GetFileRequest) (*GetFileResponse, error)
-	PutFile(context.Context, *PutFileRequest) (*PutFileResponse, error)
-	DeleteFile(context.Context, *DeleteFileRequest) (*core.Null, error)
 	ScanProject(context.Context, *ScanProjectRequest) (*ScanProjectResponse, error)
 	PreviewImport(context.Context, *PreviewImportRequest) (*PreviewImportResponse, error)
 	ImportSkill(context.Context, *ImportSkillRequest) (*ImportSkillResponse, error)
-	ResolveSource(context.Context, *ResolveSourceRequest) (*ResolveSourceResponse, error)
 	CompareSkills(context.Context, *CompareSkillsRequest) (*CompareSkillsResponse, error)
-	GetCopyCommand(context.Context, *GetCopyCommandRequest) (*GetCopyCommandResponse, error)
-	GetInstallCommands(context.Context, *GetInstallCommandsRequest) (*GetInstallCommandsResponse, error)
+	GetInstallCommand(context.Context, *GetInstallCommandRequest) (*GetInstallCommandResponse, error)
 	mustEmbedUnimplementedSkillhubServiceServer()
 }
 
@@ -290,14 +182,8 @@ type UnimplementedSkillhubServiceServer struct {
 func (UnimplementedSkillhubServiceServer) ListSkills(context.Context, *ListSkillsRequest) (*ListSkillsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListSkills not implemented")
 }
-func (UnimplementedSkillhubServiceServer) ListSkillFilters(context.Context, *ListSkillFiltersRequest) (*ListSkillFiltersResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListSkillFilters not implemented")
-}
 func (UnimplementedSkillhubServiceServer) GetSkill(context.Context, *GetSkillRequest) (*GetSkillResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSkill not implemented")
-}
-func (UnimplementedSkillhubServiceServer) CreateSkill(context.Context, *CreateSkillRequest) (*CreateSkillResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateSkill not implemented")
 }
 func (UnimplementedSkillhubServiceServer) UpdateSkill(context.Context, *UpdateSkillRequest) (*UpdateSkillResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateSkill not implemented")
@@ -311,21 +197,6 @@ func (UnimplementedSkillhubServiceServer) ListVersions(context.Context, *ListVer
 func (UnimplementedSkillhubServiceServer) CreateVersion(context.Context, *CreateVersionRequest) (*CreateVersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateVersion not implemented")
 }
-func (UnimplementedSkillhubServiceServer) RestoreVersion(context.Context, *RestoreVersionRequest) (*RestoreVersionResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RestoreVersion not implemented")
-}
-func (UnimplementedSkillhubServiceServer) ListFiles(context.Context, *ListFilesRequest) (*ListFilesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListFiles not implemented")
-}
-func (UnimplementedSkillhubServiceServer) GetFile(context.Context, *GetFileRequest) (*GetFileResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetFile not implemented")
-}
-func (UnimplementedSkillhubServiceServer) PutFile(context.Context, *PutFileRequest) (*PutFileResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PutFile not implemented")
-}
-func (UnimplementedSkillhubServiceServer) DeleteFile(context.Context, *DeleteFileRequest) (*core.Null, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteFile not implemented")
-}
 func (UnimplementedSkillhubServiceServer) ScanProject(context.Context, *ScanProjectRequest) (*ScanProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ScanProject not implemented")
 }
@@ -335,17 +206,11 @@ func (UnimplementedSkillhubServiceServer) PreviewImport(context.Context, *Previe
 func (UnimplementedSkillhubServiceServer) ImportSkill(context.Context, *ImportSkillRequest) (*ImportSkillResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ImportSkill not implemented")
 }
-func (UnimplementedSkillhubServiceServer) ResolveSource(context.Context, *ResolveSourceRequest) (*ResolveSourceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ResolveSource not implemented")
-}
 func (UnimplementedSkillhubServiceServer) CompareSkills(context.Context, *CompareSkillsRequest) (*CompareSkillsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CompareSkills not implemented")
 }
-func (UnimplementedSkillhubServiceServer) GetCopyCommand(context.Context, *GetCopyCommandRequest) (*GetCopyCommandResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetCopyCommand not implemented")
-}
-func (UnimplementedSkillhubServiceServer) GetInstallCommands(context.Context, *GetInstallCommandsRequest) (*GetInstallCommandsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetInstallCommands not implemented")
+func (UnimplementedSkillhubServiceServer) GetInstallCommand(context.Context, *GetInstallCommandRequest) (*GetInstallCommandResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetInstallCommand not implemented")
 }
 func (UnimplementedSkillhubServiceServer) mustEmbedUnimplementedSkillhubServiceServer() {}
 
@@ -378,24 +243,6 @@ func _SkillhubService_ListSkills_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SkillhubService_ListSkillFilters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListSkillFiltersRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SkillhubServiceServer).ListSkillFilters(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SkillhubService_ListSkillFilters_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SkillhubServiceServer).ListSkillFilters(ctx, req.(*ListSkillFiltersRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _SkillhubService_GetSkill_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetSkillRequest)
 	if err := dec(in); err != nil {
@@ -410,24 +257,6 @@ func _SkillhubService_GetSkill_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SkillhubServiceServer).GetSkill(ctx, req.(*GetSkillRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SkillhubService_CreateSkill_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateSkillRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SkillhubServiceServer).CreateSkill(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SkillhubService_CreateSkill_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SkillhubServiceServer).CreateSkill(ctx, req.(*CreateSkillRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -504,96 +333,6 @@ func _SkillhubService_CreateVersion_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SkillhubService_RestoreVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RestoreVersionRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SkillhubServiceServer).RestoreVersion(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SkillhubService_RestoreVersion_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SkillhubServiceServer).RestoreVersion(ctx, req.(*RestoreVersionRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SkillhubService_ListFiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListFilesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SkillhubServiceServer).ListFiles(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SkillhubService_ListFiles_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SkillhubServiceServer).ListFiles(ctx, req.(*ListFilesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SkillhubService_GetFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetFileRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SkillhubServiceServer).GetFile(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SkillhubService_GetFile_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SkillhubServiceServer).GetFile(ctx, req.(*GetFileRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SkillhubService_PutFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PutFileRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SkillhubServiceServer).PutFile(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SkillhubService_PutFile_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SkillhubServiceServer).PutFile(ctx, req.(*PutFileRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SkillhubService_DeleteFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteFileRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SkillhubServiceServer).DeleteFile(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SkillhubService_DeleteFile_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SkillhubServiceServer).DeleteFile(ctx, req.(*DeleteFileRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _SkillhubService_ScanProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ScanProjectRequest)
 	if err := dec(in); err != nil {
@@ -648,24 +387,6 @@ func _SkillhubService_ImportSkill_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SkillhubService_ResolveSource_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ResolveSourceRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SkillhubServiceServer).ResolveSource(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SkillhubService_ResolveSource_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SkillhubServiceServer).ResolveSource(ctx, req.(*ResolveSourceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _SkillhubService_CompareSkills_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CompareSkillsRequest)
 	if err := dec(in); err != nil {
@@ -684,38 +405,20 @@ func _SkillhubService_CompareSkills_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SkillhubService_GetCopyCommand_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetCopyCommandRequest)
+func _SkillhubService_GetInstallCommand_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetInstallCommandRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SkillhubServiceServer).GetCopyCommand(ctx, in)
+		return srv.(SkillhubServiceServer).GetInstallCommand(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: SkillhubService_GetCopyCommand_FullMethodName,
+		FullMethod: SkillhubService_GetInstallCommand_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SkillhubServiceServer).GetCopyCommand(ctx, req.(*GetCopyCommandRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SkillhubService_GetInstallCommands_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetInstallCommandsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SkillhubServiceServer).GetInstallCommands(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SkillhubService_GetInstallCommands_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SkillhubServiceServer).GetInstallCommands(ctx, req.(*GetInstallCommandsRequest))
+		return srv.(SkillhubServiceServer).GetInstallCommand(ctx, req.(*GetInstallCommandRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -732,16 +435,8 @@ var SkillhubService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SkillhubService_ListSkills_Handler,
 		},
 		{
-			MethodName: "ListSkillFilters",
-			Handler:    _SkillhubService_ListSkillFilters_Handler,
-		},
-		{
 			MethodName: "GetSkill",
 			Handler:    _SkillhubService_GetSkill_Handler,
-		},
-		{
-			MethodName: "CreateSkill",
-			Handler:    _SkillhubService_CreateSkill_Handler,
 		},
 		{
 			MethodName: "UpdateSkill",
@@ -760,26 +455,6 @@ var SkillhubService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SkillhubService_CreateVersion_Handler,
 		},
 		{
-			MethodName: "RestoreVersion",
-			Handler:    _SkillhubService_RestoreVersion_Handler,
-		},
-		{
-			MethodName: "ListFiles",
-			Handler:    _SkillhubService_ListFiles_Handler,
-		},
-		{
-			MethodName: "GetFile",
-			Handler:    _SkillhubService_GetFile_Handler,
-		},
-		{
-			MethodName: "PutFile",
-			Handler:    _SkillhubService_PutFile_Handler,
-		},
-		{
-			MethodName: "DeleteFile",
-			Handler:    _SkillhubService_DeleteFile_Handler,
-		},
-		{
 			MethodName: "ScanProject",
 			Handler:    _SkillhubService_ScanProject_Handler,
 		},
@@ -792,20 +467,12 @@ var SkillhubService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SkillhubService_ImportSkill_Handler,
 		},
 		{
-			MethodName: "ResolveSource",
-			Handler:    _SkillhubService_ResolveSource_Handler,
-		},
-		{
 			MethodName: "CompareSkills",
 			Handler:    _SkillhubService_CompareSkills_Handler,
 		},
 		{
-			MethodName: "GetCopyCommand",
-			Handler:    _SkillhubService_GetCopyCommand_Handler,
-		},
-		{
-			MethodName: "GetInstallCommands",
-			Handler:    _SkillhubService_GetInstallCommands_Handler,
+			MethodName: "GetInstallCommand",
+			Handler:    _SkillhubService_GetInstallCommand_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

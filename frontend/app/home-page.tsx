@@ -1,16 +1,16 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { getCopyCommand, listSkills, listVersions, scanProject } from "@/generated/api-client";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { getInstallCommand, getSkill, listSkills, listVersions } from "@/generated/api-client";
 import GitHubIntake from "./github-intake";
-import IntakePanel from "./intake-panel";
+import SkillMetadata from "./skill-metadata";
+
 import "./skillhub.css";
 
 const ComparePanel = lazy(() => import("./compare-panel"));
+const VersionPanel = lazy(() => import("./version-panel"));
 
-type Skill = { id: string; name: string; description: string; category?: string; kind?: string; repositoryUrl?: string; repositoryPath?: string };
-type ProjectSkill = { path: string; name: string; description: string };
-type Version = { id: string; version: string; commitSha?: string; notes?: string };
+type Skill = { id: string; name: string; description: string; category?: string; notes?: string; tags?: string[]; repositoryUrl: string; repositoryPath?: string };
+type Version = { id: string; sourceRef: string; commitSha: string; notes?: string };
 type LibraryResponse = { skills?: Skill[]; nextPageToken?: string };
-type ScanResult = { path: string; skills: ProjectSkill[] };
 
 function message(reason: unknown, fallback: string) {
   return reason instanceof Error && reason.message ? reason.message : fallback;
@@ -25,44 +25,6 @@ function ActionDialog({ title, onClose, children, compact = false }: { title: st
   </dialog>;
 }
 
-function AddSkill({ onComplete }: { onComplete: () => void }) {
-  const [tab, setTab] = useState<"local" | "github">("local");
-  const [path, setPath] = useState("");
-  const [result, setResult] = useState<ScanResult | null>(null);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  async function scan(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const projectPath = path.trim();
-    if (!projectPath || busy) return;
-    setBusy(true); setError(""); setResult(null);
-    try {
-      const response = await scanProject<{ skills?: ProjectSkill[] }>({ projectPath });
-      setResult({ path: projectPath, skills: response.skills ?? [] });
-    } catch (reason) {
-      const detail = message(reason, "无法连接后端服务");
-      setError(detail === "bad request" ? "路径无效或无法访问" : detail === "Failed to fetch" ? "无法连接后端服务" : detail);
-    } finally { setBusy(false); }
-  }
-
-  return <div>
-    <div className="source-tabs" role="tablist" aria-label="Skill 来源">
-      <button type="button" role="tab" aria-selected={tab === "local"} onClick={() => setTab("local")}>本地</button>
-      <button type="button" role="tab" aria-selected={tab === "github"} onClick={() => setTab("github")}>GitHub</button>
-    </div>
-    <div hidden={tab !== "local"} role="tabpanel">
-      <form className="skillhub-form" onSubmit={scan}>
-        <label htmlFor="project-path">项目或 Skill 目录</label>
-        <div className="skillhub-form-row"><input id="project-path" value={path} onChange={(event) => setPath(event.target.value)} placeholder="/path/to/project/skills" required /><button type="submit" disabled={busy}>{busy ? "扫描中…" : "扫描"}</button></div>
-      </form>
-      {error && <p className="intake-error" role="alert">{error}</p>}
-      {result && (result.skills.length === 0 ? <p className="skillhub-empty">未发现 Skill，请检查路径。</p> : <IntakePanel key={result.path} basePath={result.path} candidates={result.skills} onComplete={onComplete} />)}
-    </div>
-    <div hidden={tab !== "github"} role="tabpanel"><GitHubIntake onComplete={onComplete} /></div>
-  </div>;
-}
-
 export default function HomePage() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [nextPageToken, setNextPageToken] = useState("");
@@ -73,7 +35,10 @@ export default function HomePage() {
   const [versions, setVersions] = useState<Version[]>([]);
   const [versionsError, setVersionsError] = useState("");
   const [versionsLoading, setVersionsLoading] = useState(false);
-  const [action, setAction] = useState<"add" | "compare" | null>(null);
+  const [action, setAction] = useState<"add" | "compare" | "version" | "metadata" | null>(null);
+  const [versionRevision, setVersionRevision] = useState(0);
+  const [moreVersions, setMoreVersions] = useState("");
+  const versionsRequest = useRef<AbortController | null>(null);
   const [generating, setGenerating] = useState("");
   const [commandError, setCommandError] = useState("");
   const [command, setCommand] = useState("");
@@ -97,29 +62,62 @@ export default function HomePage() {
     return () => controller.abort();
   }, [loadLibrary]);
 
+  const loadVersions = useCallback(async (skillId: string, token = "", signal?: AbortSignal) => {
+    setVersionsLoading(true);
+    setVersionsError("");
+    try {
+      const result = await listVersions<{ versions?: Version[]; nextPageToken?: string }>({
+        skillId, pageSize: 30, ...(token ? { pageToken: token } : {}),
+      }, { signal });
+      if (!signal?.aborted) {
+        setVersions((current) => token ? [...current, ...(result.versions ?? [])] : result.versions ?? []);
+        setMoreVersions(result.nextPageToken ?? "");
+      }
+    } catch (reason) {
+      if (!signal?.aborted) setVersionsError(message(reason, "无法加载版本"));
+    } finally {
+      if (!signal?.aborted) setVersionsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!selected) return;
     const controller = new AbortController();
-    setVersions([]); setVersionsError(""); setVersionsLoading(true);
-    listVersions<{ versions?: Version[] }>({ skillId: selected }, { signal: controller.signal })
-      .then((result) => setVersions(result.versions ?? []))
-      .catch((reason: unknown) => { if (!controller.signal.aborted) setVersionsError(message(reason, "无法加载版本")); })
-      .finally(() => { if (!controller.signal.aborted) setVersionsLoading(false); });
+    versionsRequest.current = controller;
+    setVersions([]);
+    setMoreVersions("");
+    void loadVersions(selected, "", controller.signal);
     return () => controller.abort();
-  }, [selected]);
+  }, [selected, versionRevision, loadVersions]);
 
-  async function prepareCommand(skillId: string, versionId: string) {
+  async function prepareCommand(skillId: string, versionId: string, global = false) {
     if (generating) return;
     setGenerating(versionId);
     setCommandError("");
     try {
-      const result = await getCopyCommand<{ command: string }>({ skillId, versionId });
-      if (!result.command) throw new Error("未返回复制命令");
+      const result = await getInstallCommand<{ command: string }>({ skillId, versionId, global });
       setCopyStatus("");
       setCommand(result.command);
     } catch (reason) {
       setCommandError(message(reason, "请稍后重试"));
-    } finally { setGenerating(""); }
+    } finally {
+      setGenerating("");
+    }
+  }
+
+  function replaceSkill(updated: Skill) {
+    setSkills((current) => current.map((skill) => skill.id === updated.id ? updated : skill));
+  }
+
+  async function refreshVersionSkill(skillId: string) {
+    setAction(null);
+    setVersionRevision((value) => value + 1);
+    try {
+      const result = await getSkill<{ skill: Skill }>({ skillId });
+      replaceSkill(result.skill);
+    } catch {
+      void loadLibrary();
+    }
   }
 
   async function copy() {
@@ -131,19 +129,56 @@ export default function HomePage() {
     }
   }
 
+  const activeSkill = skills.find((skill) => skill.id === selected);
   const query = keyword.trim().toLocaleLowerCase();
-  const visible = skills.filter((skill) => `${skill.name} ${skill.description} ${skill.category ?? ""}`.toLocaleLowerCase().includes(query));
+  const visible = skills.filter((skill) => `${skill.name} ${skill.description} ${skill.category ?? ""} ${skill.tags?.join(" ") ?? ""}`.toLocaleLowerCase().includes(query));
 
   return <main className="skillhub-shell">
-    <header className="skillhub-heading"><div><h1>Skill 库</h1><span className="skillhub-count">{skills.length} 个已加载</span></div><div className="library-actions"><button type="button" className="secondary" onClick={() => setAction("compare")}>比对 Skill</button><button id="project-scan" type="button" onClick={() => setAction("add")}>添加 Skill</button></div></header>
+    <header className="skillhub-heading"><div><h1>Skill 库</h1><span className="skillhub-count">{skills.length} 个已加载</span></div><div className="library-actions"><button type="button" className="secondary" onClick={() => setAction("compare")}>比对 Skill</button><button type="button" onClick={() => setAction("add")}>添加 Skill</button></div></header>
     <label className="skillhub-search"><span aria-hidden="true">⌕</span><span className="sr-only">搜索 Skill</span><input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜索 Skill" /></label>
     {nextPageToken && <p className="skillhub-hint">搜索范围为已加载的 Skill。</p>}
     {error && <div className="skillhub-alert" role="alert"><span>加载失败：{error}</span><button type="button" className="secondary" onClick={() => void loadLibrary(skills.length ? nextPageToken : "")} disabled={loading}>重试</button></div>}
-    {loading && skills.length === 0 ? <p className="skillhub-empty" role="status">正在加载…</p> : !error && skills.length === 0 ? <div className="skillhub-empty"><strong>还没有 Skill</strong><p><button type="button" className="skillhub-text-button" onClick={() => setAction("add")}>添加第一个 Skill</button></p></div> : visible.length === 0 && !error ? <div className="skillhub-empty"><strong>没有匹配的 Skill</strong><p><button type="button" className="skillhub-text-button" onClick={() => setKeyword("")}>清除搜索</button></p></div> : <ul className="skillhub-list">{visible.map((skill) => <li key={skill.id}><div className="skillhub-list-top"><button type="button" className="skillhub-library-item" aria-expanded={selected === skill.id} onClick={() => setSelected(selected === skill.id ? "" : skill.id)}>{skill.name}</button><span className="skillhub-tag">{skill.kind === "SKILL_KIND_PUBLIC" ? "GitHub" : "本地"}</span></div><p>{skill.description}</p>{selected === skill.id && <div className="library-versions">{skill.repositoryUrl && <p className="library-origin">来源：{skill.repositoryUrl}{skill.repositoryPath ? ` / ${skill.repositoryPath}` : ""}</p>}<div className="library-version-row"><span className="library-version-label">版本</span>{versionsLoading ? <p>加载中…</p> : versionsError ? <p role="alert">加载失败：{versionsError}</p> : versions.length ? <ul>{versions.map((version) => <li key={version.id}><span>{version.version}</span>{version.commitSha && <code title={version.commitSha}>{version.commitSha.slice(0, 12)}</code>}{version.notes && <span>{version.notes}</span>}<button type="button" className="skillhub-text-button" aria-label={`复制 ${skill.name} ${version.version} 的命令`} disabled={!!generating} onClick={() => void prepareCommand(skill.id, version.id)}>{generating === version.id ? "生成中…" : "复制命令"}</button></li>)}</ul> : <p>暂无版本</p>}</div></div>}</li>)}</ul>}
+    {loading && !skills.length ? <p className="skillhub-empty" role="status">正在加载…</p>
+      : !error && !skills.length ? <p className="skillhub-empty">还没有 Skill。<button type="button" className="skillhub-text-button" onClick={() => setAction("add")}>收录 GitHub Skill</button></p>
+      : !visible.length && !error ? <p className="skillhub-empty">没有匹配的 Skill。<button type="button" className="skillhub-text-button" onClick={() => setKeyword("")}>清除搜索</button></p>
+      : <ul className="skillhub-list">{visible.map((skill) => <li key={skill.id}>
+        <div className="skillhub-list-top">
+          <button type="button" className="skillhub-library-item" aria-expanded={selected === skill.id} onClick={() => setSelected(selected === skill.id ? "" : skill.id)}>{skill.name}</button>
+          <div className="library-tags">
+            {skill.category && <span className="skillhub-tag">{skill.category}</span>}
+            {skill.tags?.map((tag) => <span key={tag} className="skillhub-tag">{tag}</span>)}
+          </div>
+        </div>
+        <p>{skill.description}</p>
+        {selected === skill.id && <div className="library-versions">
+          <div className="library-version-heading">
+            <a className="skillhub-text-button" href={versions[0]
+              ? `${skill.repositoryUrl}/tree/${versions[0].commitSha}${skill.repositoryPath ? `/${skill.repositoryPath}` : ""}`
+              : skill.repositoryUrl} target="_blank" rel="noreferrer">在 GitHub 打开</a>
+            <button type="button" className="skillhub-text-button" disabled={versionsLoading || !!versionsError} onClick={() => setAction("version")}>检查新版本</button>
+            <button type="button" className="skillhub-text-button" onClick={() => setAction("metadata")}>编辑整理信息</button>
+          </div>
+          {skill.notes && <p className="library-notes">{skill.notes}</p>}
+          <div className="library-version-row">
+            <span className="library-version-label">版本</span>
+            {versionsError && <p role="alert">加载失败：{versionsError}</p>}
+            {versions.length > 0 && <ul>{versions.map((version) => <li key={version.id}>
+              <span>{version.sourceRef}</span>
+              <code title={version.commitSha}>{version.commitSha.slice(0, 12)}</code>
+              {version.notes && <span>{version.notes}</span>}
+              <button type="button" className="skillhub-text-button" disabled={!!generating} onClick={() => void prepareCommand(skill.id, version.id)}>安装到项目</button>
+              <button type="button" className="skillhub-text-button" disabled={!!generating} onClick={() => void prepareCommand(skill.id, version.id, true)}>全局安装</button>
+            </li>)}</ul>}
+            {versionsLoading && <p role="status">加载中…</p>}
+            {!versionsLoading && !versionsError && !versions.length && <p>暂无版本</p>}
+            {moreVersions && <button type="button" className="skillhub-text-button" disabled={versionsLoading} onClick={() => void loadVersions(skill.id, moreVersions, versionsRequest.current?.signal)}>更多版本</button>}
+          </div>
+        </div>}
+      </li>)}</ul>}
     {nextPageToken && !error && <button className="secondary skillhub-more" type="button" disabled={loading} onClick={() => void loadLibrary(nextPageToken)}>{loading ? "加载中…" : "加载更多"}</button>}
     {commandError && <p className="intake-error" role="alert">无法生成命令：{commandError}</p>}
-    {command && <ActionDialog title="复制命令" compact onClose={() => setCommand("")}>
-      <p className="skillhub-hint copy-hint">在目标目录执行；不会覆盖同名目录。</p>
+    {command && <ActionDialog title="Codex 安装命令" compact onClose={() => setCommand("")}>
+      <p className="skillhub-hint copy-hint">在本机终端运行。项目级安装请先进入目标项目，重装可能替换同名 Skill。</p>
       <div className="copy-command">
         <pre tabIndex={0}><code>{command}</code></pre>
         <button type="button" className="copy-command-button" aria-label="复制命令" title={copyStatus === "已复制" ? "已复制" : "复制命令"} onClick={() => void copy()}>
@@ -155,7 +190,15 @@ export default function HomePage() {
       <span className="sr-only" role="status">{copyStatus}</span>
       {copyStatus && copyStatus !== "已复制" && <p className="intake-error">{copyStatus}</p>}
     </ActionDialog>}
-    {action === "add" && <ActionDialog title="添加 Skill" onClose={() => setAction(null)}><AddSkill onComplete={() => void loadLibrary()} /></ActionDialog>}
+    {action === "add" && <ActionDialog title="添加 Skill" onClose={() => setAction(null)}><GitHubIntake onComplete={() => void loadLibrary()} /></ActionDialog>}
     {action === "compare" && <ActionDialog title="比对 Skill" onClose={() => setAction(null)}><Suspense fallback={<p role="status">加载中…</p>}><ComparePanel skills={skills} /></Suspense></ActionDialog>}
+  {action === "version" && activeSkill && <ActionDialog title="检查新版本" onClose={() => setAction(null)}>
+      <Suspense fallback={<p role="status">加载中…</p>}>
+        <VersionPanel skill={activeSkill} latest={versions[0]} onSaved={() => void refreshVersionSkill(activeSkill.id)} />
+      </Suspense>
+    </ActionDialog>}
+    {action === "metadata" && activeSkill && <ActionDialog title="编辑整理信息" compact onClose={() => setAction(null)}>
+      <SkillMetadata skill={activeSkill} onSaved={(updated) => { replaceSkill(updated); setAction(null); }} />
+    </ActionDialog>}
   </main>;
 }

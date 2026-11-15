@@ -58,9 +58,6 @@ func (r *MemorySkillRepo) ListSkills(ctx context.Context, query model.ListSkillQ
 				continue
 			}
 		}
-		if query.Filter.Kind != 0 && int32(snapshot.Kind) != query.Filter.Kind {
-			continue
-		}
 		if query.Filter.Category != "" && snapshot.Category != query.Filter.Category {
 			continue
 		}
@@ -155,19 +152,15 @@ func (r *MemorySkillRepo) UpdateSkill(ctx context.Context, entity *model.Skill, 
 
 	updated := model.RebuildSkill(stored)
 	if err := updated.ApplyUpdate(model.UpdateSkillInput{
-		UpdateMask:      updateMask,
-		Name:            snapshot.Name,
-		Description:     snapshot.Description,
-		Kind:            snapshot.Kind,
-		Category:        snapshot.Category,
-		Notes:           snapshot.Notes,
-		ContentPath:     snapshot.ContentPath,
-		RepositoryUrl:   snapshot.RepositoryUrl,
-		RepositoryPath:  snapshot.RepositoryPath,
-		CurrentDigest:   snapshot.CurrentDigest,
-		OriginCommitSha: snapshot.OriginCommitSha,
-		CreateTime:      snapshot.CreateTime,
-		UpdateTime:      snapshot.UpdateTime,
+		UpdateMask:     updateMask,
+		Name:           snapshot.Name,
+		Description:    snapshot.Description,
+		Category:       snapshot.Category,
+		Notes:          snapshot.Notes,
+		RepositoryUrl:  snapshot.RepositoryUrl,
+		RepositoryPath: snapshot.RepositoryPath,
+		CreateTime:     snapshot.CreateTime,
+		UpdateTime:     snapshot.UpdateTime,
 	}); err != nil {
 		return err
 	}

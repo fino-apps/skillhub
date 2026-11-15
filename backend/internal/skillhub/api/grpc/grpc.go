@@ -56,22 +56,10 @@ func MakeGRPCServer(endpoints endpoint.Endpoints) pb.SkillhubServiceServer {
 			EncodeGRPCListSkillsResponse,
 			serverOptions...,
 		),
-		listSkillFilters: grpctransport.NewServer(
-			endpoints.ListSkillFiltersEndpoint,
-			DecodeGRPCListSkillFiltersRequest,
-			EncodeGRPCListSkillFiltersResponse,
-			serverOptions...,
-		),
 		getSkill: grpctransport.NewServer(
 			endpoints.GetSkillEndpoint,
 			DecodeGRPCGetSkillRequest,
 			EncodeGRPCGetSkillResponse,
-			serverOptions...,
-		),
-		createSkill: grpctransport.NewServer(
-			endpoints.CreateSkillEndpoint,
-			DecodeGRPCCreateSkillRequest,
-			EncodeGRPCCreateSkillResponse,
 			serverOptions...,
 		),
 		updateSkill: grpctransport.NewServer(
@@ -98,36 +86,6 @@ func MakeGRPCServer(endpoints endpoint.Endpoints) pb.SkillhubServiceServer {
 			EncodeGRPCCreateVersionResponse,
 			serverOptions...,
 		),
-		restoreVersion: grpctransport.NewServer(
-			endpoints.RestoreVersionEndpoint,
-			DecodeGRPCRestoreVersionRequest,
-			EncodeGRPCRestoreVersionResponse,
-			serverOptions...,
-		),
-		listFiles: grpctransport.NewServer(
-			endpoints.ListFilesEndpoint,
-			DecodeGRPCListFilesRequest,
-			EncodeGRPCListFilesResponse,
-			serverOptions...,
-		),
-		getFile: grpctransport.NewServer(
-			endpoints.GetFileEndpoint,
-			DecodeGRPCGetFileRequest,
-			EncodeGRPCGetFileResponse,
-			serverOptions...,
-		),
-		putFile: grpctransport.NewServer(
-			endpoints.PutFileEndpoint,
-			DecodeGRPCPutFileRequest,
-			EncodeGRPCPutFileResponse,
-			serverOptions...,
-		),
-		deleteFile: grpctransport.NewServer(
-			endpoints.DeleteFileEndpoint,
-			DecodeGRPCDeleteFileRequest,
-			EncodeGRPCDeleteFileResponse,
-			serverOptions...,
-		),
 		scanProject: grpctransport.NewServer(
 			endpoints.ScanProjectEndpoint,
 			DecodeGRPCScanProjectRequest,
@@ -146,28 +104,16 @@ func MakeGRPCServer(endpoints endpoint.Endpoints) pb.SkillhubServiceServer {
 			EncodeGRPCImportSkillResponse,
 			serverOptions...,
 		),
-		resolveSource: grpctransport.NewServer(
-			endpoints.ResolveSourceEndpoint,
-			DecodeGRPCResolveSourceRequest,
-			EncodeGRPCResolveSourceResponse,
-			serverOptions...,
-		),
 		compareSkills: grpctransport.NewServer(
 			endpoints.CompareSkillsEndpoint,
 			DecodeGRPCCompareSkillsRequest,
 			EncodeGRPCCompareSkillsResponse,
 			serverOptions...,
 		),
-		getCopyCommand: grpctransport.NewServer(
-			endpoints.GetCopyCommandEndpoint,
-			DecodeGRPCGetCopyCommandRequest,
-			EncodeGRPCGetCopyCommandResponse,
-			serverOptions...,
-		),
-		getInstallCommands: grpctransport.NewServer(
-			endpoints.GetInstallCommandsEndpoint,
-			DecodeGRPCGetInstallCommandsRequest,
-			EncodeGRPCGetInstallCommandsResponse,
+		getInstallCommand: grpctransport.NewServer(
+			endpoints.GetInstallCommandEndpoint,
+			DecodeGRPCGetInstallCommandRequest,
+			EncodeGRPCGetInstallCommandResponse,
 			serverOptions...,
 		),
 	}
@@ -177,26 +123,17 @@ func MakeGRPCServer(endpoints endpoint.Endpoints) pb.SkillhubServiceServer {
 type grpcServer struct {
 	pb.UnimplementedSkillhubServiceServer
 
-	listSkills         grpctransport.Handler
-	listSkillFilters   grpctransport.Handler
-	getSkill           grpctransport.Handler
-	createSkill        grpctransport.Handler
-	updateSkill        grpctransport.Handler
-	deleteSkill        grpctransport.Handler
-	listVersions       grpctransport.Handler
-	createVersion      grpctransport.Handler
-	restoreVersion     grpctransport.Handler
-	listFiles          grpctransport.Handler
-	getFile            grpctransport.Handler
-	putFile            grpctransport.Handler
-	deleteFile         grpctransport.Handler
-	scanProject        grpctransport.Handler
-	previewImport      grpctransport.Handler
-	importSkill        grpctransport.Handler
-	resolveSource      grpctransport.Handler
-	compareSkills      grpctransport.Handler
-	getCopyCommand     grpctransport.Handler
-	getInstallCommands grpctransport.Handler
+	listSkills        grpctransport.Handler
+	getSkill          grpctransport.Handler
+	updateSkill       grpctransport.Handler
+	deleteSkill       grpctransport.Handler
+	listVersions      grpctransport.Handler
+	createVersion     grpctransport.Handler
+	scanProject       grpctransport.Handler
+	previewImport     grpctransport.Handler
+	importSkill       grpctransport.Handler
+	compareSkills     grpctransport.Handler
+	getInstallCommand grpctransport.Handler
 }
 
 // Methods for grpcServer to implement SkillhubServiceServer interface
@@ -209,28 +146,12 @@ func (s *grpcServer) ListSkills(ctx context.Context, req *pb.ListSkillsRequest) 
 	return rep.(*pb.ListSkillsResponse), nil
 }
 
-func (s *grpcServer) ListSkillFilters(ctx context.Context, req *pb.ListSkillFiltersRequest) (*pb.ListSkillFiltersResponse, error) {
-	_, rep, err := s.listSkillFilters.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return rep.(*pb.ListSkillFiltersResponse), nil
-}
-
 func (s *grpcServer) GetSkill(ctx context.Context, req *pb.GetSkillRequest) (*pb.GetSkillResponse, error) {
 	_, rep, err := s.getSkill.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 	return rep.(*pb.GetSkillResponse), nil
-}
-
-func (s *grpcServer) CreateSkill(ctx context.Context, req *pb.CreateSkillRequest) (*pb.CreateSkillResponse, error) {
-	_, rep, err := s.createSkill.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return rep.(*pb.CreateSkillResponse), nil
 }
 
 func (s *grpcServer) UpdateSkill(ctx context.Context, req *pb.UpdateSkillRequest) (*pb.UpdateSkillResponse, error) {
@@ -265,46 +186,6 @@ func (s *grpcServer) CreateVersion(ctx context.Context, req *pb.CreateVersionReq
 	return rep.(*pb.CreateVersionResponse), nil
 }
 
-func (s *grpcServer) RestoreVersion(ctx context.Context, req *pb.RestoreVersionRequest) (*pb.RestoreVersionResponse, error) {
-	_, rep, err := s.restoreVersion.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return rep.(*pb.RestoreVersionResponse), nil
-}
-
-func (s *grpcServer) ListFiles(ctx context.Context, req *pb.ListFilesRequest) (*pb.ListFilesResponse, error) {
-	_, rep, err := s.listFiles.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return rep.(*pb.ListFilesResponse), nil
-}
-
-func (s *grpcServer) GetFile(ctx context.Context, req *pb.GetFileRequest) (*pb.GetFileResponse, error) {
-	_, rep, err := s.getFile.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return rep.(*pb.GetFileResponse), nil
-}
-
-func (s *grpcServer) PutFile(ctx context.Context, req *pb.PutFileRequest) (*pb.PutFileResponse, error) {
-	_, rep, err := s.putFile.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return rep.(*pb.PutFileResponse), nil
-}
-
-func (s *grpcServer) DeleteFile(ctx context.Context, req *pb.DeleteFileRequest) (*core.Null, error) {
-	_, rep, err := s.deleteFile.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return rep.(*core.Null), nil
-}
-
 func (s *grpcServer) ScanProject(ctx context.Context, req *pb.ScanProjectRequest) (*pb.ScanProjectResponse, error) {
 	_, rep, err := s.scanProject.ServeGRPC(ctx, req)
 	if err != nil {
@@ -329,14 +210,6 @@ func (s *grpcServer) ImportSkill(ctx context.Context, req *pb.ImportSkillRequest
 	return rep.(*pb.ImportSkillResponse), nil
 }
 
-func (s *grpcServer) ResolveSource(ctx context.Context, req *pb.ResolveSourceRequest) (*pb.ResolveSourceResponse, error) {
-	_, rep, err := s.resolveSource.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return rep.(*pb.ResolveSourceResponse), nil
-}
-
 func (s *grpcServer) CompareSkills(ctx context.Context, req *pb.CompareSkillsRequest) (*pb.CompareSkillsResponse, error) {
 	_, rep, err := s.compareSkills.ServeGRPC(ctx, req)
 	if err != nil {
@@ -345,20 +218,12 @@ func (s *grpcServer) CompareSkills(ctx context.Context, req *pb.CompareSkillsReq
 	return rep.(*pb.CompareSkillsResponse), nil
 }
 
-func (s *grpcServer) GetCopyCommand(ctx context.Context, req *pb.GetCopyCommandRequest) (*pb.GetCopyCommandResponse, error) {
-	_, rep, err := s.getCopyCommand.ServeGRPC(ctx, req)
+func (s *grpcServer) GetInstallCommand(ctx context.Context, req *pb.GetInstallCommandRequest) (*pb.GetInstallCommandResponse, error) {
+	_, rep, err := s.getInstallCommand.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	return rep.(*pb.GetCopyCommandResponse), nil
-}
-
-func (s *grpcServer) GetInstallCommands(ctx context.Context, req *pb.GetInstallCommandsRequest) (*pb.GetInstallCommandsResponse, error) {
-	_, rep, err := s.getInstallCommands.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return rep.(*pb.GetInstallCommandsResponse), nil
+	return rep.(*pb.GetInstallCommandResponse), nil
 }
 
 // Server Decode
@@ -370,24 +235,10 @@ func DecodeGRPCListSkillsRequest(_ context.Context, grpcReq interface{}) (interf
 	return req, nil
 }
 
-// DecodeGRPCListSkillFiltersRequest is a transport/grpc.DecodeRequestFunc that converts a
-// gRPC ListSkillFilters request to a user-domain ListSkillFilters request. Primarily useful in a server.
-func DecodeGRPCListSkillFiltersRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.ListSkillFiltersRequest)
-	return req, nil
-}
-
 // DecodeGRPCGetSkillRequest is a transport/grpc.DecodeRequestFunc that converts a
 // gRPC GetSkill request to a user-domain GetSkill request. Primarily useful in a server.
 func DecodeGRPCGetSkillRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*pb.GetSkillRequest)
-	return req, nil
-}
-
-// DecodeGRPCCreateSkillRequest is a transport/grpc.DecodeRequestFunc that converts a
-// gRPC CreateSkill request to a user-domain CreateSkill request. Primarily useful in a server.
-func DecodeGRPCCreateSkillRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.CreateSkillRequest)
 	return req, nil
 }
 
@@ -419,41 +270,6 @@ func DecodeGRPCCreateVersionRequest(_ context.Context, grpcReq interface{}) (int
 	return req, nil
 }
 
-// DecodeGRPCRestoreVersionRequest is a transport/grpc.DecodeRequestFunc that converts a
-// gRPC RestoreVersion request to a user-domain RestoreVersion request. Primarily useful in a server.
-func DecodeGRPCRestoreVersionRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.RestoreVersionRequest)
-	return req, nil
-}
-
-// DecodeGRPCListFilesRequest is a transport/grpc.DecodeRequestFunc that converts a
-// gRPC ListFiles request to a user-domain ListFiles request. Primarily useful in a server.
-func DecodeGRPCListFilesRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.ListFilesRequest)
-	return req, nil
-}
-
-// DecodeGRPCGetFileRequest is a transport/grpc.DecodeRequestFunc that converts a
-// gRPC GetFile request to a user-domain GetFile request. Primarily useful in a server.
-func DecodeGRPCGetFileRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.GetFileRequest)
-	return req, nil
-}
-
-// DecodeGRPCPutFileRequest is a transport/grpc.DecodeRequestFunc that converts a
-// gRPC PutFile request to a user-domain PutFile request. Primarily useful in a server.
-func DecodeGRPCPutFileRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.PutFileRequest)
-	return req, nil
-}
-
-// DecodeGRPCDeleteFileRequest is a transport/grpc.DecodeRequestFunc that converts a
-// gRPC DeleteFile request to a user-domain DeleteFile request. Primarily useful in a server.
-func DecodeGRPCDeleteFileRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.DeleteFileRequest)
-	return req, nil
-}
-
 // DecodeGRPCScanProjectRequest is a transport/grpc.DecodeRequestFunc that converts a
 // gRPC ScanProject request to a user-domain ScanProject request. Primarily useful in a server.
 func DecodeGRPCScanProjectRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -475,13 +291,6 @@ func DecodeGRPCImportSkillRequest(_ context.Context, grpcReq interface{}) (inter
 	return req, nil
 }
 
-// DecodeGRPCResolveSourceRequest is a transport/grpc.DecodeRequestFunc that converts a
-// gRPC ResolveSource request to a user-domain ResolveSource request. Primarily useful in a server.
-func DecodeGRPCResolveSourceRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.ResolveSourceRequest)
-	return req, nil
-}
-
 // DecodeGRPCCompareSkillsRequest is a transport/grpc.DecodeRequestFunc that converts a
 // gRPC CompareSkills request to a user-domain CompareSkills request. Primarily useful in a server.
 func DecodeGRPCCompareSkillsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -489,17 +298,10 @@ func DecodeGRPCCompareSkillsRequest(_ context.Context, grpcReq interface{}) (int
 	return req, nil
 }
 
-// DecodeGRPCGetCopyCommandRequest is a transport/grpc.DecodeRequestFunc that converts a
-// gRPC GetCopyCommand request to a user-domain GetCopyCommand request. Primarily useful in a server.
-func DecodeGRPCGetCopyCommandRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.GetCopyCommandRequest)
-	return req, nil
-}
-
-// DecodeGRPCGetInstallCommandsRequest is a transport/grpc.DecodeRequestFunc that converts a
-// gRPC GetInstallCommands request to a user-domain GetInstallCommands request. Primarily useful in a server.
-func DecodeGRPCGetInstallCommandsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.GetInstallCommandsRequest)
+// DecodeGRPCGetInstallCommandRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC GetInstallCommand request to a user-domain GetInstallCommand request. Primarily useful in a server.
+func DecodeGRPCGetInstallCommandRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.GetInstallCommandRequest)
 	return req, nil
 }
 
@@ -512,24 +314,10 @@ func EncodeGRPCListSkillsResponse(_ context.Context, response interface{}) (inte
 	return resp, nil
 }
 
-// EncodeGRPCListSkillFiltersResponse is a transport/grpc.EncodeResponseFunc that converts a
-// user-domain ListSkillFilters response to a gRPC ListSkillFilters reply. Primarily useful in a server.
-func EncodeGRPCListSkillFiltersResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.ListSkillFiltersResponse)
-	return resp, nil
-}
-
 // EncodeGRPCGetSkillResponse is a transport/grpc.EncodeResponseFunc that converts a
 // user-domain GetSkill response to a gRPC GetSkill reply. Primarily useful in a server.
 func EncodeGRPCGetSkillResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(*pb.GetSkillResponse)
-	return resp, nil
-}
-
-// EncodeGRPCCreateSkillResponse is a transport/grpc.EncodeResponseFunc that converts a
-// user-domain CreateSkill response to a gRPC CreateSkill reply. Primarily useful in a server.
-func EncodeGRPCCreateSkillResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.CreateSkillResponse)
 	return resp, nil
 }
 
@@ -561,41 +349,6 @@ func EncodeGRPCCreateVersionResponse(_ context.Context, response interface{}) (i
 	return resp, nil
 }
 
-// EncodeGRPCRestoreVersionResponse is a transport/grpc.EncodeResponseFunc that converts a
-// user-domain RestoreVersion response to a gRPC RestoreVersion reply. Primarily useful in a server.
-func EncodeGRPCRestoreVersionResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.RestoreVersionResponse)
-	return resp, nil
-}
-
-// EncodeGRPCListFilesResponse is a transport/grpc.EncodeResponseFunc that converts a
-// user-domain ListFiles response to a gRPC ListFiles reply. Primarily useful in a server.
-func EncodeGRPCListFilesResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.ListFilesResponse)
-	return resp, nil
-}
-
-// EncodeGRPCGetFileResponse is a transport/grpc.EncodeResponseFunc that converts a
-// user-domain GetFile response to a gRPC GetFile reply. Primarily useful in a server.
-func EncodeGRPCGetFileResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.GetFileResponse)
-	return resp, nil
-}
-
-// EncodeGRPCPutFileResponse is a transport/grpc.EncodeResponseFunc that converts a
-// user-domain PutFile response to a gRPC PutFile reply. Primarily useful in a server.
-func EncodeGRPCPutFileResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.PutFileResponse)
-	return resp, nil
-}
-
-// EncodeGRPCDeleteFileResponse is a transport/grpc.EncodeResponseFunc that converts a
-// user-domain DeleteFile response to a gRPC DeleteFile reply. Primarily useful in a server.
-func EncodeGRPCDeleteFileResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*core.Null)
-	return resp, nil
-}
-
 // EncodeGRPCScanProjectResponse is a transport/grpc.EncodeResponseFunc that converts a
 // user-domain ScanProject response to a gRPC ScanProject reply. Primarily useful in a server.
 func EncodeGRPCScanProjectResponse(_ context.Context, response interface{}) (interface{}, error) {
@@ -617,13 +370,6 @@ func EncodeGRPCImportSkillResponse(_ context.Context, response interface{}) (int
 	return resp, nil
 }
 
-// EncodeGRPCResolveSourceResponse is a transport/grpc.EncodeResponseFunc that converts a
-// user-domain ResolveSource response to a gRPC ResolveSource reply. Primarily useful in a server.
-func EncodeGRPCResolveSourceResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.ResolveSourceResponse)
-	return resp, nil
-}
-
 // EncodeGRPCCompareSkillsResponse is a transport/grpc.EncodeResponseFunc that converts a
 // user-domain CompareSkills response to a gRPC CompareSkills reply. Primarily useful in a server.
 func EncodeGRPCCompareSkillsResponse(_ context.Context, response interface{}) (interface{}, error) {
@@ -631,17 +377,10 @@ func EncodeGRPCCompareSkillsResponse(_ context.Context, response interface{}) (i
 	return resp, nil
 }
 
-// EncodeGRPCGetCopyCommandResponse is a transport/grpc.EncodeResponseFunc that converts a
-// user-domain GetCopyCommand response to a gRPC GetCopyCommand reply. Primarily useful in a server.
-func EncodeGRPCGetCopyCommandResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.GetCopyCommandResponse)
-	return resp, nil
-}
-
-// EncodeGRPCGetInstallCommandsResponse is a transport/grpc.EncodeResponseFunc that converts a
-// user-domain GetInstallCommands response to a gRPC GetInstallCommands reply. Primarily useful in a server.
-func EncodeGRPCGetInstallCommandsResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.GetInstallCommandsResponse)
+// EncodeGRPCGetInstallCommandResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain GetInstallCommand response to a gRPC GetInstallCommand reply. Primarily useful in a server.
+func EncodeGRPCGetInstallCommandResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.GetInstallCommandResponse)
 	return resp, nil
 }
 

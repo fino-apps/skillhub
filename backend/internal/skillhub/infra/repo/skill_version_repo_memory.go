@@ -149,16 +149,14 @@ func (r *MemorySkillVersionRepo) UpdateSkillVersion(ctx context.Context, entity 
 
 	updated := model.RebuildSkillVersion(stored)
 	if err := updated.ApplyUpdate(model.UpdateSkillVersionInput{
-		UpdateMask:   updateMask,
-		SkillId:      snapshot.SkillId,
-		Version:      snapshot.Version,
-		Notes:        snapshot.Notes,
-		Digest:       snapshot.Digest,
-		SnapshotPath: snapshot.SnapshotPath,
-		SourceRef:    snapshot.SourceRef,
-		CommitSha:    snapshot.CommitSha,
-		CreateTime:   snapshot.CreateTime,
-		UpdateTime:   snapshot.UpdateTime,
+		UpdateMask: updateMask,
+		SkillId:    snapshot.SkillId,
+		Name:       snapshot.Name,
+		Notes:      snapshot.Notes,
+		SourceRef:  snapshot.SourceRef,
+		CommitSha:  snapshot.CommitSha,
+		CreateTime: snapshot.CreateTime,
+		UpdateTime: snapshot.UpdateTime,
 	}); err != nil {
 		return err
 	}

@@ -182,16 +182,8 @@ export function listSkills<TResponse = unknown>(payload: ApiRequest = {}, option
   return requestApi<TResponse>(apiRoutes.listSkills, payload, options);
 }
 
-export function listSkillFilters<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
-  return requestApi<TResponse>(apiRoutes.listSkillFilters, payload, options);
-}
-
 export function getSkill<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
   return requestApi<TResponse>(apiRoutes.getSkill, payload, options);
-}
-
-export function createSkill<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
-  return requestApi<TResponse>(apiRoutes.createSkill, payload, options);
 }
 
 export function updateSkill<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
@@ -210,26 +202,6 @@ export function createVersion<TResponse = unknown>(payload: ApiRequest = {}, opt
   return requestApi<TResponse>(apiRoutes.createVersion, payload, options);
 }
 
-export function restoreVersion<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
-  return requestApi<TResponse>(apiRoutes.restoreVersion, payload, options);
-}
-
-export function listFiles<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
-  return requestApi<TResponse>(apiRoutes.listFiles, payload, options);
-}
-
-export function getFile<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
-  return requestApi<TResponse>(apiRoutes.getFile, payload, options);
-}
-
-export function putFile<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
-  return requestApi<TResponse>(apiRoutes.putFile, payload, options);
-}
-
-export function deleteFile<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
-  return requestApi<TResponse>(apiRoutes.deleteFile, payload, options);
-}
-
 export function scanProject<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
   return requestApi<TResponse>(apiRoutes.scanProject, payload, options);
 }
@@ -242,18 +214,10 @@ export function importSkill<TResponse = unknown>(payload: ApiRequest = {}, optio
   return requestApi<TResponse>(apiRoutes.importSkill, payload, options);
 }
 
-export function resolveSource<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
-  return requestApi<TResponse>(apiRoutes.resolveSource, payload, options);
-}
-
 export function compareSkills<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
   return requestApi<TResponse>(apiRoutes.compareSkills, payload, options);
 }
 
-export function getCopyCommand<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
-  return requestApi<TResponse>(apiRoutes.getCopyCommand, payload, options);
-}
-
-export function getInstallCommands<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
-  return requestApi<TResponse>(apiRoutes.getInstallCommands, payload, options);
+export function getInstallCommand<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.getInstallCommand, payload, options);
 }

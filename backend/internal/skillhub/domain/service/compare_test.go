@@ -32,20 +32,6 @@ func TestCompareDirectories(t *testing.T) {
 	}
 }
 
-func TestStoredPathRejectsEscape(t *testing.T) {
-	root := t.TempDir()
-	outside := t.TempDir()
-	if err := os.Symlink(outside, filepath.Join(root, "outside")); err != nil {
-		t.Fatal(err)
-	}
-	intake := NewIntake(root, nil)
-	for _, path := range []string{"../outside", "outside", outside} {
-		if _, err := intake.StoredPath(path); err == nil {
-			t.Fatalf("expected %q to be rejected", path)
-		}
-	}
-}
-
 func TestCheckoutGitHubCleansUpOnFetchFailure(t *testing.T) {
 	tmp, bin := t.TempDir(), t.TempDir()
 	git := filepath.Join(bin, "git")

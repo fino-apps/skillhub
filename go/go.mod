@@ -7,15 +7,12 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20260720211330-0afa2a65878a
 	google.golang.org/grpc v1.82.1
 	google.golang.org/protobuf v1.36.12
-	gorm.io/gorm v1.31.2
 )
 
 require github.com/json-iterator/go v1.1.12 // indirect
 
 require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
-	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	golang.org/x/net v0.55.0 // indirect

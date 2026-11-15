@@ -1,10 +1,10 @@
 # SkillHub
 
-SkillHub 是一个基于 Fino 的本地 Skill 管理项目。当前已生成 Go service、SQLite 仓储和 React 前端，并提供项目 Skill 扫描、本地和 GitHub 来源收录及初始版本查看；支持本地、个人快照与 GitHub 来源的差异比对；已有 Skill 的更新、版本恢复及标签筛选等业务接口仍待实现，不能将生成骨架视为完整产品。
+SkillHub 是本机运行的 GitHub Skill 工作台。用它收录和搜索 Skill、比对版本、生成 Codex 安装命令。Skill 文件由 GitHub 仓库管理，SQLite 保存目录、已收录的 commit、分类、标签和备注。
 
 ## 本地运行
 
-需要 Fino、Go 1.25.13 或更新版本、`protoc-gen-go`、`protoc-gen-go-grpc`，以及 Node.js 20.19 或更新版本。
+需要 Fino、Git、Go 1.25.13 或更新版本，以及 `protoc-gen-go` 和 `protoc-gen-go-grpc`。前端构建需要 Node.js 20.19 或更新版本，运行安装命令需要 Node.js 22.20 或更新版本。
 
 ```bash
 fino doctor --output=. --targets=service,frontend
@@ -22,31 +22,20 @@ npm ci
 npm run dev
 ```
 
-默认 HTTP 服务监听 `127.0.0.1:31101`；前端地址见 Vite 启动输出。开发环境下 Vite 将 `/skillhub` 请求代理到后端；需要连接其他服务时可设置 `VITE_API_BASE`。SQLite 默认保存于后端工作目录下的 `skillhub.db`。`.env` 包含生成的分页密钥，应保留且不要提交。
+本地 HTTP 默认监听 `127.0.0.1:31101`，Vite 将 `/skillhub` 请求代理到后端，可用 `VITE_API_BASE` 指定服务地址。新目录库为 `backend/skillhub-catalog.db`。备份目录和整理信息时先停服务，再备份 SQLite 文件。GitHub 仓库负责保留 Skill 内容和历史。
 
-## 项目扫描
+## 收录与检查版本
 
-```bash
-curl -fsS http://127.0.0.1:31101/skillhub/v1/projects:scan \
-  -H 'Content-Type: application/json' \
-  -d '{"projectPath":"/项目的绝对路径"}'
-```
+- 自有 Skill 可以集中放在一个 GitHub 仓库的 `skills/<name>/SKILL.md`。添加时填写仓库和分支或标签，选择「批量扫描仓库的 skills/ 目录」，预览并勾选条目。
+- 单个 Skill 填仓库内路径。Skill 在仓库根目录时留空。同一个仓库目录只收录一次。
+- 展开条目，点击「检查新版本」，输入分支、标签或 commit。页面展示最近收录版本与候选版本的文件差异，保存后记录候选的完整 commit SHA。
+- 私有仓库沿用运行 SkillHub 的用户已配置的 Git HTTPS 凭据。首次配置后，可用 `git ls-remote https://github.com/owner/repo` 验证。生成的安装命令由执行它的用户提供自己的 GitHub 凭据。
 
-支持直接扫描包含 `SKILL.md` 的单个 Skill 目录、名为 `skills` 的集合目录，也支持扫描项目的 `.agents/skills` 和 `.codex/skills`；允许指向项目内的目录链接并按真实路径去重，拒绝指向项目外的链接。目前扫描只发现 Skill，尚未关联管理库或计算同步状态；结果标记为无同步基准。
+## 比对与安装
 
-## 收录 Skill
+「比对 Skill」可以选择两个收录版本，也可以输入本机 Skill 路径。输入本机项目路径后，先扫描并从发现的 Skill 中选择。比对只读，单个变更文件最大 1 MiB，单次变更内容总量最大 8 MiB。
 
-扫描项目后勾选 Skill，预览文件并确认收录。疑似敏感文件默认不选；收录时会复制所选文件并创建初始版本。公开 Skill 填写 GitHub 仓库地址、仓库内路径及分支或标签，预览后只保存来源和解析到的 commit，不复制其文件。
-
-同名个人 Skill 或已收录的相同公开来源会提示冲突，不会自动覆盖；更新已有 Skill 尚未实现。个人内容和快照默认保存在 `backend/skillhub-data/`，可用 `SKILLHUB_DATA_DIR` 更改；备份时请停止服务，并同时备份该目录与 SQLite 数据库。
-
-## 复制 Skill
-
-在 Skill 库展开条目，选择版本并点击“复制命令”，然后在目标目录中运行命令。命令会创建 Skill 目录，不覆盖已有同名目录。个人 Skill 复制本机的版本快照；公开 Skill 使用 `npx tiged` 从记录的 GitHub commit 获取对应目录，需要 Node.js 和网络。
-
-## 比对 Skill
-
-在 Skill 库点击“比对 Skill”，选择本地目录或库中 Skill 的当前内容、历史版本。公开 Skill 按记录的 commit 从 GitHub 获取；比对不会修改源文件。单个变更文件最大 1 MiB，单次变更内容总量最大 8 MiB。
+从版本行选择「安装到项目」或「全局安装」，复制命令到本机终端。项目级安装须先进入目标项目。命令由 Vercel `skills` 从选定的 commit 和子目录安装到 Codex，重装可能替换同名 Skill。
 
 ## 检查
 
@@ -56,4 +45,4 @@ go -C backend test ./...
 cd frontend && npm run build
 ```
 
-产品范围和待完成设计见 [设计文档](docs/DESIGN.md)。目前的 Skill CRUD 仍是 Fino 生成骨架，标签编辑、已有 Skill 更新、版本恢复及文件编辑等业务逻辑尚未完成。
+架构和接口范围见 [设计文档](docs/DESIGN.md)。

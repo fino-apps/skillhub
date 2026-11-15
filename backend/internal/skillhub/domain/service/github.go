@@ -10,33 +10,56 @@ import (
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/model"
-	skillpb "github.com/fino-io/skillhub/go/skillhub"
 )
 
 type GitHubSource struct{ RepositoryURL, SkillPath, Ref string }
-type GitHubPreview struct {
-	Files                             []ImportFile
-	Digest, Commit, Name, Description string
-}
 
 var repositoryPattern = regexp.MustCompile(`^/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:\.git)?$`)
 
-// CheckoutGitHub resolves a public repository into a temporary directory.
-// The caller must invoke cleanup after use; no repository code is executed.
+var validSkillName = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
+var skillPathPattern = regexp.MustCompile(`^[A-Za-z0-9._/-]+$`)
+
+func NormalizeRepository(repository string) (string, error) {
+	u, err := url.Parse(strings.TrimSpace(repository))
+	if err != nil || u.Scheme != "https" || u.Host != "github.com" || u.User != nil ||
+		u.RawQuery != "" || u.ForceQuery || u.Fragment != "" || u.RawPath != "" ||
+		!repositoryPattern.MatchString(u.Path) {
+		return "", fmt.Errorf("invalid GitHub repository URL")
+	}
+	return "https://github.com" + strings.TrimSuffix(strings.ToLower(u.Path), ".git"), nil
+}
+
+func repositoryPath(path string) (string, error) {
+	clean := filepath.ToSlash(filepath.Clean(path))
+	if clean == "." && (path == "" || path == ".") {
+		return "", nil
+	}
+	if len(path) > 1024 || !skillPathPattern.MatchString(path) ||
+		clean != path || strings.HasPrefix(path, "/") || path == ".." ||
+		strings.HasPrefix(path, "../") || strings.Contains("/"+path+"/", "/.git/") {
+		return "", fmt.Errorf("invalid skill path")
+	}
+	return path, nil
+}
+
+func validGitRef(ref string) bool {
+	return ref != "" && len(ref) <= 200 && !strings.HasPrefix(ref, "-") &&
+		!strings.ContainsAny(ref, " \t\r\n\\~^:?*[") && !strings.Contains(ref, "..")
+}
+
+// CheckoutGitHub checks out the requested commit without executing repository content.
 func CheckoutGitHub(ctx context.Context, source GitHubSource) (root, commit string, cleanup func(), err error) {
-	u, err := url.Parse(source.RepositoryURL)
-	if err != nil || u.Scheme != "https" || u.Host != "github.com" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || !repositoryPattern.MatchString(u.Path) {
-		return "", "", nil, fmt.Errorf("invalid GitHub repository URL")
+	repository, err := NormalizeRepository(source.RepositoryURL)
+	if err != nil {
+		return "", "", nil, err
 	}
 	ref := strings.TrimSpace(source.Ref)
-	if ref == "" || len(ref) > 200 || strings.HasPrefix(ref, "-") || strings.ContainsAny(ref, " \t\r\n\\~^:?*[") || strings.Contains(ref, "..") {
+	if !validGitRef(ref) {
 		return "", "", nil, fmt.Errorf("invalid git reference")
 	}
-	path := filepath.Clean(source.SkillPath)
-	if filepath.IsAbs(path) || path == ".." || strings.HasPrefix(path, ".."+string(filepath.Separator)) {
-		return "", "", nil, fmt.Errorf("invalid skill path")
+	path, err := repositoryPath(source.SkillPath)
+	if err != nil {
+		return "", "", nil, err
 	}
 	temp, err := os.MkdirTemp("", "skillhub-github-")
 	if err != nil {
@@ -58,7 +81,7 @@ func CheckoutGitHub(ctx context.Context, source GitHubSource) (root, commit stri
 	defer cancel()
 	run := func(args ...string) (string, error) {
 		cmd := exec.CommandContext(ctx, "git", args...)
-		cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0", "GIT_CONFIG_GLOBAL=/dev/null", "GIT_CONFIG_NOSYSTEM=1")
+		cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
 		out, err := cmd.Output()
 		if err != nil {
 			return "", fmt.Errorf("GitHub fetch failed: %w", err)
@@ -68,12 +91,15 @@ func CheckoutGitHub(ctx context.Context, source GitHubSource) (root, commit stri
 	if _, err = run("init", "-q", temp); err != nil {
 		return "", "", nil, err
 	}
-	if _, err = run("-C", temp, "-c", "protocol.file.allow=never", "fetch", "-q", "--depth=1", source.RepositoryURL, ref); err != nil {
+	if _, err = run("-C", temp, "-c", "protocol.file.allow=never", "fetch", "-q", "--depth=1", repository, ref); err != nil {
 		return "", "", nil, err
 	}
 	commit, err = run("-C", temp, "rev-parse", "FETCH_HEAD^{commit}")
 	if err != nil {
 		return "", "", nil, err
+	}
+	if commitPattern.MatchString(ref) && commit != ref {
+		return "", "", nil, fmt.Errorf("resolved commit does not match selected commit")
 	}
 	if _, err = run("-C", temp, "-c", "core.hooksPath=/dev/null", "checkout", "-q", "--detach", commit); err != nil {
 		return "", "", nil, err
@@ -85,53 +111,89 @@ func CheckoutGitHub(ctx context.Context, source GitHubSource) (root, commit stri
 	return root, commit, cleanup, nil
 }
 
-// PreviewGitHub inspects a pinned repository without executing its files.
-func PreviewGitHub(ctx context.Context, source GitHubSource) (GitHubPreview, error) {
-	root, commit, cleanup, err := CheckoutGitHub(ctx, source)
+// InspectGitHub reads one Skill or discovers the direct children of skills/.
+func InspectGitHub(ctx context.Context, source GitHubSource, collection bool) ([]ScannedSkill, string, error) {
+	if !collection {
+		skills, commit, err := ReadGitHubSkills(ctx, source.RepositoryURL, source.Ref, []string{source.SkillPath})
+		return skills, commit, err
+	}
+	root, commit, cleanup, err := CheckoutGitHub(ctx, GitHubSource{RepositoryURL: source.RepositoryURL, Ref: source.Ref})
 	if err != nil {
-		return GitHubPreview{}, err
+		return nil, "", err
 	}
 	defer cleanup()
-	meta, ok, err := readSkill(root)
-	if err != nil || !ok || (len(meta.Name) > 64 || !validSkillName.MatchString(meta.Name)) {
-		return GitHubPreview{}, fmt.Errorf("invalid SKILL.md")
+	directory := filepath.Join(root, "skills")
+	info, err := os.Lstat(directory)
+	if os.IsNotExist(err) {
+		return nil, commit, nil
 	}
-	files, digest, err := PreviewLocalSkill(root)
+	if err != nil || !info.IsDir() {
+		return nil, "", fmt.Errorf("invalid skills directory")
+	}
+	entries, err := os.ReadDir(directory)
 	if err != nil {
-		return GitHubPreview{}, err
+		return nil, "", err
 	}
-	return GitHubPreview{Files: files, Digest: digest, Commit: commit, Name: meta.Name, Description: meta.Description}, nil
+	skills := make([]ScannedSkill, 0)
+	for _, entry := range entries {
+		if !entry.IsDir() || strings.HasPrefix(entry.Name(), ".") {
+			continue
+		}
+		path := "skills/" + entry.Name()
+		if _, err := repositoryPath(path); err != nil {
+			continue
+		}
+		if skill, err := readGitHubSkill(root, path); err == nil {
+			skills = append(skills, skill)
+		}
+	}
+	return skills, commit, nil
 }
 
-// ImportPublic saves only a resolved upstream reference and version metadata.
-func (i *Intake) ImportPublic(ctx context.Context, source GitHubSource, expected, commit, version, notes string) (*model.Skill, *model.SkillVersion, error) {
-	i.mu.Lock()
-	defer i.mu.Unlock()
-	preview, err := PreviewGitHub(ctx, source)
+// ReadGitHubSkills reads all selected paths from the same checkout.
+func ReadGitHubSkills(ctx context.Context, repository, ref string, paths []string) ([]ScannedSkill, string, error) {
+	root, commit, cleanup, err := CheckoutGitHub(ctx, GitHubSource{RepositoryURL: repository, Ref: ref})
 	if err != nil {
-		return nil, nil, err
+		return nil, "", err
 	}
-	source.RepositoryURL = strings.TrimSuffix(strings.ToLower(source.RepositoryURL), ".git")
-	source.SkillPath = filepath.ToSlash(filepath.Clean(source.SkillPath))
-	if source.SkillPath == "." {
-		source.SkillPath = ""
+	defer cleanup()
+	skills := make([]ScannedSkill, 0, len(paths))
+	for _, path := range paths {
+		skill, err := readGitHubSkill(root, path)
+		if err != nil {
+			return nil, "", err
+		}
+		skills = append(skills, skill)
 	}
-	if preview.Digest != expected || preview.Commit != commit {
-		return nil, nil, fmt.Errorf("source changed since preview")
-	}
-	skill, err := model.NewSkill(model.CreateSkillInput{Name: preview.Name, Description: preview.Description, Kind: skillpb.SkillKind_SKILL_KIND_PUBLIC, RepositoryUrl: source.RepositoryURL, RepositoryPath: source.SkillPath})
+	return skills, commit, nil
+}
+
+func readGitHubSkill(root, path string) (ScannedSkill, error) {
+	path, err := repositoryPath(path)
 	if err != nil {
-		return nil, nil, err
+		return ScannedSkill{}, err
 	}
-	if version == "" {
-		version = "1.0.0"
+	directory := filepath.Join(root, path)
+	resolved, err := filepath.EvalSymlinks(directory)
+	if err != nil || resolved != directory {
+		return ScannedSkill{}, fmt.Errorf("invalid skill directory: %s", path)
 	}
-	initial, err := model.NewSkillVersion(model.CreateSkillVersionInput{SkillId: string(skill.ID()), Version: version, Notes: notes, Digest: preview.Digest, SourceRef: source.Ref, CommitSha: preview.Commit})
+	skill, ok, err := readSkill(directory)
 	if err != nil {
-		return nil, nil, err
+		return ScannedSkill{}, err
 	}
-	if err := i.repository.CreateInitial(ctx, skill, initial, func() error { return nil }); err != nil {
-		return nil, nil, err
+	if !ok || len(skill.Name) > 64 || !validSkillName.MatchString(skill.Name) || len(skill.Description) > 1024 {
+		return ScannedSkill{}, fmt.Errorf("invalid SKILL.md: %s", path)
 	}
-	return skill, initial, nil
+	skill.Path = path
+	return skill, nil
+}
+
+// ReadPinnedGitHubSkills reads a reviewed commit even if its branch has moved.
+func ReadPinnedGitHubSkills(ctx context.Context, repository, commit string, paths []string) ([]ScannedSkill, error) {
+	if !commitPattern.MatchString(commit) {
+		return nil, fmt.Errorf("invalid commit SHA")
+	}
+	skills, _, err := ReadGitHubSkills(ctx, repository, commit, paths)
+	return skills, err
 }

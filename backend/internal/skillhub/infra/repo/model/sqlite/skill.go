@@ -7,25 +7,20 @@ package sqlite
 
 import (
 	"github.com/fino-io/core/go/fino/core"
-	pb "github.com/fino-io/skillhub/go/skillhub"
 
 	domainmodel "github.com/fino-io/skillhub/backend/internal/skillhub/domain/model"
 )
 
 type Skill struct {
-	ID              domainmodel.SkillID `gorm:"type:char(36);primaryKey;comment:主键"`
-	Name            string              `gorm:"type:text;not null;index;comment:Skill 名称"`
-	Description     string              `gorm:"type:text;not null;comment:用途说明"`
-	Kind            pb.SkillKind        `gorm:"type:integer;not null;index;comment:来源类型"`
-	Category        string              `gorm:"type:text;not null;index;comment:分类"`
-	Notes           string              `gorm:"type:text;not null;comment:个人备注"`
-	ContentPath     string              `gorm:"type:text;not null;comment:个人内容在数据目录内的相对路径"`
-	RepositoryUrl   string              `gorm:"type:text;not null;comment:GitHub 来源地址"`
-	RepositoryPath  string              `gorm:"type:text;not null;comment:仓库内 Skill 路径"`
-	CurrentDigest   string              `gorm:"type:text;not null;comment:个人当前内容摘要"`
-	OriginCommitSha string              `gorm:"type:text;not null;comment:复制为个人 Skill 时的来源 commit"`
-	CreateTime      *core.Timestamp     `gorm:"type:datetime;not null;comment:创建时间"`
-	UpdateTime      *core.Timestamp     `gorm:"type:datetime;not null;comment:最后更新时间"`
+	ID             domainmodel.SkillID `gorm:"type:char(36);primaryKey;comment:主键"`
+	Name           string              `gorm:"type:text;not null;index;comment:Skill 名称"`
+	Description    string              `gorm:"type:text;not null;comment:用途说明"`
+	Category       string              `gorm:"type:text;not null;index;comment:分类"`
+	Notes          string              `gorm:"type:text;not null;comment:个人备注"`
+	RepositoryUrl  string              `gorm:"type:text;not null;uniqueIndex:idx_skill_source;comment:GitHub 来源地址"`
+	RepositoryPath string              `gorm:"type:text;not null;uniqueIndex:idx_skill_source;comment:仓库内 Skill 路径"`
+	CreateTime     *core.Timestamp     `gorm:"type:datetime;not null;comment:创建时间"`
+	UpdateTime     *core.Timestamp     `gorm:"type:datetime;not null;comment:最后更新时间"`
 }
 
 func (Skill) TableName() string {

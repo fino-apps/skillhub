@@ -7,28 +7,17 @@ import "fino/options.proto";
 
 option go_package = "github.com/fino-io/skillhub/go/skillhub;skillhub";
 
-// SkillKind 区分由管理库维护的 Skill 和只记录来源的公开 Skill。
-enum SkillKind {
-  SKILL_KIND_UNSPECIFIED = 0;
-  SKILL_KIND_PERSONAL = 1;
-  SKILL_KIND_PUBLIC = 2;
-}
-
-// Skill 保存管理信息；个人内容位于受控的相对目录。
+// Skill 保存 GitHub 目录的索引和本地整理信息。
 message Skill {
   option (fino.model) = {generate: true services: "SkillhubService"};
 
   string id = 1 [(fino.db) = {len: 36 comment: "主键"}];
   string name = 2 [(fino.db) = {len: 64 index: "" comment: "Skill 名称"}];
   string description = 3 [(fino.db) = {len: 1024 comment: "用途说明"}];
-  SkillKind kind = 4 [(fino.db) = {index: "" comment: "来源类型"}];
   string category = 5 [(fino.db) = {len: 128 index: "" comment: "分类"}];
   string notes = 6 [(fino.db) = {len: 4096 comment: "个人备注"}];
-  string content_path = 7 [(fino.db) = {len: 1024 comment: "个人内容在数据目录内的相对路径"}];
-  string repository_url = 8 [(fino.db) = {len: 2048 comment: "GitHub 来源地址"}];
-  string repository_path = 9 [(fino.db) = {len: 1024 comment: "仓库内 Skill 路径"}];
-  string current_digest = 10 [(fino.db) = {len: 128 comment: "个人当前内容摘要"}];
-  string origin_commit_sha = 11 [(fino.db) = {len: 64 comment: "复制为个人 Skill 时的来源 commit"}];
+  string repository_url = 8 [(fino.db) = {len: 2048 unique_index: "idx_skill_source" comment: "GitHub 来源地址"}];
+  string repository_path = 9 [(fino.db) = {len: 1024 unique_index: "idx_skill_source" comment: "仓库内 Skill 路径"}];
 
   fino.core.Timestamp create_time = 98 [(fino.db) = {comment: "创建时间"}];
   fino.core.Timestamp update_time = 99 [(fino.db) = {comment: "最后更新时间"}];
@@ -46,33 +35,16 @@ message SkillTag {
   fino.core.Timestamp update_time = 99 [(fino.db) = {comment: "最后更新时间"}];
 }
 
-// SkillVersion 指向个人不可变快照或公开来源的固定 commit。
+// SkillVersion 指向 GitHub 的固定 commit。
 message SkillVersion {
   option (fino.model) = {generate: true services: "SkillhubService"};
 
   string id = 1 [(fino.db) = {len: 36 comment: "主键"}];
-  string skill_id = 2 [(fino.db) = {len: 36 unique_index: "idx_skill_version" comment: "Skill ID"}];
-  string version = 3 [(fino.db) = {len: 128 unique_index: "idx_skill_version" comment: "版本标识"}];
+  string skill_id = 2 [(fino.db) = {len: 36 unique_index: "idx_skill_commit" comment: "Skill ID"}];
+  string name = 3 [(fino.db) = {len: 64 comment: "该 commit 中的 Skill 名称"}];
   string notes = 4 [(fino.db) = {len: 4096 comment: "版本说明"}];
-  string digest = 5 [(fino.db) = {len: 128 comment: "目录内容摘要"}];
-  string snapshot_path = 6 [(fino.db) = {len: 1024 comment: "个人快照在数据目录内的相对路径"}];
-  string source_ref = 7 [(fino.db) = {len: 512 comment: "公开来源的分支或 tag"}];
-  string commit_sha = 8 [(fino.db) = {len: 64 comment: "公开来源解析出的完整 commit"}];
-
-  fino.core.Timestamp create_time = 98 [(fino.db) = {comment: "创建时间"}];
-  fino.core.Timestamp update_time = 99 [(fino.db) = {comment: "最后更新时间"}];
-}
-
-// ProjectSkill 保存业务项目与上次导入的共同基准。
-message ProjectSkill {
-  option (fino.model) = {generate: true services: "SkillhubService"};
-
-  string id = 1 [(fino.db) = {len: 36 comment: "主键"}];
-  string project_path = 2 [(fino.db) = {len: 2048 index: "" comment: "本机项目绝对路径"}];
-  string skill_path = 3 [(fino.db) = {len: 1024 comment: "Skill 相对项目的路径"}];
-  string skill_id = 4 [(fino.db) = {len: 36 index: "" comment: "管理库 Skill ID"}];
-  string base_version_id = 5 [(fino.db) = {len: 36 comment: "上次导入的基准版本 ID"}];
-  string base_digest = 6 [(fino.db) = {len: 128 comment: "上次导入的内容摘要"}];
+  string source_ref = 7 [(fino.db) = {len: 200 comment: "用户选择的 Git 引用"}];
+  string commit_sha = 8 [(fino.db) = {len: 40 unique_index: "idx_skill_commit" comment: "完整 commit SHA"}];
 
   fino.core.Timestamp create_time = 98 [(fino.db) = {comment: "创建时间"}];
   fino.core.Timestamp update_time = 99 [(fino.db) = {comment: "最后更新时间"}];
