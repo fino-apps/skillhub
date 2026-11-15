@@ -1,0 +1,11 @@
+Source: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/tree/09170eec67eefd46a7ae85de61b40c194020f997/src/ui-ux-pro-max
+Pinned upstream revision: 09170eec67eefd46a7ae85de61b40c194020f997
+Imported: 2026-10-02
+License: MIT; see LICENSE.txt.
+
+Fino adaptation:
+- Renders the upstream universal skill template with a focused Fino description and movable skill-directory paths.
+- Keeps the upstream quick reference as a progressively loaded reference.
+- Preserves all data and top-level Python scripts verbatim; omits upstream tests and platform installer templates from runtime output.
+- Reuses existing project design systems and detects the actual stack/audience rather than assuming a mobile consumer app.
+- Includes upstream data provenance and font/icon license metadata; does not bundle fonts or icon assets.
