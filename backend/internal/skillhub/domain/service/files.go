@@ -20,6 +20,10 @@ type skillFile struct {
 
 // readSkillFiles returns a stable digest and file list without following links.
 func readSkillFiles(path string) ([]skillFile, string, error) {
+	return inspectSkillFiles(path, "")
+}
+
+func inspectSkillFiles(path, destination string) ([]skillFile, string, error) {
 	if !filepath.IsAbs(path) {
 		return nil, "", fmt.Errorf("skill path must be absolute")
 	}
@@ -34,7 +38,13 @@ func readSkillFiles(path string) ([]skillFile, string, error) {
 	if _, ok, err := readSkill(root); err != nil || !ok {
 		return nil, "", fmt.Errorf("invalid SKILL.md")
 	}
+	source, err := os.OpenRoot(root)
+	if err != nil {
+		return nil, "", err
+	}
+	defer source.Close()
 	files := make([]skillFile, 0)
+	var total int64
 	err = filepath.WalkDir(root, func(path string, entry fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
@@ -53,6 +63,12 @@ func readSkillFiles(path string) ([]skillFile, string, error) {
 			if entry.Name() == ".git" || entry.Name() == "node_modules" || entry.Name() == ".venv" {
 				return filepath.SkipDir
 			}
+			if destination != "" {
+				return os.MkdirAll(filepath.Join(destination, rel), 0700)
+			}
+			return nil
+		}
+		if entry.Name() == ".git" {
 			return nil
 		}
 		if !entry.Type().IsRegular() {
@@ -65,20 +81,19 @@ func readSkillFiles(path string) ([]skillFile, string, error) {
 		if stat.Size() > 20*1024*1024 {
 			return fmt.Errorf("file too large: %s", rel)
 		}
-		file, err := os.Open(path)
+		total += stat.Size()
+		if destination != "" && (total > 64*1024*1024 || len(files) >= 10000) {
+			return fmt.Errorf("skill exceeds snapshot size or file count limit")
+		}
+		target := ""
+		if destination != "" {
+			target = filepath.Join(destination, rel)
+		}
+		digest, err := hashSkillFile(source, rel, stat, target)
 		if err != nil {
 			return err
 		}
-		hash := sha256.New()
-		_, readErr := io.Copy(hash, file)
-		closeErr := file.Close()
-		if readErr != nil {
-			return readErr
-		}
-		if closeErr != nil {
-			return closeErr
-		}
-		files = append(files, skillFile{Path: filepath.ToSlash(rel), Size: stat.Size(), Digest: hex.EncodeToString(hash.Sum(nil))})
+		files = append(files, skillFile{Path: filepath.ToSlash(rel), Size: stat.Size(), Digest: digest})
 		return nil
 	})
 	if err != nil {
@@ -90,4 +105,37 @@ func readSkillFiles(path string) ([]skillFile, string, error) {
 		fmt.Fprintf(hash, "%s\x00%s\x00", file.Path, file.Digest)
 	}
 	return files, hex.EncodeToString(hash.Sum(nil)), nil
+}
+
+// hashSkillFile hashes the bytes written to a snapshot or read for comparison.
+func hashSkillFile(source *os.Root, relative string, info fs.FileInfo, destination string) (string, error) {
+	file, err := source.Open(relative)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+	hash := sha256.New()
+	var writer io.Writer = hash
+	var target *os.File
+	if destination != "" {
+		target, err = os.OpenFile(destination, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600|info.Mode().Perm()&0100)
+		if err != nil {
+			return "", err
+		}
+		writer = io.MultiWriter(hash, target)
+	}
+	size, err := io.Copy(writer, io.LimitReader(file, info.Size()+1))
+	if target != nil {
+		closeErr := target.Close()
+		if err == nil {
+			err = closeErr
+		}
+	}
+	if err != nil {
+		return "", err
+	}
+	if size != info.Size() {
+		return "", fmt.Errorf("skill changed while reading %s", relative)
+	}
+	return hex.EncodeToString(hash.Sum(nil)), nil
 }

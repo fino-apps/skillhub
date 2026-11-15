@@ -17,8 +17,9 @@ type Skill struct {
 	Description    string              `gorm:"type:text;not null;comment:用途说明"`
 	Category       string              `gorm:"type:text;not null;index;comment:分类"`
 	Notes          string              `gorm:"type:text;not null;comment:个人备注"`
-	RepositoryUrl  string              `gorm:"type:text;not null;uniqueIndex:idx_skill_source;comment:GitHub 来源地址"`
-	RepositoryPath string              `gorm:"type:text;not null;uniqueIndex:idx_skill_source;comment:仓库内 Skill 路径"`
+	RepositoryUrl  string              `gorm:"type:text;not null;uniqueIndex:idx_skill_location;comment:GitHub 来源地址"`
+	RepositoryPath string              `gorm:"type:text;not null;uniqueIndex:idx_skill_location;comment:仓库内 Skill 路径"`
+	LocalPath      string              `gorm:"type:text;not null;default:'';uniqueIndex:idx_skill_location;comment:本机原始 Skill 目录；GitHub 来源留空"`
 	CreateTime     *core.Timestamp     `gorm:"type:datetime;not null;comment:创建时间"`
 	UpdateTime     *core.Timestamp     `gorm:"type:datetime;not null;comment:最后更新时间"`
 }

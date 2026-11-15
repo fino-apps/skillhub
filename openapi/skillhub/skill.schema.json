@@ -1,6 +1,6 @@
 {
   "title": "skillhub.Skill",
-  "description": "Skill 保存 GitHub 目录的索引和本地整理信息。",
+  "description": "Skill 保存来源和整理信息。",
   "type": "object",
   "properties": {
     "category": {
@@ -14,6 +14,9 @@
       "type": "string"
     },
     "id": {
+      "type": "string"
+    },
+    "localPath": {
       "type": "string"
     },
     "name": {

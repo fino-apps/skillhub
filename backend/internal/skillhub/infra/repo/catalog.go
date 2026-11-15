@@ -17,8 +17,8 @@ type CatalogRepo struct{ provider db.Provider }
 
 func NewCatalogRepo(provider db.Provider) *CatalogRepo { return &CatalogRepo{provider: provider} }
 
-func (r *CatalogRepo) AddSkills(ctx context.Context, entries []domainrepo.CatalogEntry) (int, error) {
-	added := 0
+func (r *CatalogRepo) AddSkills(ctx context.Context, entries []domainrepo.CatalogEntry) ([]model.SkillID, error) {
+	var added []model.SkillID
 	err := r.provider.NewSession(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, entry := range entries {
 			result := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(mapper.SkillToRecord(entry.Skill))
@@ -31,11 +31,14 @@ func (r *CatalogRepo) AddSkills(ctx context.Context, entries []domainrepo.Catalo
 			if err := tx.Create(mapper.SkillVersionToRecord(entry.Version)).Error; err != nil {
 				return err
 			}
-			added++
+			added = append(added, entry.Skill.ID())
 		}
 		return nil
 	})
-	return added, err
+	if err != nil {
+		return nil, err
+	}
+	return added, nil
 }
 
 func (r *CatalogRepo) AddVersion(ctx context.Context, version *model.SkillVersion, description string) (bool, error) {

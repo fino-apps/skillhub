@@ -102,6 +102,7 @@ export const apiRoutes = {
         sourceRef: "",
         commitSha: "",
         notes: "",
+        expectedDigest: "",
       },
     },
   },

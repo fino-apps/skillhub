@@ -12,7 +12,7 @@ type CatalogEntry struct {
 }
 
 type CatalogRepo interface {
-	AddSkills(context.Context, []CatalogEntry) (int, error)
+	AddSkills(context.Context, []CatalogEntry) ([]model.SkillID, error)
 	AddVersion(context.Context, *model.SkillVersion, string) (bool, error)
 	Tags(context.Context, []model.SkillID) (map[model.SkillID][]string, error)
 	UpdateMetadata(context.Context, model.SkillID, string, string, []string) (*model.Skill, error)

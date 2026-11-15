@@ -115,6 +115,14 @@ func readSkill(skillPath string) (ScannedSkill, bool, error) {
 	if err != nil || !within(skillPath, realFile) {
 		return ScannedSkill{}, false, fmt.Errorf("invalid SKILL.md in %s", filepath.Base(skillPath))
 	}
+	info, err := os.Stat(realFile)
+	if err != nil {
+		return ScannedSkill{}, false, err
+	}
+	if !info.Mode().IsRegular() {
+		return ScannedSkill{}, false, fmt.Errorf("SKILL.md is not a regular file")
+	}
+
 	file, err := os.Open(realFile)
 	if err != nil {
 		return ScannedSkill{}, false, err

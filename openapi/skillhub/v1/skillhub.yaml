@@ -359,6 +359,7 @@ components:
           minLength: 40
           maxLength: 40
         repositoryUrl:
+          description: 本地收录时仓库字段留空，skill_paths 为本机绝对路径。
           type: string
           maxLength: 2048
         skillPaths:
@@ -370,9 +371,6 @@ components:
           type: string
           maxLength: 200
       required:
-        - repositoryUrl
-        - sourceRef
-        - commitSha
         - skillPaths
     skillhub.v1.ImportSkillResponse:
       title: skillhub.v1.ImportSkillResponse
@@ -512,6 +510,8 @@ components:
           type: string
         id:
           type: string
+        localPath:
+          type: string
         name:
           type: string
         notes:
@@ -570,20 +570,24 @@ components:
           type: string
           minLength: 40
           maxLength: 40
+        expectedDigest:
+          description: 本地版本要匹配比对时的原目录摘要。
+          type: string
+          minLength: 64
+          maxLength: 64
         notes:
           type: string
           maxLength: 4096
         sourceRef:
           type: string
           maxLength: 200
-      required:
-        - sourceRef
-        - commitSha
     skillhub.v1.VersionView:
       title: skillhub.v1.VersionView
       type: object
       properties:
         commitSha:
+          type: string
+        contentDigest:
           type: string
         createTime:
           type: string

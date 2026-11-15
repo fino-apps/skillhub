@@ -1,9 +1,12 @@
 {
   "title": "skillhub.SkillVersion",
-  "description": "SkillVersion 指向 GitHub 的固定 commit。",
+  "description": "SkillVersion 指向本机快照或 GitHub 的固定 commit。",
   "type": "object",
   "properties": {
     "commitSha": {
+      "type": "string"
+    },
+    "contentDigest": {
       "type": "string"
     },
     "createTime": {

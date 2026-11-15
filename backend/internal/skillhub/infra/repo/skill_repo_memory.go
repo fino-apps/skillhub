@@ -159,6 +159,7 @@ func (r *MemorySkillRepo) UpdateSkill(ctx context.Context, entity *model.Skill, 
 		Notes:          snapshot.Notes,
 		RepositoryUrl:  snapshot.RepositoryUrl,
 		RepositoryPath: snapshot.RepositoryPath,
+		LocalPath:      snapshot.LocalPath,
 		CreateTime:     snapshot.CreateTime,
 		UpdateTime:     snapshot.UpdateTime,
 	}); err != nil {

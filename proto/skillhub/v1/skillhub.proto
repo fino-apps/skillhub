@@ -75,6 +75,7 @@ message SkillView {
   string notes = 7;
   string repository_url = 8;
   string repository_path = 9;
+  string local_path = 10;
 
   fino.core.Timestamp create_time = 98;
   fino.core.Timestamp update_time = 99;
@@ -121,6 +122,7 @@ message VersionView {
   string notes = 4;
   string source_ref = 6;
   string commit_sha = 7;
+  string content_digest = 8;
   fino.core.Timestamp create_time = 98;
 }
 
@@ -130,9 +132,11 @@ message ListVersionsResponse {
 }
 
 message VersionInput {
-  string source_ref = 1 [(fino.validate) = {required: true max: 200}];
-  string commit_sha = 2 [(fino.validate) = {required: true min: 40 max: 40}];
+  string source_ref = 1 [(fino.validate) = {omitempty: true max: 200}];
+  string commit_sha = 2 [(fino.validate) = {omitempty: true min: 40 max: 40}];
   string notes = 3 [(fino.validate) = {omitempty: true max: 4096}];
+  // 本地版本要匹配比对时的原目录摘要。
+  string expected_digest = 4 [(fino.validate) = {omitempty: true min: 64 max: 64}];
 }
 
 message CreateVersionRequest {
@@ -184,9 +188,10 @@ message PreviewImportResponse {
 }
 
 message ImportSkillRequest {
-  string repository_url = 1 [(fino.validate) = {required: true max: 2048}];
-  string source_ref = 2 [(fino.validate) = {required: true max: 200}];
-  string commit_sha = 3 [(fino.validate) = {required: true min: 40 max: 40}];
+  // 本地收录时仓库字段留空，skill_paths 为本机绝对路径。
+  string repository_url = 1 [(fino.validate) = {omitempty: true max: 2048}];
+  string source_ref = 2 [(fino.validate) = {omitempty: true max: 200}];
+  string commit_sha = 3 [(fino.validate) = {omitempty: true min: 40 max: 40}];
   repeated string skill_paths = 4 [(fino.validate) = {required: true max: 100}];
 }
 

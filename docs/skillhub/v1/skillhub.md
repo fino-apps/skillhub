@@ -191,9 +191,10 @@ POST /skillhub/v1/skills/{skill_id}/versions
 
 | 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
 |---|---|---|---|---|---|
-| `sourceRef` | `string` |  | 是 |  | 最大长度为 200 |
-| `commitSha` | `string` |  | 是 |  | 最小长度为 40；最大长度为 40 |
+| `sourceRef` | `string` |  | 否 |  | 最大长度为 200 |
+| `commitSha` | `string` |  | 否 |  | 最小长度为 40；最大长度为 40 |
 | `notes` | `string` |  | 否 |  | 最大长度为 4096 |
+| `expectedDigest` | `string` |  | 否 |  | 本地版本要匹配比对时的原目录摘要。；最小长度为 64；最大长度为 64 |
 
 ### 返回值
 
@@ -270,9 +271,9 @@ POST /skillhub/v1/imports
 
 | 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
 |---|---|---|---|---|---|
-| `repositoryUrl` | `string` |  | 是 |  | 最大长度为 2048 |
-| `sourceRef` | `string` |  | 是 |  | 最大长度为 200 |
-| `commitSha` | `string` |  | 是 |  | 最小长度为 40；最大长度为 40 |
+| `repositoryUrl` | `string` |  | 否 |  | 本地收录时仓库字段留空，skill_paths 为本机绝对路径。；最大长度为 2048 |
+| `sourceRef` | `string` |  | 否 |  | 最大长度为 200 |
+| `commitSha` | `string` |  | 否 |  | 最小长度为 40；最大长度为 40 |
 | `skillPaths` | `Array<string>` |  | 是 |  | 最大长度为 100 |
 
 ### 返回值
@@ -356,6 +357,7 @@ POST /skillhub/v1/install-commands:generate
 | `notes` | `string` |  | 否 |  |  |
 | `repositoryUrl` | `string` |  | 否 |  |  |
 | `repositoryPath` | `string` |  | 否 |  |  |
+| `localPath` | `string` |  | 否 |  |  |
 | `createTime` | `string` | `Timestamp` | 否 |  |  |
 | `updateTime` | `string` | `Timestamp` | 否 |  |  |
 
@@ -369,6 +371,7 @@ POST /skillhub/v1/install-commands:generate
 | `notes` | `string` |  | 否 |  |  |
 | `sourceRef` | `string` |  | 否 |  |  |
 | `commitSha` | `string` |  | 否 |  |  |
+| `contentDigest` | `string` |  | 否 |  |  |
 | `createTime` | `string` | `Timestamp` | 否 |  |  |
 
 ### `skillhub.v1.SkillCandidate`

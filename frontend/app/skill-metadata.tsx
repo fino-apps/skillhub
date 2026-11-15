@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { updateSkill } from "@/generated/api-client";
 
-type Skill = { name: string; description: string; repositoryUrl: string; repositoryPath?: string; id: string; category?: string; notes?: string; tags?: string[] };
+type Skill = { name: string; description: string; repositoryUrl?: string; localPath?: string; repositoryPath?: string; id: string; category?: string; notes?: string; tags?: string[] };
 
 export default function SkillMetadata({ skill, onSaved }: { skill: Skill; onSaved: (skill: Skill) => void }) {
   const [category, setCategory] = useState(skill.category ?? "");

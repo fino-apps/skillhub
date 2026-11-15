@@ -30,7 +30,16 @@ func (s skillhubServer) previewImport(ctx context.Context, in *pb.PreviewImportR
 func (s skillhubServer) importSkill(ctx context.Context, in *pb.ImportSkillRequest) (*pb.ImportSkillResponse, error) {
 	ref := strings.TrimSpace(in.GetSourceRef())
 	paths := in.GetSkillPaths()
-	if ref == "" || len(ref) > 200 || len(paths) == 0 || len(paths) > 100 {
+	if len(paths) == 0 || len(paths) > 100 {
+		return nil, errcode.NewPlatformBadRequest()
+	}
+	if in.GetRepositoryUrl() == "" {
+		if ref != "" || in.GetCommitSha() != "" {
+			return nil, errcode.NewPlatformBadRequest()
+		}
+		return s.importLocalSkills(ctx, paths)
+	}
+	if ref == "" || len(ref) > 200 {
 		return nil, errcode.NewPlatformBadRequest()
 	}
 	repository, err := service.NormalizeRepository(in.GetRepositoryUrl())
@@ -65,7 +74,7 @@ func (s skillhubServer) importSkill(ctx context.Context, in *pb.ImportSkillReque
 	if err != nil {
 		return nil, errcode.WrapCreateSkillhubFailed(err)
 	}
-	return &pb.ImportSkillResponse{AddedCount: int32(added), ExistingCount: int32(len(entries) - added)}, nil
+	return &pb.ImportSkillResponse{AddedCount: int32(len(added)), ExistingCount: int32(len(entries) - len(added))}, nil
 }
 
 func pinnedVersion(skillID, name, ref, commit, notes string) (*model.SkillVersion, error) {
@@ -77,7 +86,8 @@ func pinnedVersion(skillID, name, ref, commit, notes string) (*model.SkillVersio
 func versionView(version *model.SkillVersion) *pb.VersionView {
 	return &pb.VersionView{
 		Id: string(version.ID()), SkillId: version.SkillId(), Name: version.Name(),
-		Notes: version.Notes(), SourceRef: version.SourceRef(), CommitSha: version.CommitSha(), CreateTime: version.CreateTime(),
+		Notes: version.Notes(), SourceRef: version.SourceRef(), CommitSha: version.CommitSha(),
+		ContentDigest: version.ContentDigest(), CreateTime: version.CreateTime(),
 	}
 }
 
@@ -87,6 +97,18 @@ func (s skillhubServer) createVersion(ctx context.Context, in *pb.CreateVersionR
 		return nil, errcode.WrapPlatformNotFound(err)
 	}
 	input := in.GetVersion()
+	if input == nil {
+		return nil, errcode.NewPlatformBadRequest()
+	}
+	if skill.LocalPath() != "" {
+		if input.GetSourceRef() != "" || input.GetCommitSha() != "" {
+			return nil, errcode.NewPlatformBadRequest()
+		}
+		return s.captureVersion(ctx, skill, input)
+	}
+	if input.GetExpectedDigest() != "" {
+		return nil, errcode.NewPlatformBadRequest()
+	}
 	ref, commit := strings.TrimSpace(input.GetSourceRef()), input.GetCommitSha()
 	if ref == "" || len(ref) > 200 {
 		return nil, errcode.NewPlatformBadRequest()
@@ -99,7 +121,11 @@ func (s skillhubServer) createVersion(ctx context.Context, in *pb.CreateVersionR
 	if err != nil {
 		return nil, errcode.WrapPlatformBadRequest(err)
 	}
-	created, err := s.catalog.AddVersion(ctx, version, items[0].Description)
+	return s.saveVersion(ctx, version, items[0].Description)
+}
+
+func (s skillhubServer) saveVersion(ctx context.Context, version *model.SkillVersion, description string) (*pb.CreateVersionResponse, error) {
+	created, err := s.catalog.AddVersion(ctx, version, description)
 	if err != nil {
 		return nil, errcode.WrapCreateSkillhubFailed(err)
 	}

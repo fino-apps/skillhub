@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/fino-io/finokit/config"
 	"github.com/fino-io/finokit/logs"
@@ -76,6 +77,22 @@ func buildServer(deps infra) (pb.SkillhubServiceServer, error) {
 		return nil, err
 	}
 
+	// The current indexes also distinguish independent local snapshots.
+	session := deps.DB.NewSession(context.Background())
+	for _, index := range []string{"idx_skill_source", "idx_skill_commit"} {
+		if err := session.Exec("DROP INDEX IF EXISTS " + index).Error; err != nil {
+			return nil, err
+		}
+	}
+	snapshotDir := os.Getenv("SKILLHUB_SNAPSHOT_DIR")
+	if snapshotDir == "" {
+		snapshotDir = "skillhub-snapshots"
+	}
+	snapshots, err := service.NewSnapshotStore(snapshotDir)
+	if err != nil {
+		return nil, err
+	}
+
 	skillRepo := infrarepo.NewSkillRepo(infrarepo.SkillRepoDeps{
 		SkillDao:       dao.NewSkillDaoImpl(deps.DB),
 		PageTokenCodec: deps.Pagination,
@@ -93,6 +110,7 @@ func buildServer(deps infra) (pb.SkillhubServiceServer, error) {
 
 	return app.NewService(app.ServiceDeps{
 		Catalog:     infrarepo.NewCatalogRepo(deps.DB),
+		Snapshots:   snapshots,
 		SkillhubSvc: skillhubService,
 	}), nil
 }

@@ -63,6 +63,7 @@ func ToSkillView(entity *model.Skill) *inputpb.SkillView {
 		Notes:          entity.Notes(),
 		RepositoryUrl:  entity.RepositoryUrl(),
 		RepositoryPath: entity.RepositoryPath(),
+		LocalPath:      entity.LocalPath(),
 		CreateTime:     entity.CreateTime(),
 		UpdateTime:     entity.UpdateTime(),
 	}

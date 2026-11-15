@@ -17,14 +17,15 @@ func SkillVersionToRecord(entity *model.SkillVersion) *pmodel.SkillVersion {
 
 	snapshot := entity.Snapshot()
 	return &pmodel.SkillVersion{
-		ID:         snapshot.ID,
-		SkillId:    snapshot.SkillId,
-		Name:       snapshot.Name,
-		Notes:      snapshot.Notes,
-		SourceRef:  snapshot.SourceRef,
-		CommitSha:  snapshot.CommitSha,
-		CreateTime: snapshot.CreateTime,
-		UpdateTime: snapshot.UpdateTime,
+		ID:            snapshot.ID,
+		SkillId:       snapshot.SkillId,
+		Name:          snapshot.Name,
+		Notes:         snapshot.Notes,
+		SourceRef:     snapshot.SourceRef,
+		CommitSha:     snapshot.CommitSha,
+		ContentDigest: snapshot.ContentDigest,
+		CreateTime:    snapshot.CreateTime,
+		UpdateTime:    snapshot.UpdateTime,
 	}
 }
 
@@ -34,14 +35,15 @@ func RecordToSkillVersion(record *pmodel.SkillVersion) *model.SkillVersion {
 	}
 
 	return model.RebuildSkillVersion(model.SkillVersionSnapshot{
-		ID:         record.ID,
-		SkillId:    record.SkillId,
-		Name:       record.Name,
-		Notes:      record.Notes,
-		SourceRef:  record.SourceRef,
-		CommitSha:  record.CommitSha,
-		CreateTime: record.CreateTime,
-		UpdateTime: record.UpdateTime,
+		ID:            record.ID,
+		SkillId:       record.SkillId,
+		Name:          record.Name,
+		Notes:         record.Notes,
+		SourceRef:     record.SourceRef,
+		CommitSha:     record.CommitSha,
+		ContentDigest: record.ContentDigest,
+		CreateTime:    record.CreateTime,
+		UpdateTime:    record.UpdateTime,
 	})
 }
 
@@ -72,6 +74,8 @@ func SkillVersionFields(snapshot model.SkillVersionSnapshot, updateMask []string
 			fields["source_ref"] = snapshot.SourceRef
 		case "commitSha":
 			fields["commit_sha"] = snapshot.CommitSha
+		case "contentDigest":
+			fields["content_digest"] = snapshot.ContentDigest
 		case "createTime":
 			fields["create_time"] = snapshot.CreateTime
 		case "updateTime":

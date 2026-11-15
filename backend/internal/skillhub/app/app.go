@@ -22,6 +22,7 @@ import (
 type ServiceDeps struct {
 	SkillhubSvc service.ISkillhubService
 	Catalog     repo.CatalogRepo
+	Snapshots   *service.SnapshotStore
 }
 
 type skillhubServer struct {
@@ -29,6 +30,7 @@ type skillhubServer struct {
 
 	skillhubSvc service.ISkillhubService
 	catalog     repo.CatalogRepo
+	snapshots   *service.SnapshotStore
 }
 
 // NewService wires the generated transport server to the application service.
@@ -36,6 +38,7 @@ func NewService(deps ServiceDeps) pb.SkillhubServiceServer {
 	return skillhubServer{
 		skillhubSvc: deps.SkillhubSvc,
 		catalog:     deps.Catalog,
+		snapshots:   deps.Snapshots,
 	}
 }
 
@@ -168,6 +171,10 @@ func (s skillhubServer) DeleteSkill(ctx context.Context, in *pb.DeleteSkillReque
 	}
 
 	logs.Ctx(ctx).Infow("skill deleted", "skill_id", id)
+
+	if err := s.snapshots.RemoveSkill(string(id)); err != nil {
+		logs.Ctx(ctx).Warnw("failed to remove skill snapshots", "skill_id", id, "error", err)
+	}
 
 	return &core.Null{}, nil
 }

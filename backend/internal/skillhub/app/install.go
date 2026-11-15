@@ -21,7 +21,16 @@ func (s skillhubServer) getInstallCommand(ctx context.Context, in *pb.GetInstall
 	if version.SkillId() != in.GetSkillId() {
 		return nil, errcode.NewPlatformBadRequest()
 	}
-	command, err := service.InstallCommand(skill.RepositoryUrl(), skill.RepositoryPath(), version.CommitSha(), version.Name(), in.GetGlobal())
+	var command string
+	if version.ContentDigest() != "" {
+		path, pathErr := s.snapshots.Path(version.SkillId(), string(version.ID()), version.Name())
+		if pathErr != nil {
+			return nil, errcode.WrapPlatformNotFound(pathErr)
+		}
+		command, err = service.LocalInstallCommand(path, version.Name(), in.GetGlobal())
+	} else {
+		command, err = service.InstallCommand(skill.RepositoryUrl(), skill.RepositoryPath(), version.CommitSha(), version.Name(), in.GetGlobal())
+	}
 	if err != nil {
 		return nil, errcode.WrapPlatformBadRequest(err)
 	}

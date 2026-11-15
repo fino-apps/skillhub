@@ -24,6 +24,7 @@ func SkillToRecord(entity *model.Skill) *pmodel.Skill {
 		Notes:          snapshot.Notes,
 		RepositoryUrl:  snapshot.RepositoryUrl,
 		RepositoryPath: snapshot.RepositoryPath,
+		LocalPath:      snapshot.LocalPath,
 		CreateTime:     snapshot.CreateTime,
 		UpdateTime:     snapshot.UpdateTime,
 	}
@@ -42,6 +43,7 @@ func RecordToSkill(record *pmodel.Skill) *model.Skill {
 		Notes:          record.Notes,
 		RepositoryUrl:  record.RepositoryUrl,
 		RepositoryPath: record.RepositoryPath,
+		LocalPath:      record.LocalPath,
 		CreateTime:     record.CreateTime,
 		UpdateTime:     record.UpdateTime,
 	})
@@ -76,6 +78,8 @@ func SkillFields(snapshot model.SkillSnapshot, updateMask []string) map[string]i
 			fields["repository_url"] = snapshot.RepositoryUrl
 		case "repositoryPath":
 			fields["repository_path"] = snapshot.RepositoryPath
+		case "localPath":
+			fields["local_path"] = snapshot.LocalPath
 		case "createTime":
 			fields["create_time"] = snapshot.CreateTime
 		case "updateTime":

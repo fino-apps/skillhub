@@ -16,7 +16,12 @@ type comparisonSource struct {
 	cleanup func()
 }
 
-func (s skillhubServer) gitHubVersion(ctx context.Context, skill *model.Skill, version *model.SkillVersion) (comparisonSource, error) {
+func (s skillhubServer) versionSource(ctx context.Context, skill *model.Skill, version *model.SkillVersion) (comparisonSource, error) {
+	if version.ContentDigest() != "" {
+		path, err := s.snapshots.Path(version.SkillId(), string(version.ID()), version.Name())
+		return comparisonSource{path: path}, err
+	}
+
 	if skill.RepositoryUrl() == "" || version.CommitSha() == "" {
 		return comparisonSource{}, fmt.Errorf("version has no pinned commit")
 	}
@@ -46,7 +51,7 @@ func (s skillhubServer) compareSource(ctx context.Context, location *pb.SkillLoc
 		if len(versions.Items) == 0 {
 			return comparisonSource{}, fmt.Errorf("skill has no versions")
 		}
-		return s.gitHubVersion(ctx, skill, versions.Items[0])
+		return s.versionSource(ctx, skill, versions.Items[0])
 	}
 	if id := location.GetVersionId(); id != "" {
 		version, err := s.skillhubSvc.GetSkillVersion(ctx, model.SkillVersionID(id))
@@ -57,7 +62,7 @@ func (s skillhubServer) compareSource(ctx context.Context, location *pb.SkillLoc
 		if err != nil {
 			return comparisonSource{}, err
 		}
-		return s.gitHubVersion(ctx, skill, version)
+		return s.versionSource(ctx, skill, version)
 	}
 	return comparisonSource{}, fmt.Errorf("source missing")
 }

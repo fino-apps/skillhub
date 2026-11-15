@@ -190,16 +190,20 @@ func validateCreateVersionRequest(req *pb.CreateVersionRequest) error {
 		return newRequestValidationError("version", err)
 	}
 
-	if err := requestValidator.Var(req.GetVersion().GetSourceRef(), "required,max=200"); err != nil {
+	if err := requestValidator.Var(req.GetVersion().GetSourceRef(), "omitempty,max=200"); err != nil {
 		return newRequestValidationError("version.source_ref", err)
 	}
 
-	if err := requestValidator.Var(req.GetVersion().GetCommitSha(), "required,min=40,max=40"); err != nil {
+	if err := requestValidator.Var(req.GetVersion().GetCommitSha(), "omitempty,min=40,max=40"); err != nil {
 		return newRequestValidationError("version.commit_sha", err)
 	}
 
 	if err := requestValidator.Var(req.GetVersion().GetNotes(), "omitempty,max=4096"); err != nil {
 		return newRequestValidationError("version.notes", err)
+	}
+
+	if err := requestValidator.Var(req.GetVersion().GetExpectedDigest(), "omitempty,min=64,max=64"); err != nil {
+		return newRequestValidationError("version.expected_digest", err)
 	}
 
 	return nil
@@ -222,15 +226,15 @@ func validatePreviewImportRequest(req *pb.PreviewImportRequest) error {
 }
 
 func validateImportSkillRequest(req *pb.ImportSkillRequest) error {
-	if err := requestValidator.Var(req.GetRepositoryUrl(), "required,max=2048"); err != nil {
+	if err := requestValidator.Var(req.GetRepositoryUrl(), "omitempty,max=2048"); err != nil {
 		return newRequestValidationError("repository_url", err)
 	}
 
-	if err := requestValidator.Var(req.GetSourceRef(), "required,max=200"); err != nil {
+	if err := requestValidator.Var(req.GetSourceRef(), "omitempty,max=200"); err != nil {
 		return newRequestValidationError("source_ref", err)
 	}
 
-	if err := requestValidator.Var(req.GetCommitSha(), "required,min=40,max=40"); err != nil {
+	if err := requestValidator.Var(req.GetCommitSha(), "omitempty,min=40,max=40"); err != nil {
 		return newRequestValidationError("commit_sha", err)
 	}
 

@@ -46,8 +46,9 @@ erDiagram
 | `description` | `string` | 长度 1024 | 用途说明 |
 | `category` | `string` | 长度 128；索引 （自动命名） | 分类 |
 | `notes` | `string` | 长度 4096 | 个人备注 |
-| `repository_url` | `string` | 长度 2048；唯一索引 `idx_skill_source` | GitHub 来源地址 |
-| `repository_path` | `string` | 长度 1024；唯一索引 `idx_skill_source` | 仓库内 Skill 路径 |
+| `repository_url` | `string` | 长度 2048；唯一索引 `idx_skill_location` | GitHub 来源地址 |
+| `repository_path` | `string` | 长度 1024；唯一索引 `idx_skill_location` | 仓库内 Skill 路径 |
+| `local_path` | `string` | 长度 2048；唯一索引 `idx_skill_location`；默认值 `''` | 本机原始 Skill 目录；GitHub 来源留空 |
 | `create_time` | `timestamp` |  | 创建时间 |
 | `update_time` | `timestamp` |  | 最后更新时间 |
 
@@ -70,11 +71,12 @@ erDiagram
 | 字段 | 模型类型 | DB 标注 | 说明 |
 |---|---|---|---|
 | `id` | `string` | PK（默认约定）；长度 36 | 主键 |
-| `skill_id` | `string` | 长度 36；唯一索引 `idx_skill_commit` | Skill ID |
-| `name` | `string` | 长度 64 | 该 commit 中的 Skill 名称 |
+| `skill_id` | `string` | 长度 36；唯一索引 `idx_skill_version_source` | Skill ID |
+| `name` | `string` | 长度 64 | 该版本的 Skill 名称 |
 | `notes` | `string` | 长度 4096 | 版本说明 |
 | `source_ref` | `string` | 长度 200 | 用户选择的 Git 引用 |
-| `commit_sha` | `string` | 长度 40；唯一索引 `idx_skill_commit` | 完整 commit SHA |
+| `commit_sha` | `string` | 长度 40；唯一索引 `idx_skill_version_source` | 完整 commit SHA |
+| `content_digest` | `string` | 长度 64；唯一索引 `idx_skill_version_source`；默认值 `''` | 本地版本的内容摘要 |
 | `create_time` | `timestamp` |  | 创建时间 |
 | `update_time` | `timestamp` |  | 最后更新时间 |
 

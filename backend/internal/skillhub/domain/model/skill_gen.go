@@ -22,6 +22,7 @@ type CreateSkillInput struct {
 	Notes          string
 	RepositoryUrl  string
 	RepositoryPath string
+	LocalPath      string
 	CreateTime     *core.Timestamp
 	UpdateTime     *core.Timestamp
 }
@@ -33,6 +34,7 @@ type UpdateSkillInput struct {
 	Notes          string
 	RepositoryUrl  string
 	RepositoryPath string
+	LocalPath      string
 	CreateTime     *core.Timestamp
 	UpdateTime     *core.Timestamp
 	UpdateMask     []string
@@ -55,6 +57,7 @@ type SkillSnapshot struct {
 	Notes          string
 	RepositoryUrl  string
 	RepositoryPath string
+	LocalPath      string
 	CreateTime     *core.Timestamp
 	UpdateTime     *core.Timestamp
 }
@@ -67,6 +70,7 @@ type Skill struct {
 	notes          string
 	repositoryUrl  string
 	repositoryPath string
+	localPath      string
 	createTime     *core.Timestamp
 	updateTime     *core.Timestamp
 }
@@ -93,6 +97,7 @@ func NewSkill(input CreateSkillInput) (*Skill, error) {
 		notes:          input.Notes,
 		repositoryUrl:  input.RepositoryUrl,
 		repositoryPath: input.RepositoryPath,
+		localPath:      input.LocalPath,
 		createTime:     input.CreateTime,
 		updateTime:     input.UpdateTime,
 	}, nil
@@ -107,6 +112,7 @@ func RebuildSkill(snapshot SkillSnapshot) *Skill {
 		notes:          snapshot.Notes,
 		repositoryUrl:  snapshot.RepositoryUrl,
 		repositoryPath: snapshot.RepositoryPath,
+		localPath:      snapshot.LocalPath,
 		createTime:     snapshot.CreateTime,
 		updateTime:     snapshot.UpdateTime,
 	}
@@ -136,6 +142,8 @@ func (e *Skill) ApplyUpdate(input UpdateSkillInput) error {
 			updated.repositoryUrl = input.RepositoryUrl
 		case "repositoryPath":
 			updated.repositoryPath = input.RepositoryPath
+		case "localPath":
+			updated.localPath = input.LocalPath
 		case "createTime":
 			updated.createTime = input.CreateTime
 		case "updateTime":
@@ -162,6 +170,7 @@ func (e *Skill) Snapshot() SkillSnapshot {
 		Notes:          e.notes,
 		RepositoryUrl:  e.repositoryUrl,
 		RepositoryPath: e.repositoryPath,
+		LocalPath:      e.localPath,
 		CreateTime:     e.createTime,
 		UpdateTime:     e.updateTime,
 	}
@@ -221,6 +230,14 @@ func (e *Skill) RepositoryPath() string {
 		return zero
 	}
 	return e.repositoryPath
+}
+
+func (e *Skill) LocalPath() string {
+	if e == nil {
+		var zero string
+		return zero
+	}
+	return e.localPath
 }
 
 func (e *Skill) CreateTime() *core.Timestamp {
