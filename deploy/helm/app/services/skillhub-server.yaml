@@ -1,0 +1,17 @@
+# Project-owned deployment settings; runtime YAML stays in backend/configs/.
+nameOverride: skillhub
+existingSecret: skillhub-runtime
+server:
+  configKey: skillhubServer
+image:
+  repository: skillhub/skillhub-server
+  tag: latest-amd64
+
+sqlite:
+  enabled: true
+
+frontend:
+  image:
+    repository: skillhub/skillhub-frontend
+    tag: latest-amd64
+  apiPrefix: /skillhub/v1

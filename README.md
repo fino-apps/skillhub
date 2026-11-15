@@ -1,57 +1,45 @@
-# Skillhub
+# SkillHub
 
-这是一个用 Fino 生成的 Go 服务。默认示例提供 Resource 的 HTTP/gRPC CRUD，数据保存在内存中，重启后清空。
+SkillHub 是一个基于 Fino 的本地 Skill 管理项目。当前已生成 Go service、SQLite 仓储和 React 前端，并提供项目 Skill 扫描；版本管理、导入、线上比较、安装命令及标签筛选等业务接口仍待实现，不能将生成骨架视为完整产品。
 
 ## 本地运行
 
-需要 Go 1.25.13 或更新版本、Fino，以及 PATH 中的 `protoc-gen-go` 和 `protoc-gen-go-grpc`。在项目根目录执行：
+需要 Fino、Go 1.25.13 或更新版本、`protoc-gen-go`、`protoc-gen-go-grpc`，以及 Node.js 20.19 或更新版本。
 
 ```bash
-fino doctor --targets=api,service
-fino build --targets=api,service
+fino doctor --output=. --targets=service,frontend
+fino build --output=. --targets=service,frontend
 cd backend
-test -f .env || cp .env.example .env
+cp -n .env.example .env
 go run ./cmd/skillhub-server
 ```
 
-默认 HTTP、gRPC、调试端口分别为 `31101`、`31102`、`31103`。在 `backend/.env` 中修改端口，后续启动沿用已有的环境文件和分页密钥。用 Ctrl-C 停止服务。
-
-本地演示配置监听所有网卡，HTTP 和 gRPC 默认未启用认证。对外部署前配置访问控制，并为每个部署设置独立的 `PAGINATION_ENCODED_KEY`，重启时沿用该值。
-
-服务默认加载 `backend/configs/` 中的 YAML。需要接入 Nacos 时，按 `backend/.env.example` 配置 `NACOS_SERVER_ADDR` 和对应的命名空间、分组及凭据。服务启动时优先读取远端 YAML，读取或加载失败时使用本地配置。
-
-## 调用接口
-
-启动后，在另一个终端创建一条资源：
+在另一个终端启动前端：
 
 ```bash
-curl -fsS http://localhost:31101/skillhub/v1/resources \
-  -H 'Content-Type: application/json' -d '{"name":"first resource"}'
+cd frontend
+npm ci
+npm run dev
 ```
 
-将响应中的 `id` 填入下方命令，查询刚创建的资源：
+默认 HTTP 服务监听 `127.0.0.1:31101`；前端地址见 Vite 启动输出。SQLite 默认保存于后端工作目录下的 `skillhub.db`。`.env` 包含生成的分页密钥，应保留且不要提交。
+
+## 项目扫描
 
 ```bash
-id=替换为返回的id
-curl -fsS "http://localhost:31101/skillhub/v1/resources/$id"
+curl -fsS http://127.0.0.1:31101/skillhub/v1/projects:scan \
+  -H 'Content-Type: application/json' \
+  -d '{"projectPath":"/项目的绝对路径"}'
 ```
 
-更多接口见 [API 文档](docs/) 和 [OpenAPI](openapi/)。这两个目录在生成后可用。
+扫描 `.agents/skills` 和 `.codex/skills`，允许指向项目内的目录链接并按真实路径去重，拒绝指向项目外的链接。目前扫描只发现 Skill，尚未关联管理库或计算同步状态；结果标记为无同步基准。
 
-## 修改契约与重新生成
-
-从 [proto/](proto/) 修改 RPC、消息或 HTTP 绑定，再在项目根目录执行：
+## 检查
 
 ```bash
-fino build --targets=api,service
 go -C go test ./...
 go -C backend test ./...
+cd frontend && npm run build
 ```
 
-需要 Go 客户端或 Web 前端时，将 `client` 或 `frontend` 加入构建目标。生成前端还需要 Node.js 和 npm，可用 `fino doctor --targets=frontend` 检查。可编辑 [ER 配置](.fino/er.yaml) 调整生成的 [模型 ER 图](docs/er.md)。
-
-应用入口在 `backend/cmd/skillhub-server/`，业务实现位于 `backend/internal/skillhub/`。协作与维护约定见 [AGENTS.md](AGENTS.md)。
-
-## 部署
-
-生成服务后，可查看 [Docker Compose](deploy/compose/README.md) 和 [Helm](deploy/helm/README.md) 的部署说明。Helm 的环境覆盖放在 `deploy/helm/environments/`。
+产品范围和待完成设计见 [设计文档](docs/DESIGN.md)。目前的 Skill CRUD 是 Fino 生成骨架，尚未完成标签、目录内容和版本等业务逻辑；不要用于重要数据。

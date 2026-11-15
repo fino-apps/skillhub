@@ -1,0 +1,48 @@
+{
+  "title": "skillhub.Skill",
+  "description": "Skill 保存管理信息；个人内容位于受控的相对目录。",
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string"
+    },
+    "contentPath": {
+      "type": "string"
+    },
+    "createTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "currentDigest": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "$ref": "#/components/schemas/skillhub.SkillKind"
+    },
+    "name": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "originCommitSha": {
+      "type": "string"
+    },
+    "repositoryPath": {
+      "type": "string"
+    },
+    "repositoryUrl": {
+      "type": "string"
+    },
+    "updateTime": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -231,12 +231,11 @@ message RestoreVersionResponse {
 
 // SkillLocation 选择管理库当前内容、历史版本、项目目录或 GitHub 的固定版本。
 message SkillLocation {
-  oneof location {
-    string current_skill_id = 1;
-    string version_id = 2;
-    string local_path = 3;
-    GitHubSource github = 4;
-  }
+  // 应用层校验恰好指定一种来源。
+  string current_skill_id = 1;
+  string version_id = 2;
+  string local_path = 3;
+  GitHubSource github = 4;
 }
 
 message GitHubSource {

@@ -1,0 +1,20 @@
+.skillhub-shell { width: var(--site-content-width); max-width: 1100px; margin: 40px auto 80px; }
+.skillhub-heading { margin-bottom: 36px; }
+.skillhub-heading h1 { font-size: 28px; margin: 0 0 8px; }
+.skillhub-heading p, .skillhub-section > p { color: var(--muted); margin: 0 0 20px; }
+.skillhub-section { border-top: 1px solid var(--line); padding: 24px 0; }
+.skillhub-section h2 { font-size: 18px; margin: 0 0 16px; }
+.skillhub-section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.skillhub-section-heading label { color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.skillhub-list { list-style: none; padding: 0; margin: 8px 0; }
+.skillhub-list li { padding: 16px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+.skillhub-list strong { font-size: 15px; }
+.skillhub-list p { margin: 5px 0; color: var(--muted); overflow-wrap: anywhere; }
+.skillhub-list span { color: var(--muted); font-size: 13px; margin-left: 12px; overflow-wrap: anywhere; }
+.skillhub-form label { display: block; margin-bottom: 8px; }
+.skillhub-form > div { display: flex; gap: 8px; max-width: 700px; }
+.skillhub-form input { flex: 1; min-width: 0; }
+.skillhub-form button { padding: 0 18px; white-space: nowrap; }
+.skillhub-empty { color: var(--muted); padding: 16px 0; }
+.skillhub-error { color: var(--danger); }
+@media (max-width: 600px) { .skillhub-section-heading { align-items: stretch; flex-direction: column; } .skillhub-section-heading label input { flex: 1; min-width: 0; } .skillhub-list span { display: block; margin: 4px 0 0; } }

@@ -1,0 +1,1098 @@
+openapi: 3.0.3
+info:
+  title: SkillhubService
+  version: 1.0.0
+paths:
+  /skillhub/v1/files:get:
+    post:
+      operationId: GetFile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.GetFileRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.GetFileResponse'
+  /skillhub/v1/files:list:
+    post:
+      operationId: ListFiles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.ListFilesRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.ListFilesResponse'
+  /skillhub/v1/imports:
+    post:
+      operationId: ImportSkill
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.ImportSkillRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.ImportSkillResponse'
+  /skillhub/v1/imports:preview:
+    post:
+      operationId: PreviewImport
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.PreviewImportRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.PreviewImportResponse'
+  /skillhub/v1/install-commands:generate:
+    post:
+      operationId: GetInstallCommands
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.GetInstallCommandsRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.GetInstallCommandsResponse'
+  /skillhub/v1/projects:scan:
+    post:
+      operationId: ScanProject
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.ScanProjectRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.ScanProjectResponse'
+  /skillhub/v1/skill-filters:
+    get:
+      operationId: ListSkillFilters
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.ListSkillFiltersResponse'
+  /skillhub/v1/skills:
+    get:
+      operationId: ListSkills
+      parameters:
+        - name: keyword
+          in: query
+          schema:
+            type: string
+            maxLength: 1024
+        - name: kind
+          in: query
+          schema:
+            $ref: '#/components/schemas/skillhub.SkillKind'
+        - name: category
+          in: query
+          schema:
+            type: string
+            maxLength: 128
+        - name: tag
+          in: query
+          schema:
+            type: string
+            maxLength: 128
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+        - name: pageToken
+          in: query
+          schema:
+            type: string
+            maxLength: 512
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.ListSkillsResponse'
+    post:
+      operationId: CreateSkill
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.SkillInput'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.CreateSkillResponse'
+  /skillhub/v1/skills/{skill_id}:
+    get:
+      operationId: GetSkill
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            maxLength: 36
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.GetSkillResponse'
+    patch:
+      operationId: UpdateSkill
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            maxLength: 36
+        - name: updateMask
+          in: query
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.UpdateSkillInput'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.UpdateSkillResponse'
+    delete:
+      operationId: DeleteSkill
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            maxLength: 36
+        - name: deleteContent
+          in: query
+          description: 显式选择是否删除个人内容和快照；公开 Skill 只删除记录。
+          schema:
+            description: 显式选择是否删除个人内容和快照；公开 Skill 只删除记录。
+            type: boolean
+      responses:
+        "200":
+          description: OK
+  /skillhub/v1/skills/{skill_id}/files:
+    put:
+      operationId: PutFile
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            maxLength: 36
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.PutFileRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.PutFileResponse'
+    delete:
+      operationId: DeleteFile
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            maxLength: 36
+        - name: path
+          in: query
+          required: true
+          schema:
+            type: string
+            maxLength: 1024
+        - name: expectedDigest
+          in: query
+          description: 删除前个人 Skill 整个目录的摘要。
+          required: true
+          schema:
+            description: 删除前个人 Skill 整个目录的摘要。
+            type: string
+            maxLength: 128
+      responses:
+        "200":
+          description: OK
+  /skillhub/v1/skills/{skill_id}/versions:
+    get:
+      operationId: ListVersions
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            maxLength: 36
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+        - name: pageToken
+          in: query
+          schema:
+            type: string
+            maxLength: 512
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.ListVersionsResponse'
+    post:
+      operationId: CreateVersion
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            maxLength: 36
+        - name: expectedDigest
+          in: query
+          description: 个人快照要求匹配当前目录摘要；公开 Skill 留空。
+          schema:
+            description: 个人快照要求匹配当前目录摘要；公开 Skill 留空。
+            type: string
+            maxLength: 128
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.VersionInput'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.CreateVersionResponse'
+  /skillhub/v1/skills/{skill_id}/versions/{version_id}:restore:
+    post:
+      operationId: RestoreVersion
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            maxLength: 36
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            maxLength: 36
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.RestoreVersionRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.RestoreVersionResponse'
+  /skillhub/v1/skills:compare:
+    post:
+      operationId: CompareSkills
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.CompareSkillsRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.CompareSkillsResponse'
+  /skillhub/v1/sources:resolve:
+    post:
+      operationId: ResolveSource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.ResolveSourceRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.ResolveSourceResponse'
+components:
+  schemas:
+    skillhub.SkillKind:
+      title: skillhub.SkillKind
+      description: SkillKind 区分由管理库维护的 Skill 和只记录来源的公开 Skill。
+      type: string
+      enum:
+        - SKILL_KIND_UNSPECIFIED
+        - SKILL_KIND_PERSONAL
+        - SKILL_KIND_PUBLIC
+    skillhub.v1.CompareSkillsRequest:
+      title: skillhub.v1.CompareSkillsRequest
+      type: object
+      properties:
+        left:
+          $ref: '#/components/schemas/skillhub.v1.SkillLocation'
+        right:
+          $ref: '#/components/schemas/skillhub.v1.SkillLocation'
+      required:
+        - left
+        - right
+    skillhub.v1.CompareSkillsResponse:
+      title: skillhub.v1.CompareSkillsResponse
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/skillhub.v1.FileChangeView'
+        leftCommitSha:
+          type: string
+        leftDigest:
+          type: string
+        rightCommitSha:
+          type: string
+        rightDigest:
+          type: string
+    skillhub.v1.CreateSkillRequest:
+      title: skillhub.v1.CreateSkillRequest
+      type: object
+      properties:
+        skill:
+          $ref: '#/components/schemas/skillhub.v1.SkillInput'
+      required:
+        - skill
+    skillhub.v1.CreateSkillResponse:
+      title: skillhub.v1.CreateSkillResponse
+      type: object
+      properties:
+        skill:
+          $ref: '#/components/schemas/skillhub.v1.SkillView'
+    skillhub.v1.CreateVersionRequest:
+      title: skillhub.v1.CreateVersionRequest
+      type: object
+      properties:
+        expectedDigest:
+          description: 个人快照要求匹配当前目录摘要；公开 Skill 留空。
+          type: string
+          maxLength: 128
+        skillId:
+          type: string
+          format: uuid
+          maxLength: 36
+        version:
+          $ref: '#/components/schemas/skillhub.v1.VersionInput'
+      required:
+        - skillId
+        - version
+    skillhub.v1.CreateVersionResponse:
+      title: skillhub.v1.CreateVersionResponse
+      type: object
+      properties:
+        version:
+          $ref: '#/components/schemas/skillhub.v1.VersionView'
+    skillhub.v1.DeleteFileRequest:
+      title: skillhub.v1.DeleteFileRequest
+      type: object
+      properties:
+        expectedDigest:
+          description: 删除前个人 Skill 整个目录的摘要。
+          type: string
+          maxLength: 128
+        path:
+          type: string
+          maxLength: 1024
+        skillId:
+          type: string
+          format: uuid
+          maxLength: 36
+      required:
+        - skillId
+        - path
+        - expectedDigest
+    skillhub.v1.DeleteSkillRequest:
+      title: skillhub.v1.DeleteSkillRequest
+      type: object
+      properties:
+        deleteContent:
+          description: 显式选择是否删除个人内容和快照；公开 Skill 只删除记录。
+          type: boolean
+        skillId:
+          type: string
+          format: uuid
+          maxLength: 36
+      required:
+        - skillId
+    skillhub.v1.FileChangeKind:
+      title: skillhub.v1.FileChangeKind
+      type: string
+      enum:
+        - FILE_CHANGE_KIND_UNSPECIFIED
+        - FILE_CHANGE_KIND_ADDED
+        - FILE_CHANGE_KIND_MODIFIED
+        - FILE_CHANGE_KIND_DELETED
+    skillhub.v1.FileChangeView:
+      title: skillhub.v1.FileChangeView
+      type: object
+      properties:
+        binary:
+          type: boolean
+        kind:
+          $ref: '#/components/schemas/skillhub.v1.FileChangeKind'
+        leftText:
+          type: string
+        path:
+          type: string
+        rightText:
+          type: string
+    skillhub.v1.FileView:
+      title: skillhub.v1.FileView
+      type: object
+      properties:
+        binary:
+          type: boolean
+        digest:
+          type: string
+        excluded:
+          type: boolean
+        path:
+          type: string
+        sensitive:
+          type: boolean
+        size:
+          type: string
+          format: int64
+    skillhub.v1.GetFileRequest:
+      title: skillhub.v1.GetFileRequest
+      type: object
+      properties:
+        location:
+          $ref: '#/components/schemas/skillhub.v1.SkillLocation'
+        path:
+          type: string
+          maxLength: 1024
+      required:
+        - location
+        - path
+    skillhub.v1.GetFileResponse:
+      title: skillhub.v1.GetFileResponse
+      type: object
+      properties:
+        file:
+          $ref: '#/components/schemas/skillhub.v1.FileView'
+        resolvedCommitSha:
+          type: string
+        text:
+          type: string
+    skillhub.v1.GetInstallCommandsRequest:
+      title: skillhub.v1.GetInstallCommandsRequest
+      type: object
+      properties:
+        global:
+          type: boolean
+        projectPath:
+          description: 项目级安装命令须在此项目中执行；全局安装时可留空。
+          type: string
+          maxLength: 2048
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/skillhub.v1.InstallSelection'
+          maxItems: 100
+      required:
+        - skills
+    skillhub.v1.GetInstallCommandsResponse:
+      title: skillhub.v1.GetInstallCommandsResponse
+      type: object
+      properties:
+        commands:
+          type: array
+          items:
+            type: string
+    skillhub.v1.GetSkillRequest:
+      title: skillhub.v1.GetSkillRequest
+      type: object
+      properties:
+        skillId:
+          type: string
+          format: uuid
+          maxLength: 36
+      required:
+        - skillId
+    skillhub.v1.GetSkillResponse:
+      title: skillhub.v1.GetSkillResponse
+      type: object
+      properties:
+        skill:
+          $ref: '#/components/schemas/skillhub.v1.SkillView'
+    skillhub.v1.GitHubSource:
+      title: skillhub.v1.GitHubSource
+      type: object
+      properties:
+        ref:
+          type: string
+          maxLength: 512
+        repositoryUrl:
+          type: string
+          maxLength: 2048
+        skillPath:
+          description: 空路径表示 Skill 位于仓库根目录。
+          type: string
+          maxLength: 1024
+      required:
+        - repositoryUrl
+        - ref
+    skillhub.v1.ImportSkillRequest:
+      title: skillhub.v1.ImportSkillRequest
+      type: object
+      properties:
+        expectedSourceDigest:
+          description: 匹配预览时的完整源目录摘要；导入已有 Skill 时也须匹配目标摘要。
+          type: string
+          maxLength: 128
+        expectedTargetDigest:
+          type: string
+          maxLength: 128
+        includedFiles:
+          description: 明确列出要复制的相对文件路径，必须包含 SKILL.md。
+          type: array
+          items:
+            type: string
+        projectPath:
+          type: string
+          maxLength: 2048
+        source:
+          $ref: '#/components/schemas/skillhub.v1.SkillLocation'
+        targetSkillId:
+          type: string
+          format: uuid
+          maxLength: 36
+        version:
+          $ref: '#/components/schemas/skillhub.v1.VersionInput'
+      required:
+        - source
+        - expectedSourceDigest
+        - includedFiles
+        - version
+    skillhub.v1.ImportSkillResponse:
+      title: skillhub.v1.ImportSkillResponse
+      description: GitHub 来源复制为个人 Skill 时，服务端保留仓库信息和解析到的 commit。
+      type: object
+      properties:
+        skill:
+          $ref: '#/components/schemas/skillhub.v1.SkillView'
+        version:
+          $ref: '#/components/schemas/skillhub.v1.VersionView'
+    skillhub.v1.InstallSelection:
+      title: skillhub.v1.InstallSelection
+      description: 每项的 ID 格式和归属由应用层校验。
+      type: object
+      properties:
+        skillId:
+          type: string
+        versionId:
+          type: string
+    skillhub.v1.ListFilesRequest:
+      title: skillhub.v1.ListFilesRequest
+      type: object
+      properties:
+        location:
+          $ref: '#/components/schemas/skillhub.v1.SkillLocation'
+      required:
+        - location
+    skillhub.v1.ListFilesResponse:
+      title: skillhub.v1.ListFilesResponse
+      type: object
+      properties:
+        digest:
+          type: string
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/skillhub.v1.FileView'
+        resolvedCommitSha:
+          type: string
+    skillhub.v1.ListSkillFiltersRequest:
+      title: skillhub.v1.ListSkillFiltersRequest
+      type: object
+    skillhub.v1.ListSkillFiltersResponse:
+      title: skillhub.v1.ListSkillFiltersResponse
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+    skillhub.v1.ListSkillsRequest:
+      title: skillhub.v1.ListSkillsRequest
+      type: object
+      properties:
+        category:
+          type: string
+          maxLength: 128
+        keyword:
+          type: string
+          maxLength: 1024
+        kind:
+          $ref: '#/components/schemas/skillhub.SkillKind'
+        pageSize:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+        pageToken:
+          type: string
+          maxLength: 512
+        tag:
+          type: string
+          maxLength: 128
+    skillhub.v1.ListSkillsResponse:
+      title: skillhub.v1.ListSkillsResponse
+      type: object
+      properties:
+        nextPageToken:
+          type: string
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/skillhub.v1.SkillView'
+    skillhub.v1.ListVersionsRequest:
+      title: skillhub.v1.ListVersionsRequest
+      type: object
+      properties:
+        pageSize:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+        pageToken:
+          type: string
+          maxLength: 512
+        skillId:
+          type: string
+          format: uuid
+          maxLength: 36
+      required:
+        - skillId
+    skillhub.v1.ListVersionsResponse:
+      title: skillhub.v1.ListVersionsResponse
+      type: object
+      properties:
+        nextPageToken:
+          type: string
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/skillhub.v1.VersionView'
+    skillhub.v1.PreviewImportRequest:
+      title: skillhub.v1.PreviewImportRequest
+      type: object
+      properties:
+        projectPath:
+          type: string
+          maxLength: 2048
+        source:
+          $ref: '#/components/schemas/skillhub.v1.SkillLocation'
+        targetSkillId:
+          type: string
+          format: uuid
+          maxLength: 36
+      required:
+        - source
+    skillhub.v1.PreviewImportResponse:
+      title: skillhub.v1.PreviewImportResponse
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/skillhub.v1.FileView'
+        resolvedCommitSha:
+          type: string
+        sourceDigest:
+          description: 预览时完整源目录及目标当前目录的摘要。
+          type: string
+        status:
+          $ref: '#/components/schemas/skillhub.v1.ProjectSkillStatus'
+        targetDigest:
+          type: string
+    skillhub.v1.ProjectSkillStatus:
+      title: skillhub.v1.ProjectSkillStatus
+      type: string
+      enum:
+        - PROJECT_SKILL_STATUS_UNSPECIFIED
+        - PROJECT_SKILL_STATUS_NEW
+        - PROJECT_SKILL_STATUS_UNCHANGED
+        - PROJECT_SKILL_STATUS_PROJECT_CHANGED
+        - PROJECT_SKILL_STATUS_LIBRARY_CHANGED
+        - PROJECT_SKILL_STATUS_CONFLICT
+        - PROJECT_SKILL_STATUS_NO_BASELINE
+    skillhub.v1.ProjectSkillView:
+      title: skillhub.v1.ProjectSkillView
+      type: object
+      properties:
+        baseDigest:
+          type: string
+        baseVersionId:
+          type: string
+        description:
+          type: string
+        digest:
+          type: string
+        name:
+          type: string
+        path:
+          type: string
+        skillId:
+          type: string
+        status:
+          $ref: '#/components/schemas/skillhub.v1.ProjectSkillStatus'
+    skillhub.v1.PutFileRequest:
+      title: skillhub.v1.PutFileRequest
+      type: object
+      properties:
+        expectedDigest:
+          description: 编辑前个人 Skill 整个目录的摘要；新建文件同样需要。
+          type: string
+          maxLength: 128
+        path:
+          type: string
+          maxLength: 1024
+        skillId:
+          type: string
+          format: uuid
+          maxLength: 36
+        text:
+          type: string
+      required:
+        - skillId
+        - path
+        - expectedDigest
+    skillhub.v1.PutFileResponse:
+      title: skillhub.v1.PutFileResponse
+      type: object
+      properties:
+        currentDigest:
+          type: string
+        file:
+          $ref: '#/components/schemas/skillhub.v1.FileView'
+    skillhub.v1.ResolveSourceRequest:
+      title: skillhub.v1.ResolveSourceRequest
+      type: object
+      properties:
+        source:
+          $ref: '#/components/schemas/skillhub.v1.GitHubSource'
+      required:
+        - source
+    skillhub.v1.ResolveSourceResponse:
+      title: skillhub.v1.ResolveSourceResponse
+      type: object
+      properties:
+        commitSha:
+          type: string
+        description:
+          type: string
+        digest:
+          type: string
+        name:
+          type: string
+    skillhub.v1.RestoreVersionRequest:
+      title: skillhub.v1.RestoreVersionRequest
+      type: object
+      properties:
+        expectedDigest:
+          description: 必须匹配当前内容摘要，防止预览后出现新的修改。
+          type: string
+          maxLength: 128
+        skillId:
+          type: string
+          format: uuid
+          maxLength: 36
+        versionId:
+          type: string
+          format: uuid
+          maxLength: 36
+      required:
+        - skillId
+        - versionId
+        - expectedDigest
+    skillhub.v1.RestoreVersionResponse:
+      title: skillhub.v1.RestoreVersionResponse
+      type: object
+      properties:
+        backupVersion:
+          $ref: '#/components/schemas/skillhub.v1.VersionView'
+        skill:
+          $ref: '#/components/schemas/skillhub.v1.SkillView'
+    skillhub.v1.ScanProjectRequest:
+      title: skillhub.v1.ScanProjectRequest
+      type: object
+      properties:
+        projectPath:
+          type: string
+          maxLength: 2048
+      required:
+        - projectPath
+    skillhub.v1.ScanProjectResponse:
+      title: skillhub.v1.ScanProjectResponse
+      type: object
+      properties:
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/skillhub.v1.ProjectSkillView'
+    skillhub.v1.SkillInput:
+      title: skillhub.v1.SkillInput
+      description: 应用层校验 kind；公开 Skill 必须提供 GitHub 仓库地址。
+      type: object
+      properties:
+        category:
+          type: string
+          maxLength: 128
+        description:
+          type: string
+          maxLength: 1024
+        kind:
+          $ref: '#/components/schemas/skillhub.SkillKind'
+        name:
+          type: string
+          maxLength: 64
+        notes:
+          type: string
+          maxLength: 4096
+        repositoryPath:
+          type: string
+          maxLength: 1024
+        repositoryUrl:
+          type: string
+          maxLength: 2048
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 100
+      required:
+        - name
+        - description
+    skillhub.v1.SkillLocation:
+      title: skillhub.v1.SkillLocation
+      description: SkillLocation 选择管理库当前内容、历史版本、项目目录或 GitHub 的固定版本。
+      type: object
+      properties:
+        currentSkillId:
+          description: 应用层校验恰好指定一种来源。
+          type: string
+        github:
+          $ref: '#/components/schemas/skillhub.v1.GitHubSource'
+        localPath:
+          type: string
+        versionId:
+          type: string
+    skillhub.v1.SkillView:
+      title: skillhub.v1.SkillView
+      type: object
+      properties:
+        category:
+          type: string
+        createTime:
+          type: string
+          format: date-time
+        currentDigest:
+          type: string
+        description:
+          type: string
+        id:
+          type: string
+        kind:
+          $ref: '#/components/schemas/skillhub.SkillKind'
+        name:
+          type: string
+        notes:
+          type: string
+        originCommitSha:
+          type: string
+        repositoryPath:
+          type: string
+        repositoryUrl:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        updateTime:
+          type: string
+          format: date-time
+    skillhub.v1.UpdateSkillInput:
+      title: skillhub.v1.UpdateSkillInput
+      description: update_mask 指定需要更新的字段；来源类型和仓库地址不可更改。
+      type: object
+      properties:
+        category:
+          type: string
+          maxLength: 128
+        description:
+          type: string
+          maxLength: 1024
+        name:
+          type: string
+          maxLength: 64
+        notes:
+          type: string
+          maxLength: 4096
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 100
+    skillhub.v1.UpdateSkillRequest:
+      title: skillhub.v1.UpdateSkillRequest
+      type: object
+      properties:
+        skill:
+          $ref: '#/components/schemas/skillhub.v1.UpdateSkillInput'
+        skillId:
+          type: string
+          format: uuid
+          maxLength: 36
+        updateMask:
+          type: string
+      required:
+        - skillId
+        - skill
+    skillhub.v1.UpdateSkillResponse:
+      title: skillhub.v1.UpdateSkillResponse
+      type: object
+      properties:
+        skill:
+          $ref: '#/components/schemas/skillhub.v1.SkillView'
+    skillhub.v1.VersionInput:
+      title: skillhub.v1.VersionInput
+      type: object
+      properties:
+        commitSha:
+          type: string
+          maxLength: 64
+        notes:
+          type: string
+          maxLength: 4096
+        sourceRef:
+          description: 公开 Skill 使用完整 commit，个人 Skill 创建当前内容快照。
+          type: string
+          maxLength: 512
+        version:
+          type: string
+          maxLength: 128
+      required:
+        - version
+    skillhub.v1.VersionView:
+      title: skillhub.v1.VersionView
+      type: object
+      properties:
+        commitSha:
+          type: string
+        createTime:
+          type: string
+          format: date-time
+        digest:
+          type: string
+        id:
+          type: string
+        notes:
+          type: string
+        skillId:
+          type: string
+        sourceRef:
+          type: string
+        version:
+          type: string
