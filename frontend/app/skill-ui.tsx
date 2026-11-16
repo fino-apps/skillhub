@@ -24,23 +24,53 @@ export function Dialog({ title, children, onClose, compact }: {
   </dialog>;
 }
 
-export function Menu({ label, children }: { label: string; children: ReactNode }) {
+export function Popover({ summary, label, className, children, closeOnSelect = false }: {
+  summary: ReactNode; label?: string; className: string; children: ReactNode; closeOnSelect?: boolean;
+}) {
   const details = useRef<HTMLDetailsElement>(null);
-  return <details ref={details} className="skill-menu"
+  const trigger = useRef<HTMLElement>(null);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(event: PointerEvent) {
+      if (details.current && event.target instanceof Node && !details.current.contains(event.target)) {
+        details.current.open = false;
+      }
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [open]);
+
+  function close() {
+    if (!details.current?.open) return;
+    trigger.current?.focus();
+    details.current.open = false;
+  }
+
+  return <details ref={details} className={className}
+    onToggle={(event) => setOpen(event.currentTarget.open)}
     onBlur={(event) => {
       if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false;
     }}
     onKeyDown={(event) => {
       if (event.key === "Escape" && details.current?.open) {
-        details.current.open = false;
-        details.current.querySelector("summary")?.focus();
+        event.preventDefault();
+        close();
       }
+    }}
+    onClick={(event) => {
+      if (closeOnSelect && event.target instanceof Element && event.target.closest("button, a")) close();
     }}>
-    <summary aria-label={label} title={label}>⋯</summary>
-    <div className="skill-menu-items" onClick={(event) => {
-      if ((event.target as HTMLElement).closest("button, a") && details.current) details.current.open = false;
-    }}>{children}</div>
+    <summary ref={trigger} aria-label={label} title={label}>{summary}</summary>
+    {children}
   </details>;
+}
+
+export function Menu({ label, children }: { label: string; children: ReactNode }) {
+  return <Popover className="skill-menu" summary="⋯" label={label} closeOnSelect>
+    <div className="skill-menu-items">{children}</div>
+  </Popover>;
 }
 
 export function Failure({ error }: { error: string }) {
@@ -53,11 +83,15 @@ export function useSkillOperation() {
   const [notice, setNotice] = useState("");
   const [savedPath, setSavedPath] = useState("");
 
-  async function run(key: string, action: () => Promise<void>) {
-    setBusy(key);
+  function dismiss() {
     setError("");
     setNotice("");
     setSavedPath("");
+  }
+
+  async function run(key: string, action: () => Promise<void>) {
+    setBusy(key);
+    dismiss();
     try {
       await action();
     } catch (err) {
@@ -74,21 +108,35 @@ export function useSkillOperation() {
     });
   }
 
-  return { busy, error, notice, savedPath, setNotice, run, save };
+  return { busy, error, notice, savedPath, setNotice, run, save, dismiss };
 }
 
-export function OperationFeedback({ error, notice, savedPath }: { error: string; notice: string; savedPath: string }) {
-  const [copied, setCopied] = useState(false);
-  return <>
-    <Failure error={error} />
-    {notice && <p className="skill-feedback" role="status">{notice}</p>}
-    {savedPath && <div className="skill-feedback" role="status">
-      <span>已保存到 <code>{savedPath}</code></span>
-      <button type="button" className="skillhub-text-button" onClick={() => {
-        void navigator.clipboard.writeText(savedPath).then(() => setCopied(true), () => setCopied(false));
-      }}>{copied ? "已复制" : "复制路径"}</button>
-    </div>}
-  </>;
+export function OperationFeedback({ error, notice, savedPath, floating, dismiss }: {
+  error: string; notice: string; savedPath: string; floating?: boolean; dismiss: () => void;
+}) {
+  const [copyStatus, setCopyStatus] = useState("");
+  useEffect(() => setCopyStatus(""), [savedPath]);
+  const visible = error || notice || savedPath;
+
+  async function copyPath() {
+    try {
+      await navigator.clipboard.writeText(savedPath);
+      setCopyStatus("已复制");
+    } catch {
+      setCopyStatus("无法复制，请选择路径后手动复制");
+    }
+  }
+
+  return <div className={floating ? "operation-feedback operation-feedback-floating" : "operation-feedback"} hidden={!visible}>
+    <div className="operation-feedback-content">
+      <Failure error={error} />
+      {notice && <p role="status">{notice}</p>}
+      {savedPath && <p role="status">已保存到 <code>{savedPath}</code></p>}
+      <span role="status" className={!copyStatus || copyStatus === "已复制" ? "sr-only" : "skillhub-hint"}>{copyStatus}</span>
+    </div>
+    {savedPath && <button type="button" className="skillhub-text-button" onClick={() => void copyPath()}>{copyStatus === "已复制" ? "已复制" : "复制路径"}</button>}
+    {floating && <button type="button" className="dialog-close" aria-label="关闭操作提示" onClick={dismiss}>×</button>}
+  </div>;
 }
 
 export function ExportLocation({ onSave, busy }: { onSave: (directory?: string) => void; busy: boolean }) {

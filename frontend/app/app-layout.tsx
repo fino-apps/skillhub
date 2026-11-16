@@ -33,12 +33,14 @@ export default function AppLayout() {
               <img className="fino-logo" src="/fino-logo.png" alt="fino" />
             </Link>
             <Link className="product-label" to="/" title="Home">{projectName}</Link>
+          </div>
+          <nav className="site-tools" aria-label="开发工具">
             <NavLink className="console-link" to="/console">API Console</NavLink>
             <NavLink className="console-link" to="/issues">Issues</NavLink>
             <a className="console-link observability-link" href={monitorHref} target="_blank" rel="noreferrer">Monitor</a>
             <a className="console-link observability-link" href={logsHref} target="_blank" rel="noreferrer">Logs</a>
             <a className="console-link observability-link" href={traceHref} target="_blank" rel="noreferrer">Trace</a>
-          </div>
+          </nav>
           <nav className="site-nav" aria-label="Main navigation">
             <ThemeToggle />
           </nav>

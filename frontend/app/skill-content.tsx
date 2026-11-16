@@ -58,17 +58,25 @@ function resolveRelative(from: string, href: string) {
   return parts.join("/");
 }
 
-function markdownBody(text: string) {
-  return text.replace(/^(?:\uFEFF)?---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, "");
+function markdownBody(text: string, skillName: string) {
+  const body = text.replace(/^(?:\uFEFF)?---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, "");
+  const title = /^\s*#\s+([^\r\n]+)\r?\n?/.exec(body);
+  const normalize = (value: string) => value.trim().toLowerCase().replace(/[\s-]+/g, "-");
+  return title && normalize(title[1]) === normalize(skillName) ? body.slice(title[0].length) : body;
 }
 
-export default function SkillContent({ skillId, versionId, available }: { skillId: string; versionId: string; available: boolean }) {
+export default function SkillContent({ skillId, skillName, versionId, available }: {
+  skillId: string; skillName: string; versionId: string; available: boolean;
+}) {
   const [contents, setContents] = useState<Contents>({});
   const [path, setPath] = useState("SKILL.md");
   const [history, setHistory] = useState<{ path: string; y: number }[]>([]);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [error, setError] = useState("");
   const position = useRef<number | null>(null);
+  const previewHeading = useRef<HTMLHeadingElement>(null);
+  const reader = useRef<HTMLElement>(null);
+  const moveToPreview = useRef(false);
 
   useEffect(() => {
     if (!available) return;
@@ -90,15 +98,25 @@ export default function SkillContent({ skillId, versionId, available }: { skillI
   }, [skillId, versionId, path, available]);
 
   useEffect(() => {
-    if (preview && position.current !== null) {
+    if (!preview && !error) return;
+    if (position.current !== null) {
+      reader.current?.focus({ preventScroll: true });
       window.scrollTo(0, position.current);
       position.current = null;
+    } else if (moveToPreview.current) {
+      const target = previewHeading.current ?? reader.current;
+      target?.focus({ preventScroll: true });
+      target?.scrollIntoView({ block: "start" });
     }
-  }, [preview]);
+    moveToPreview.current = false;
+  }, [preview, error]);
 
   function open(file: string) {
     if (file === path) return;
     setHistory((previous) => [...previous, { path, y: window.scrollY }]);
+    moveToPreview.current = true;
+    setPreview(null);
+    setError("");
     setPath(file);
   }
 
@@ -107,28 +125,34 @@ export default function SkillContent({ skillId, versionId, available }: { skillI
     if (!prior) return;
     position.current = prior.y;
     setHistory((previous) => previous.slice(0, -1));
+    setPreview(null);
+    setError("");
     setPath(prior.path);
   }
 
   if (!available) return <p className="skillhub-empty">此版本的快照待补齐。</p>;
   const files = contents.files ?? [];
   const tree = fileTree(files);
-  return <section className="skill-content">
-    {contents.description && <details className="skill-disclosure"><summary>原始描述</summary><p>{contents.description}</p></details>}
-    {files.length > 1 && <details className="skill-disclosure">
-      <summary>浏览文件 <span className="skillhub-hint">{files.length}</span></summary>
-      <FileTree tree={tree} selected={path} onSelect={open} />
-    </details>}
-    <Failure error={error} />
+  return <section className="skill-content" ref={reader} tabIndex={-1} aria-label="文件预览">
+    <div className="skill-content-tools">
+      {files.length > 1 && <details className="skill-disclosure">
+        <summary>浏览文件 <span className="skillhub-hint">{files.length}</span></summary>
+        <FileTree tree={tree} selected={path} onSelect={open} />
+      </details>}
+      {contents.description && <details className="skill-disclosure"><summary>原始描述</summary><p>{contents.description}</p></details>}
+    </div>
     {path !== "SKILL.md" && <div className="library-actions skill-file-heading">
-      <button type="button" className="skillhub-text-button" onClick={back}>返回</button><code>{path}</code>
+      <button type="button" className="skillhub-text-button" onClick={back}>返回</button>
+      <h2 ref={previewHeading} tabIndex={-1}><code>{path}</code></h2>
     </div>}
+    <Failure error={error} />
     {!preview && !error && <p role="status">读取中…</p>}
     {preview?.binary && <p>二进制文件 · {preview.size ?? 0} 字节</p>}
     {preview?.tooLarge && <p>文件过大，可保存版本到本机查看。</p>}
     {preview && !preview.binary && !preview.tooLarge && (path.toLowerCase().endsWith(".md")
       ? <article className="skill-markdown">
         <ReactMarkdown skipHtml disallowedElements={["img"]} remarkPlugins={[remarkGfm]} components={{
+          h1({ children }) { return <h2>{children}</h2>; },
           a({ href, children }) {
             if (!href) return <span>{children}</span>;
             if (href.startsWith("#")) return <a href={href}>{children}</a>;
@@ -136,7 +160,7 @@ export default function SkillContent({ skillId, versionId, available }: { skillI
             const file = resolveRelative(path, href);
             return file ? <button type="button" className="skillhub-text-button markdown-file-link" onClick={() => open(file)}>{children}</button> : <span>{children}</span>;
           },
-        }}>{path === "SKILL.md" ? markdownBody(preview.text ?? "") : preview.text ?? ""}</ReactMarkdown>
+        }}>{path === "SKILL.md" ? markdownBody(preview.text ?? "", skillName) : preview.text ?? ""}</ReactMarkdown>
       </article>
       : <pre className="copy-command"><code>{preview.text}</code></pre>)}
   </section>;

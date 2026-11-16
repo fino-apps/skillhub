@@ -1,11 +1,11 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { deleteSkill, listFacets, listSkills, repairVersion } from "@/generated/api-client";
 import GitHubIntake from "./github-intake";
 import LocalIntake, { ZipIntake } from "./local-intake";
 import SkillMetadata, { BatchMetadata } from "./skill-metadata";
 import { archiveURL, fetchAllSkills, libraryNavigation, message, sourceLabel, sourceNames, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
-import { Dialog, ExportLocation, Failure, Menu, OperationFeedback, useSkillOperation } from "./skill-ui";
+import { Dialog, ExportLocation, Failure, Menu, OperationFeedback, Popover, useSkillOperation } from "./skill-ui";
 import { shortVersion, versionDigest } from "./skill-version";
 
 import "./skillhub.css";
@@ -27,6 +27,7 @@ function Filters({ params, facets, onChange }: {
   const source = params.get("source") ?? "";
   const tags = params.getAll("tag");
   const count = Number(!!source) + tags.length;
+  const sourceLabelId = useId();
 
   function set(name: string, value: string) {
     const next = new URLSearchParams(params);
@@ -46,14 +47,13 @@ function Filters({ params, facets, onChange }: {
         {facets.categories?.map((category) => <option key={category}>{category}</option>)}
       </select>
     </label>
-    <details className="skill-filter">
-      <summary>筛选{count ? ` ${count}` : ""}</summary>
+    <Popover className={`skill-filter${count ? " has-filters" : ""}`} summary={count ? `筛选 ${count}` : "筛选"}>
       <div className="filter-panel skill-fields">
-        <label>来源<select value={source} onChange={(event) => set("source", event.target.value)}>
+        <label><span id={sourceLabelId}>来源</span><select aria-labelledby={sourceLabelId} value={source} onChange={(event) => set("source", event.target.value)}>
           <option value="">全部来源</option>
           {facets.sources?.map((value) => <option key={value} value={value}>{sourceNames[value] || value}</option>)}
         </select></label>
-        {!!facets.tags?.length && <fieldset className="skill-fields">
+        {!!facets.tags?.length && <fieldset className="skill-fields filter-tags">
           <legend>标签</legend>
           {facets.tags.map((tag) => <label key={tag} className="github-checkbox">
             <input type="checkbox" checked={tags.includes(tag)} onChange={(event) => {
@@ -71,9 +71,9 @@ function Filters({ params, facets, onChange }: {
           next.delete("source");
           next.delete("tag");
           onChange(next);
-        }}>清除筛选</button>}
+        }}>清除来源和标签</button>}
       </div>
-    </details>
+    </Popover>
   </div>;
 }
 
@@ -82,6 +82,7 @@ export default function HomePage() {
   const scope = params.toString();
   const initial = useRef(libraryNavigation.returning?.scope === scope ? libraryNavigation.returning : null);
   const request = useRef<AbortController | null>(null);
+  const selectAll = useRef<HTMLInputElement>(null);
   const [skills, setSkills] = useState(initial.current?.skills ?? []);
   const [token, setToken] = useState(initial.current?.token ?? "");
   const [selected, setSelected] = useState<string[]>([]);
@@ -182,6 +183,9 @@ export default function HomePage() {
   const uncategorized = params.get("category") === "~";
   const selectable = skills.slice(0, 100);
   const allSelected = selectable.length > 0 && selectable.every(({ id }) => selected.includes(id));
+  useEffect(() => {
+    if (selectAll.current) selectAll.current.indeterminate = selected.length > 0 && !allSelected;
+  }, [selected.length, allSelected]);
   const library = scope ? `/?${scope}` : "/";
   const aiSkills = selected.length
     ? skills.filter(({ id }) => selected.includes(id))
@@ -189,7 +193,7 @@ export default function HomePage() {
   const editComplete = () => { setPanel(null); reload(); };
 
   return <main className="skillhub-shell">
-    <div className="skillhub-heading">
+    <div className="skillhub-heading library-heading">
       <h1 id="skill-library-heading" tabIndex={-1}>技能库</h1>
       <div className="library-actions">
         <button type="button" onClick={() => setPanel({ kind: "folder" })}>导入文件夹</button>
@@ -201,13 +205,17 @@ export default function HomePage() {
       </div>
     </div>
     <Filters params={params} facets={facets} onChange={updateFilters} />
-    <div className="library-feedback"><OperationFeedback {...operation} /></div>
+    {panel?.kind !== "export" && <OperationFeedback {...operation} floating />}
     {(selected.length > 0 || (uncategorized && skills.length > 0)) && <div className="library-actions library-selection">
       {selected.length > 0 && <>
-        <span>已选 {selected.length} 项</span>
+        <span role="status">已选 {selected.length} 项</span>
         <button type="button" className="secondary" onClick={() => setPanel({ kind: "batch" })}>批量编辑</button>
       </>}
       <button type="button" className="secondary" onClick={() => setPanel({ kind: "ai" })}>AI 整理</button>
+      {selected.length > 0 && <button type="button" className="skillhub-text-button" onClick={() => {
+        setSelected([]);
+        selectAll.current?.focus();
+      }}>清除选择</button>}
     </div>}
     {error && <div className="library-actions"><Failure error={error} /><button type="button" className="secondary" onClick={reload}>重试</button></div>}
     {loading && skills.length === 0 && <p className="skillhub-empty" role="status">加载中…</p>}
@@ -218,7 +226,7 @@ export default function HomePage() {
     </div>}
     {skills.length > 0 && <table className="skillhub-table library-table" aria-busy={loading}>
       <thead><tr>
-        <th scope="col"><input type="checkbox" aria-label="选择当前已加载条目" checked={allSelected}
+        <th scope="col"><input ref={selectAll} type="checkbox" aria-label={skills.length > 100 ? "选择前 100 项" : "选择当前已加载条目"} checked={allSelected}
           onChange={() => setSelected(allSelected ? [] : selectable.map(({ id }) => id))} /></th>
         <th scope="col">Skill / 用途</th><th scope="col">来源</th><th scope="col">分类 / 标签</th><th scope="col">操作</th>
       </tr></thead>
@@ -226,7 +234,7 @@ export default function HomePage() {
         const version = skill.defaultVersion;
         const tags = skill.tags ?? [];
         const purpose = skill.purpose || skill.description || "";
-        return <tr key={skill.id} className="skillhub-entry">
+        return <tr key={skill.id} className="skillhub-entry" data-selected={selected.includes(skill.id) || undefined}>
           <td><input type="checkbox" aria-label={`选择 ${skill.name}`} checked={selected.includes(skill.id)}
             disabled={selected.length >= 100 && !selected.includes(skill.id)}
             onChange={() => setSelected((ids) => ids.includes(skill.id) ? ids.filter((id) => id !== skill.id) : [...ids, skill.id])} /></td>
@@ -237,8 +245,8 @@ export default function HomePage() {
             <span className="library-mobile-source">{sourceLabel(skill)}{skill.category ? ` · ${skill.category}` : ""}</span>
           </td>
           <td className="library-source">{sourceLabel(skill)}</td>
-          <td className="library-classification">{[skill.category, ...tags.slice(0, 2)].filter(Boolean).join(" · ") || "—"}{tags.length > 2 && ` +${tags.length - 2}`}</td>
-          <td className="library-row-actions">
+          <td className="library-classification">{[skill.category || "未分类", ...tags.slice(0, 2)].join(" · ")}{tags.length > 2 && ` +${tags.length - 2}`}</td>
+          <td className="library-row-actions"><div className="library-row-controls">
             {version?.available && <code title={versionDigest(version)}>{shortVersion(version)}</code>}
             {version && (version.available
               ? <button type="button" className="skillhub-text-button" disabled={!!operation.busy}
@@ -250,13 +258,13 @@ export default function HomePage() {
               })}>补齐版本</button>)}
             <Menu label={`${skill.name} 更多操作`}>
               {version?.available && <>
-                <button type="button" onClick={() => setPanel({ kind: "export", skill, versionId: version.id })}>另存到…</button>
+                <button type="button" onClick={() => { operation.dismiss(); setPanel({ kind: "export", skill, versionId: version.id }); }}>另存到…</button>
                 <a href={archiveURL(skill.id, version.id)}>下载 ZIP</a>
               </>}
               <button type="button" onClick={() => setPanel({ kind: "metadata", skill })}>编辑整理信息</button>
               <button type="button" className="skill-danger" onClick={() => remove(skill)}>删除</button>
             </Menu>
-          </td>
+          </div></td>
         </tr>;
       })}</tbody>
     </table>}

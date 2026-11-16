@@ -129,7 +129,7 @@ function Detail({ skillId }: { skillId: string }) {
           <Menu label="Skill 更多操作">
             <button type="button" onClick={() => setPanel({ kind: "metadata" })}>编辑整理信息</button>
             {view?.available && <>
-              <button type="button" onClick={() => setPanel({ kind: "export", version: view })}>另存到…</button>
+              <button type="button" onClick={() => { operation.dismiss(); setPanel({ kind: "export", version: view }); }}>另存到…</button>
               <a href={archiveURL(skillId, view.id)}>下载 ZIP</a>
               <button type="button" onClick={() => setPanel({ kind: "install", version: view })}>复制安装命令</button>
             </>}
@@ -152,13 +152,13 @@ function Detail({ skillId }: { skillId: string }) {
         {skill.category && <span>{skill.category}</span>}
         {skill.tags?.map((tag) => <span key={tag}>{tag}</span>)}
       </div>
-      <OperationFeedback {...operation} />
+      {panel?.kind !== "export" && <OperationFeedback {...operation} floating />}
       <nav className="skill-tabs" aria-label="Skill 详情">
         <button type="button" aria-pressed={!versionsTab} onClick={() => routeValue("tab", "")}>内容</button>
         <button type="button" aria-pressed={versionsTab} onClick={() => routeValue("tab", "versions")}>版本</button>
       </nav>
       {!versionsTab && (view
-        ? <SkillContent key={view.id} skillId={skillId} versionId={view.id} available={!!view.available} />
+        ? <SkillContent key={view.id} skillId={skillId} skillName={skill.name} versionId={view.id} available={!!view.available} />
         : <p className="skillhub-empty">暂无版本</p>)}
       {versionsTab && <section className="skill-versions">
         <div className="library-actions">
@@ -187,7 +187,7 @@ function Detail({ skillId }: { skillId: string }) {
                 {version.available ? <>
                   <button type="button" disabled={busy} onClick={() => void operation.save(skillId, version.id)}>保存到本机</button>
                   {!isDefault && <button type="button" disabled={busy} onClick={() => makeDefault(version)}>设为默认</button>}
-                  <button type="button" onClick={() => setPanel({ kind: "export", version })}>另存到…</button>
+                  <button type="button" onClick={() => { operation.dismiss(); setPanel({ kind: "export", version }); }}>另存到…</button>
                   <a href={archiveURL(skillId, version.id)}>下载 ZIP</a>
                   <button type="button" onClick={() => setPanel({ kind: "install", version })}>复制安装命令</button>
                 </> : <button type="button" disabled={busy} onClick={() => repair(version)}>补齐版本</button>}
