@@ -12,16 +12,22 @@ import (
 )
 
 type Skill struct {
-	ID             domainmodel.SkillID `gorm:"type:char(36);primaryKey;comment:主键"`
-	Name           string              `gorm:"type:text;not null;index;comment:Skill 名称"`
-	Description    string              `gorm:"type:text;not null;comment:用途说明"`
-	Category       string              `gorm:"type:text;not null;index;comment:分类"`
-	Notes          string              `gorm:"type:text;not null;comment:个人备注"`
-	RepositoryUrl  string              `gorm:"type:text;not null;uniqueIndex:idx_skill_location;comment:GitHub 来源地址"`
-	RepositoryPath string              `gorm:"type:text;not null;uniqueIndex:idx_skill_location;comment:仓库内 Skill 路径"`
-	LocalPath      string              `gorm:"type:text;not null;default:'';uniqueIndex:idx_skill_location;comment:本机原始 Skill 目录；GitHub 来源留空"`
-	CreateTime     *core.Timestamp     `gorm:"type:datetime;not null;comment:创建时间"`
-	UpdateTime     *core.Timestamp     `gorm:"type:datetime;not null;comment:最后更新时间"`
+	ID               domainmodel.SkillID `gorm:"type:char(36);primaryKey;comment:主键"`
+	Name             string              `gorm:"type:text;not null;index;comment:Skill 名称"`
+	Description      string              `gorm:"type:text;not null;comment:用途说明"`
+	Category         string              `gorm:"type:text;not null;index;comment:分类"`
+	Notes            string              `gorm:"type:text;not null;comment:个人备注"`
+	RepositoryUrl    string              `gorm:"type:text;not null;comment:GitHub 来源地址"`
+	RepositoryPath   string              `gorm:"type:text;not null;comment:仓库内 Skill 路径"`
+	LocalPath        string              `gorm:"type:text;not null;default:'';comment:本机原始 Skill 目录；GitHub 来源留空"`
+	SourceKey        string              `gorm:"type:text;not null;default:'';comment:收录来源标识"`
+	ImportKind       string              `gorm:"type:text;not null;default:'';comment:folder、github 或 zip"`
+	Purpose          string              `gorm:"type:text;not null;default:'';comment:用户整理的一行用途"`
+	UpstreamName     string              `gorm:"type:text;not null;default:'';comment:展示的上游名称"`
+	UpstreamUrl      string              `gorm:"type:text;not null;default:'';comment:展示的上游链接"`
+	DefaultVersionId string              `gorm:"type:text;not null;default:'';comment:默认导出版本"`
+	CreateTime       *core.Timestamp     `gorm:"type:datetime;not null;comment:创建时间"`
+	UpdateTime       *core.Timestamp     `gorm:"type:datetime;not null;comment:最后更新时间"`
 }
 
 func (Skill) TableName() string {

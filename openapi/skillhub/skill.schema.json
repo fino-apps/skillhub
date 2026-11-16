@@ -10,10 +10,16 @@
       "type": "string",
       "format": "date-time"
     },
+    "defaultVersionId": {
+      "type": "string"
+    },
     "description": {
       "type": "string"
     },
     "id": {
+      "type": "string"
+    },
+    "importKind": {
       "type": "string"
     },
     "localPath": {
@@ -25,15 +31,27 @@
     "notes": {
       "type": "string"
     },
+    "purpose": {
+      "type": "string"
+    },
     "repositoryPath": {
       "type": "string"
     },
     "repositoryUrl": {
       "type": "string"
     },
+    "sourceKey": {
+      "type": "string"
+    },
     "updateTime": {
       "type": "string",
       "format": "date-time"
+    },
+    "upstreamName": {
+      "type": "string"
+    },
+    "upstreamUrl": {
+      "type": "string"
     }
   }
 }

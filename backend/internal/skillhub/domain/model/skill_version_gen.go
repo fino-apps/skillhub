@@ -16,26 +16,34 @@ import (
 type SkillVersionID string
 
 type CreateSkillVersionInput struct {
-	SkillId       string
-	Name          string
-	Notes         string
-	SourceRef     string
-	CommitSha     string
-	ContentDigest string
-	CreateTime    *core.Timestamp
-	UpdateTime    *core.Timestamp
+	SkillId            string
+	Name               string
+	Notes              string
+	SourceRef          string
+	CommitSha          string
+	ContentDigest      string
+	Description        string
+	UpstreamCommit     string
+	UpstreamRepository string
+	UpstreamPath       string
+	CreateTime         *core.Timestamp
+	UpdateTime         *core.Timestamp
 }
 
 type UpdateSkillVersionInput struct {
-	SkillId       string
-	Name          string
-	Notes         string
-	SourceRef     string
-	CommitSha     string
-	ContentDigest string
-	CreateTime    *core.Timestamp
-	UpdateTime    *core.Timestamp
-	UpdateMask    []string
+	SkillId            string
+	Name               string
+	Notes              string
+	SourceRef          string
+	CommitSha          string
+	ContentDigest      string
+	Description        string
+	UpstreamCommit     string
+	UpstreamRepository string
+	UpstreamPath       string
+	CreateTime         *core.Timestamp
+	UpdateTime         *core.Timestamp
+	UpdateMask         []string
 }
 
 type ListSkillVersionQuery struct {
@@ -48,27 +56,35 @@ type ListSkillVersionQuery struct {
 type ListSkillVersionResult = pagination.Page[*SkillVersion]
 
 type SkillVersionSnapshot struct {
-	ID            SkillVersionID
-	SkillId       string
-	Name          string
-	Notes         string
-	SourceRef     string
-	CommitSha     string
-	ContentDigest string
-	CreateTime    *core.Timestamp
-	UpdateTime    *core.Timestamp
+	ID                 SkillVersionID
+	SkillId            string
+	Name               string
+	Notes              string
+	SourceRef          string
+	CommitSha          string
+	ContentDigest      string
+	Description        string
+	UpstreamCommit     string
+	UpstreamRepository string
+	UpstreamPath       string
+	CreateTime         *core.Timestamp
+	UpdateTime         *core.Timestamp
 }
 
 type SkillVersion struct {
-	id            SkillVersionID
-	skillId       string
-	name          string
-	notes         string
-	sourceRef     string
-	commitSha     string
-	contentDigest string
-	createTime    *core.Timestamp
-	updateTime    *core.Timestamp
+	id                 SkillVersionID
+	skillId            string
+	name               string
+	notes              string
+	sourceRef          string
+	commitSha          string
+	contentDigest      string
+	description        string
+	upstreamCommit     string
+	upstreamRepository string
+	upstreamPath       string
+	createTime         *core.Timestamp
+	updateTime         *core.Timestamp
 }
 
 func NewSkillVersion(input CreateSkillVersionInput) (*SkillVersion, error) {
@@ -86,29 +102,37 @@ func NewSkillVersion(input CreateSkillVersionInput) (*SkillVersion, error) {
 	}
 
 	return &SkillVersion{
-		id:            SkillVersionID(id.String()),
-		skillId:       input.SkillId,
-		name:          input.Name,
-		notes:         input.Notes,
-		sourceRef:     input.SourceRef,
-		commitSha:     input.CommitSha,
-		contentDigest: input.ContentDigest,
-		createTime:    input.CreateTime,
-		updateTime:    input.UpdateTime,
+		id:                 SkillVersionID(id.String()),
+		skillId:            input.SkillId,
+		name:               input.Name,
+		notes:              input.Notes,
+		sourceRef:          input.SourceRef,
+		commitSha:          input.CommitSha,
+		contentDigest:      input.ContentDigest,
+		description:        input.Description,
+		upstreamCommit:     input.UpstreamCommit,
+		upstreamRepository: input.UpstreamRepository,
+		upstreamPath:       input.UpstreamPath,
+		createTime:         input.CreateTime,
+		updateTime:         input.UpdateTime,
 	}, nil
 }
 
 func RebuildSkillVersion(snapshot SkillVersionSnapshot) *SkillVersion {
 	return &SkillVersion{
-		id:            snapshot.ID,
-		skillId:       snapshot.SkillId,
-		name:          snapshot.Name,
-		notes:         snapshot.Notes,
-		sourceRef:     snapshot.SourceRef,
-		commitSha:     snapshot.CommitSha,
-		contentDigest: snapshot.ContentDigest,
-		createTime:    snapshot.CreateTime,
-		updateTime:    snapshot.UpdateTime,
+		id:                 snapshot.ID,
+		skillId:            snapshot.SkillId,
+		name:               snapshot.Name,
+		notes:              snapshot.Notes,
+		sourceRef:          snapshot.SourceRef,
+		commitSha:          snapshot.CommitSha,
+		contentDigest:      snapshot.ContentDigest,
+		description:        snapshot.Description,
+		upstreamCommit:     snapshot.UpstreamCommit,
+		upstreamRepository: snapshot.UpstreamRepository,
+		upstreamPath:       snapshot.UpstreamPath,
+		createTime:         snapshot.CreateTime,
+		updateTime:         snapshot.UpdateTime,
 	}
 }
 
@@ -136,6 +160,14 @@ func (e *SkillVersion) ApplyUpdate(input UpdateSkillVersionInput) error {
 			updated.commitSha = input.CommitSha
 		case "contentDigest":
 			updated.contentDigest = input.ContentDigest
+		case "description":
+			updated.description = input.Description
+		case "upstreamCommit":
+			updated.upstreamCommit = input.UpstreamCommit
+		case "upstreamRepository":
+			updated.upstreamRepository = input.UpstreamRepository
+		case "upstreamPath":
+			updated.upstreamPath = input.UpstreamPath
 		case "createTime":
 			updated.createTime = input.CreateTime
 		case "updateTime":
@@ -155,15 +187,19 @@ func (e *SkillVersion) Snapshot() SkillVersionSnapshot {
 	}
 
 	return SkillVersionSnapshot{
-		ID:            e.id,
-		SkillId:       e.skillId,
-		Name:          e.name,
-		Notes:         e.notes,
-		SourceRef:     e.sourceRef,
-		CommitSha:     e.commitSha,
-		ContentDigest: e.contentDigest,
-		CreateTime:    e.createTime,
-		UpdateTime:    e.updateTime,
+		ID:                 e.id,
+		SkillId:            e.skillId,
+		Name:               e.name,
+		Notes:              e.notes,
+		SourceRef:          e.sourceRef,
+		CommitSha:          e.commitSha,
+		ContentDigest:      e.contentDigest,
+		Description:        e.description,
+		UpstreamCommit:     e.upstreamCommit,
+		UpstreamRepository: e.upstreamRepository,
+		UpstreamPath:       e.upstreamPath,
+		CreateTime:         e.createTime,
+		UpdateTime:         e.updateTime,
 	}
 }
 
@@ -221,6 +257,38 @@ func (e *SkillVersion) ContentDigest() string {
 		return zero
 	}
 	return e.contentDigest
+}
+
+func (e *SkillVersion) Description() string {
+	if e == nil {
+		var zero string
+		return zero
+	}
+	return e.description
+}
+
+func (e *SkillVersion) UpstreamCommit() string {
+	if e == nil {
+		var zero string
+		return zero
+	}
+	return e.upstreamCommit
+}
+
+func (e *SkillVersion) UpstreamRepository() string {
+	if e == nil {
+		var zero string
+		return zero
+	}
+	return e.upstreamRepository
+}
+
+func (e *SkillVersion) UpstreamPath() string {
+	if e == nil {
+		var zero string
+		return zero
+	}
+	return e.upstreamPath
 }
 
 func (e *SkillVersion) CreateTime() *core.Timestamp {

@@ -16,6 +16,7 @@ type skillFile struct {
 	Path   string
 	Size   int64
 	Digest string
+	Mode   fs.FileMode
 }
 
 // readSkillFiles returns a stable digest and file list without following links.
@@ -82,7 +83,7 @@ func inspectSkillFiles(path, destination string) ([]skillFile, string, error) {
 			return fmt.Errorf("file too large: %s", rel)
 		}
 		total += stat.Size()
-		if destination != "" && (total > 64*1024*1024 || len(files) >= 10000) {
+		if total > 64*1024*1024 || len(files) >= 10000 {
 			return fmt.Errorf("skill exceeds snapshot size or file count limit")
 		}
 		target := ""
@@ -93,7 +94,7 @@ func inspectSkillFiles(path, destination string) ([]skillFile, string, error) {
 		if err != nil {
 			return err
 		}
-		files = append(files, skillFile{Path: filepath.ToSlash(rel), Size: stat.Size(), Digest: digest})
+		files = append(files, skillFile{Path: filepath.ToSlash(rel), Size: stat.Size(), Digest: digest, Mode: stat.Mode().Perm() & 0100})
 		return nil
 	})
 	if err != nil {
@@ -102,7 +103,7 @@ func inspectSkillFiles(path, destination string) ([]skillFile, string, error) {
 	sort.Slice(files, func(i, j int) bool { return files[i].Path < files[j].Path })
 	hash := sha256.New()
 	for _, file := range files {
-		fmt.Fprintf(hash, "%s\x00%s\x00", file.Path, file.Digest)
+		fmt.Fprintf(hash, "%s\x00%s\x00%o\x00", file.Path, file.Digest, file.Mode)
 	}
 	return files, hex.EncodeToString(hash.Sum(nil)), nil
 }

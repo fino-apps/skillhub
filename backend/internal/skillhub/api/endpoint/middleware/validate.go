@@ -100,6 +100,26 @@ func validateRequest(request interface{}) error {
 		return validatePreviewImportRequest(request)
 	case *pb.ImportSkillRequest:
 		return validateImportSkillRequest(request)
+	case *pb.SetDefaultVersionRequest:
+		return validateSetDefaultVersionRequest(request)
+	case *pb.DeleteVersionRequest:
+		return validateDeleteVersionRequest(request)
+	case *pb.GetVersionContentRequest:
+		return validateGetVersionContentRequest(request)
+	case *pb.GetVersionFileRequest:
+		return validateGetVersionFileRequest(request)
+	case *pb.ExportVersionToDirectoryRequest:
+		return validateExportVersionToDirectoryRequest(request)
+	case *pb.RepairVersionRequest:
+		return validateRepairVersionRequest(request)
+	case *pb.BatchUpdateSkillMetadataRequest:
+		return validateBatchUpdateSkillMetadataRequest(request)
+	case *pb.CommitUploadRequest:
+		return validateCommitUploadRequest(request)
+	case *pb.CreateOrganizationTaskRequest:
+		return validateCreateOrganizationTaskRequest(request)
+	case *pb.GetOrganizationTaskRequest:
+		return validateGetOrganizationTaskRequest(request)
 	case *pb.CompareSkillsRequest:
 		return validateCompareSkillsRequest(request)
 	case *pb.GetInstallCommandRequest:
@@ -110,6 +130,18 @@ func validateRequest(request interface{}) error {
 }
 
 func validateListSkillsRequest(req *pb.ListSkillsRequest) error {
+	if err := requestValidator.Var(req.GetKeyword(), "omitempty,max=240"); err != nil {
+		return newRequestValidationError("keyword", err)
+	}
+
+	if err := requestValidator.Var(req.GetSource(), "omitempty,max=120"); err != nil {
+		return newRequestValidationError("source", err)
+	}
+
+	if err := requestValidator.Var(req.GetTags(), "omitempty,max=30"); err != nil {
+		return newRequestValidationError("tags", err)
+	}
+
 	if err := requestValidator.Var(req.GetCategory(), "omitempty,max=128"); err != nil {
 		return newRequestValidationError("category", err)
 	}
@@ -152,6 +184,18 @@ func validateUpdateSkillRequest(req *pb.UpdateSkillRequest) error {
 
 	if err := requestValidator.Var(req.GetSkill().GetNotes(), "omitempty,max=4096"); err != nil {
 		return newRequestValidationError("skill.notes", err)
+	}
+
+	if err := requestValidator.Var(req.GetSkill().GetPurpose(), "omitempty,max=240"); err != nil {
+		return newRequestValidationError("skill.purpose", err)
+	}
+
+	if err := requestValidator.Var(req.GetSkill().GetUpstreamName(), "omitempty,max=120"); err != nil {
+		return newRequestValidationError("skill.upstream_name", err)
+	}
+
+	if err := requestValidator.Var(req.GetSkill().GetUpstreamUrl(), "omitempty,max=2048"); err != nil {
+		return newRequestValidationError("skill.upstream_url", err)
 	}
 
 	return nil
@@ -206,6 +250,10 @@ func validateCreateVersionRequest(req *pb.CreateVersionRequest) error {
 		return newRequestValidationError("version.expected_digest", err)
 	}
 
+	if err := requestValidator.Var(req.GetVersion().GetLocalPath(), "omitempty,max=2048"); err != nil {
+		return newRequestValidationError("version.local_path", err)
+	}
+
 	return nil
 }
 
@@ -240,6 +288,126 @@ func validateImportSkillRequest(req *pb.ImportSkillRequest) error {
 
 	if err := requestValidator.Var(req.GetSkillPaths(), "required,max=100"); err != nil {
 		return newRequestValidationError("skill_paths", err)
+	}
+
+	return nil
+}
+
+func validateSetDefaultVersionRequest(req *pb.SetDefaultVersionRequest) error {
+	if err := requestValidator.Var(req.GetSkillId(), "required,uuid"); err != nil {
+		return newRequestValidationError("skill_id", err)
+	}
+
+	if err := requestValidator.Var(req.GetVersionId(), "required,uuid"); err != nil {
+		return newRequestValidationError("version_id", err)
+	}
+
+	return nil
+}
+
+func validateDeleteVersionRequest(req *pb.DeleteVersionRequest) error {
+	if err := requestValidator.Var(req.GetSkillId(), "required,uuid"); err != nil {
+		return newRequestValidationError("skill_id", err)
+	}
+
+	if err := requestValidator.Var(req.GetVersionId(), "required,uuid"); err != nil {
+		return newRequestValidationError("version_id", err)
+	}
+
+	return nil
+}
+
+func validateGetVersionContentRequest(req *pb.GetVersionContentRequest) error {
+	if err := requestValidator.Var(req.GetSkillId(), "required,uuid"); err != nil {
+		return newRequestValidationError("skill_id", err)
+	}
+
+	if err := requestValidator.Var(req.GetVersionId(), "required,uuid"); err != nil {
+		return newRequestValidationError("version_id", err)
+	}
+
+	return nil
+}
+
+func validateGetVersionFileRequest(req *pb.GetVersionFileRequest) error {
+	if err := requestValidator.Var(req.GetSkillId(), "required,uuid"); err != nil {
+		return newRequestValidationError("skill_id", err)
+	}
+
+	if err := requestValidator.Var(req.GetVersionId(), "required,uuid"); err != nil {
+		return newRequestValidationError("version_id", err)
+	}
+
+	if err := requestValidator.Var(req.GetPath(), "required,max=2048"); err != nil {
+		return newRequestValidationError("path", err)
+	}
+
+	return nil
+}
+
+func validateExportVersionToDirectoryRequest(req *pb.ExportVersionToDirectoryRequest) error {
+	if err := requestValidator.Var(req.GetSkillId(), "required,uuid"); err != nil {
+		return newRequestValidationError("skill_id", err)
+	}
+
+	if err := requestValidator.Var(req.GetVersionId(), "required,uuid"); err != nil {
+		return newRequestValidationError("version_id", err)
+	}
+
+	if err := requestValidator.Var(req.GetDirectory(), "omitempty,max=2048"); err != nil {
+		return newRequestValidationError("directory", err)
+	}
+
+	return nil
+}
+
+func validateRepairVersionRequest(req *pb.RepairVersionRequest) error {
+	if err := requestValidator.Var(req.GetSkillId(), "required,uuid"); err != nil {
+		return newRequestValidationError("skill_id", err)
+	}
+
+	if err := requestValidator.Var(req.GetVersionId(), "required,uuid"); err != nil {
+		return newRequestValidationError("version_id", err)
+	}
+
+	return nil
+}
+
+func validateBatchUpdateSkillMetadataRequest(req *pb.BatchUpdateSkillMetadataRequest) error {
+	if err := requestValidator.Var(req.GetChanges(), "required,max=100"); err != nil {
+		return newRequestValidationError("changes", err)
+	}
+
+	return nil
+}
+
+func validateCommitUploadRequest(req *pb.CommitUploadRequest) error {
+	if err := requestValidator.Var(req.GetUploadId(), "required,uuid"); err != nil {
+		return newRequestValidationError("upload_id", err)
+	}
+
+	if err := requestValidator.Var(req.GetSkillPaths(), "required,max=100"); err != nil {
+		return newRequestValidationError("skill_paths", err)
+	}
+
+	if err := requestValidator.Var(req.GetTargetSkillId(), "omitempty,uuid"); err != nil {
+		return newRequestValidationError("target_skill_id", err)
+	}
+
+	return nil
+}
+
+func validateCreateOrganizationTaskRequest(req *pb.CreateOrganizationTaskRequest) error {
+	if err := requestValidator.Var(req.GetSkillIds(), "omitempty,max=100"); err != nil {
+		return newRequestValidationError("skill_ids", err)
+	}
+
+	return nil
+}
+
+func validateGetOrganizationTaskRequest(req *pb.GetOrganizationTaskRequest) error {
+	if err := requestValidator.Var(req.GetTaskId(), "required,uuid"); err != nil {
+		return newRequestValidationError("task_id", err)
 	}
 
 	return nil

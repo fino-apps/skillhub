@@ -46,6 +46,43 @@ service SkillhubService {
     option (google.api.http) = {post: "/skillhub/v1/imports" body: "*"};
   }
 
+  rpc SetDefaultVersion(SetDefaultVersionRequest) returns (fino.core.Null) {
+    option (google.api.http) = {put: "/skillhub/v1/skills/{skill_id}/versions/{version_id}/default"};
+  }
+  rpc DeleteVersion(DeleteVersionRequest) returns (fino.core.Null) {
+    option (google.api.http) = {delete: "/skillhub/v1/skills/{skill_id}/versions/{version_id}"};
+  }
+  rpc GetVersionContent(GetVersionContentRequest) returns (GetVersionContentResponse) {
+    option (google.api.http) = {get: "/skillhub/v1/skills/{skill_id}/versions/{version_id}/content"};
+  }
+  rpc GetVersionFile(GetVersionFileRequest) returns (GetVersionFileResponse) {
+    option (google.api.http) = {get: "/skillhub/v1/skills/{skill_id}/versions/{version_id}/file"};
+  }
+  rpc SelectLocalDirectory(SelectLocalDirectoryRequest) returns (SelectLocalDirectoryResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/directories:select" body: "*"};
+  }
+  rpc ExportVersionToDirectory(ExportVersionToDirectoryRequest) returns (ExportVersionToDirectoryResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/skills/{skill_id}/versions/{version_id}:export" body: "*"};
+  }
+  rpc RepairVersion(RepairVersionRequest) returns (fino.core.Null) {
+    option (google.api.http) = {post: "/skillhub/v1/skills/{skill_id}/versions/{version_id}:repair"};
+  }
+  rpc ListFacets(ListFacetsRequest) returns (ListFacetsResponse) {
+    option (google.api.http) = {get: "/skillhub/v1/facets"};
+  }
+  rpc BatchUpdateSkillMetadata(BatchUpdateSkillMetadataRequest) returns (fino.core.Null) {
+    option (google.api.http) = {patch: "/skillhub/v1/skills:organize" body: "*"};
+  }
+  rpc CommitUpload(CommitUploadRequest) returns (ImportSkillResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/uploads/{upload_id}:commit" body: "*"};
+  }
+  rpc CreateOrganizationTask(CreateOrganizationTaskRequest) returns (OrganizationTaskView) {
+    option (google.api.http) = {post: "/skillhub/v1/organization-tasks" body: "*"};
+  }
+  rpc GetOrganizationTask(GetOrganizationTaskRequest) returns (OrganizationTaskView) {
+    option (google.api.http) = {get: "/skillhub/v1/organization-tasks/{task_id}"};
+  }
+
   rpc CompareSkills(CompareSkillsRequest) returns (CompareSkillsResponse) {
     option (google.api.http) = {post: "/skillhub/v1/skills:compare" body: "*"};
   }
@@ -56,6 +93,10 @@ service SkillhubService {
 }
 
 message ListSkillsRequest {
+  string keyword = 1 [(fino.validate) = {omitempty: true max: 240}];
+  string source = 2 [(fino.validate) = {omitempty: true max: 120}];
+  repeated string tags = 4 [(fino.validate) = {omitempty: true max: 30}];
+  bool uncategorized = 5;
   string category = 3 [(fino.validate) = {omitempty: true max: 128}];
   int32 page_size = 90 [(fino.validate) = {omitempty: true min: 1 max: 100}];
   string page_token = 91 [(fino.validate) = {omitempty: true max: 512}];
@@ -76,6 +117,11 @@ message SkillView {
   string repository_url = 8;
   string repository_path = 9;
   string local_path = 10;
+  string import_kind = 11;
+  string purpose = 12;
+  string upstream_name = 13;
+  string upstream_url = 14;
+  VersionView default_version = 15;
 
   fino.core.Timestamp create_time = 98;
   fino.core.Timestamp update_time = 99;
@@ -99,6 +145,9 @@ message UpdateSkillInput {
   string category = 3 [(fino.validate) = {omitempty: true max: 128}];
   repeated string tags = 4 [(fino.validate) = {omitempty: true max: 100}];
   string notes = 5 [(fino.validate) = {omitempty: true max: 4096}];
+  string purpose = 6 [(fino.validate) = {omitempty: true max: 240}];
+  string upstream_name = 7 [(fino.validate) = {omitempty: true max: 120}];
+  string upstream_url = 8 [(fino.validate) = {omitempty: true max: 2048}];
 }
 
 message UpdateSkillResponse {
@@ -123,6 +172,10 @@ message VersionView {
   string source_ref = 6;
   string commit_sha = 7;
   string content_digest = 8;
+  bool available = 9;
+  string upstream_commit = 10;
+  string upstream_repository = 11;
+  string upstream_path = 12;
   fino.core.Timestamp create_time = 98;
 }
 
@@ -137,6 +190,8 @@ message VersionInput {
   string notes = 3 [(fino.validate) = {omitempty: true max: 4096}];
   // 本地版本要匹配比对时的原目录摘要。
   string expected_digest = 4 [(fino.validate) = {omitempty: true min: 64 max: 64}];
+  string local_path = 5 [(fino.validate) = {omitempty: true max: 2048}];
+  bool make_default = 6;
 }
 
 message CreateVersionRequest {
@@ -195,9 +250,15 @@ message ImportSkillRequest {
   repeated string skill_paths = 4 [(fino.validate) = {required: true max: 100}];
 }
 
+message ImportFailure {
+  string path = 1;
+  string message = 2;
+}
+
 message ImportSkillResponse {
   int32 added_count = 1;
   int32 existing_count = 2;
+  repeated ImportFailure failures = 3;
 }
 
 message CompareSkillsRequest {
@@ -218,6 +279,7 @@ message FileChangeView {
   bool binary = 3;
   string left_text = 4;
   string right_text = 5;
+  string detail = 6;
 }
 
 message CompareSkillsResponse {
@@ -236,4 +298,91 @@ message GetInstallCommandRequest {
 
 message GetInstallCommandResponse {
   string command = 1;
+}
+
+message SetDefaultVersionRequest {
+  string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
+  string version_id = 2 [(fino.validate) = {required: true uuid: true}];
+}
+message DeleteVersionRequest {
+  string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
+  string version_id = 2 [(fino.validate) = {required: true uuid: true}];
+}
+message GetVersionContentRequest {
+  string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
+  string version_id = 2 [(fino.validate) = {required: true uuid: true}];
+}
+message GetVersionContentResponse {
+  string description = 1;
+  repeated string files = 2;
+}
+message GetVersionFileRequest {
+  string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
+  string version_id = 2 [(fino.validate) = {required: true uuid: true}];
+  string path = 3 [(fino.validate) = {required: true max: 2048}];
+}
+message GetVersionFileResponse {
+  string text = 1;
+  int32 size = 2;
+  bool binary = 3;
+  bool too_large = 4;
+}
+message SelectLocalDirectoryRequest {}
+message SelectLocalDirectoryResponse {
+  string path = 1;
+}
+message ExportVersionToDirectoryRequest {
+  string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
+  string version_id = 2 [(fino.validate) = {required: true uuid: true}];
+  string directory = 3 [(fino.validate) = {omitempty: true max: 2048}];
+  bool choose_directory = 4;
+}
+message ExportVersionToDirectoryResponse {
+  string path = 1;
+}
+message RepairVersionRequest {
+  string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
+  string version_id = 2 [(fino.validate) = {required: true uuid: true}];
+}
+message ListFacetsRequest {}
+message ListFacetsResponse {
+  repeated string categories = 1;
+  repeated string sources = 2;
+  repeated string tags = 3;
+  bool ai_enabled = 4;
+}
+message SkillMetadataChange {
+  string skill_id = 1;
+  optional string purpose = 2;
+  optional string category = 3;
+  repeated string add_tags = 4;
+  repeated string remove_tags = 5;
+  string revision = 6;
+}
+message BatchUpdateSkillMetadataRequest {
+  repeated SkillMetadataChange changes = 1 [(fino.validate) = {required: true max: 100}];
+}
+message CommitUploadRequest {
+  string upload_id = 1 [(fino.validate) = {required: true uuid: true}];
+  repeated string skill_paths = 2 [(fino.validate) = {required: true max: 100}];
+  string target_skill_id = 3 [(fino.validate) = {omitempty: true uuid: true}];
+  bool make_default = 4;
+}
+message CreateOrganizationTaskRequest {
+  repeated string skill_ids = 1 [(fino.validate) = {omitempty: true max: 100}];
+  bool uncategorized = 2;
+}
+message GetOrganizationTaskRequest {
+  string task_id = 1 [(fino.validate) = {required: true uuid: true}];
+}
+message OrganizationSuggestion {
+  string name = 1;
+  SkillMetadataChange change = 2;
+  string error = 3;
+}
+message OrganizationTaskView {
+  string id = 1;
+  int32 total = 2;
+  repeated OrganizationSuggestion results = 3;
+  bool done = 4;
 }

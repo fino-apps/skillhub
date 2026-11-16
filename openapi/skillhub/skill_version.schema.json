@@ -13,6 +13,9 @@
       "type": "string",
       "format": "date-time"
     },
+    "description": {
+      "type": "string"
+    },
     "id": {
       "type": "string"
     },
@@ -31,6 +34,15 @@
     "updateTime": {
       "type": "string",
       "format": "date-time"
+    },
+    "upstreamCommit": {
+      "type": "string"
+    },
+    "upstreamPath": {
+      "type": "string"
+    },
+    "upstreamRepository": {
+      "type": "string"
     }
   }
 }

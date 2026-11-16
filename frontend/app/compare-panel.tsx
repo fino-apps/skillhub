@@ -1,11 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react";
 import ReactDiffViewer from "react-diff-viewer-continued";
 import { compareSkills, listVersions, scanProject } from "@/generated/api-client";
-import { versionLabel, type SkillVersion } from "./skill-version";
+import { shortVersion, versionLabel, type SkillVersion } from "./skill-version";
+import { localCandidate, pickDirectory } from "./library-api";
 
 type Skill = { id: string; name: string };
 type Source = { skillId: string; versionId: string; path: string };
-export type Change = { path: string; kind: string; binary?: boolean; leftText?: string; rightText?: string };
+export type Change = { path: string; kind: string; binary?: boolean; leftText?: string; rightText?: string; detail?: string };
 
 function LocalSource({ path, onChange }: { path: string; onChange: (path: string) => void }) {
   const [found, setFound] = useState<{ path: string; name: string }[]>([]);
@@ -34,10 +35,13 @@ function LocalSource({ path, onChange }: { path: string; onChange: (path: string
 
   return <div className="compare-local">
     <label>本机项目或 Skill 目录<input value={path} onChange={(event) => { onChange(event.target.value); setFound([]); setFeedback(""); }} placeholder="/path/to/project" required disabled={scanning} /></label>
+    <button type="button" className="secondary" disabled={scanning} onClick={() => {
+      void pickDirectory().then((dir) => { if (dir) { onChange(dir); setFound([]); } }, () => setFeedback("无法打开目录选择器，请输入路径。"));
+    }}>选择文件夹</button>
     <button type="button" className="secondary" disabled={scanning || !path.trim()} onClick={() => void scan()}>{scanning ? "扫描中…" : "扫描项目"}</button>
     {found.length > 0 && <label>选择 Skill<select defaultValue="" onChange={(event) => {
       const relative = event.target.value;
-      if (relative) onChange(relative === "." ? base : `${base.replace(/\/$/, "")}/${relative}`);
+      if (relative) onChange(localCandidate(base, relative));
     }}>
       <option value="" disabled>选择扫描结果</option>
       {found.map((skill) => <option key={skill.path} value={skill.path}>{skill.name}</option>)}
@@ -46,7 +50,7 @@ function LocalSource({ path, onChange }: { path: string; onChange: (path: string
   </div>;
 }
 
-function SourcePicker({ label, skills, value, onChange, disabled }: { label: string; skills: Skill[]; value: Source; onChange: (source: Source) => void; disabled: boolean }) {
+function SourcePicker({ label, skills, value, onChange, disabled, fixed }: { label: string; skills: Skill[]; value: Source; onChange: (source: Source) => void; disabled: boolean; fixed: boolean }) {
   const [versions, setVersions] = useState<SkillVersion[]>([]);
   const [error, setError] = useState("");
 
@@ -70,11 +74,11 @@ function SourcePicker({ label, skills, value, onChange, disabled }: { label: str
   }, [value.skillId]);
 
   return <fieldset className="compare-source" disabled={disabled}><legend>{label}</legend>
-    <label>来源<select value={value.skillId} onChange={(event) => onChange({ skillId: event.target.value, versionId: "", path: value.path })}>
+    {!fixed && <label>来源<select value={value.skillId} onChange={(event) => onChange({ skillId: event.target.value, versionId: "", path: value.path })}>
       <option value="">本地目录</option>
       {skills.map((skill) => <option key={skill.id} value={skill.id}>{skill.name}</option>)}
-    </select></label>
-    {value.skillId ? <label>版本<select value={value.versionId} onChange={(event) => onChange({ ...value, versionId: event.target.value })}><option value="">最近收录版本</option>{versions.map((version) => <option key={version.id} value={version.id}>{versionLabel(version)} · {(version.commitSha ?? version.contentDigest)?.slice(0, 8)}</option>)}</select></label> : <LocalSource path={value.path} onChange={(path) => onChange({ ...value, path })} />}
+    </select></label>}
+    {value.skillId ? <label>版本<select value={value.versionId} onChange={(event) => onChange({ ...value, versionId: event.target.value })}><option value="">默认版本</option>{versions.filter((version) => version.available).map((version) => <option key={version.id} value={version.id}>{versionLabel(version)} · {shortVersion(version, versions)}</option>)}</select></label> : <LocalSource path={value.path} onChange={(path) => onChange({ ...value, path })} />}
     {error && <span role="alert" className="intake-error">{error}</span>}
   </fieldset>;
 }
@@ -85,9 +89,9 @@ function location(source: Source) {
   return { localPath: source.path.trim() };
 }
 
-export default function ComparePanel({ skills, skillId = "" }: { skills: Skill[]; skillId?: string }) {
+export default function ComparePanel({ skills, skillId = "", candidate = "" }: { skills: Skill[]; skillId?: string; candidate?: string }) {
   const [left, setLeft] = useState<Source>({ skillId, versionId: "", path: "" });
-  const [right, setRight] = useState<Source>({ skillId, versionId: "", path: "" });
+  const [right, setRight] = useState<Source>({ skillId, versionId: candidate, path: "" });
   const [changes, setChanges] = useState<Change[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -105,8 +109,8 @@ export default function ComparePanel({ skills, skillId = "" }: { skills: Skill[]
 
   return <div className="compare-panel">
     <form onSubmit={submit}>
-      <div className="compare-sources"><SourcePicker label="原始版本" skills={skills} value={left} disabled={busy} onChange={(value) => { setLeft(value); setChanges(null); }} /><SourcePicker label="目标版本" skills={skills} value={right} disabled={busy} onChange={(value) => { setRight(value); setChanges(null); }} /></div>
-      <button type="submit" disabled={busy}>{busy ? "比对中…" : "开始比对"}</button>
+      <div className="compare-sources"><SourcePicker label="基准版本" fixed={!!skillId} skills={skills} value={left} disabled={busy} onChange={(value) => { setLeft(value); setChanges(null); }} /><SourcePicker label="对比版本" fixed={!!skillId} skills={skills} value={right} disabled={busy} onChange={(value) => { setRight(value); setChanges(null); }} /></div>
+      <button type="submit" disabled={busy || (!!skillId && left.versionId === right.versionId)}>{busy ? "比对中…" : "开始比对"}</button>
     </form>
     {error && <p className="intake-error" role="alert">{error}</p>}
     {changes && <CompareResults files={changes} />}
@@ -127,6 +131,10 @@ export function CompareResults({ files }: { files: Change[] }) {
   const selected = files.find((file) => file.path === selectedPath) ?? files[0];
   return <div className="compare-results">
     <div className="compare-files">{files.map((file) => <button type="button" key={file.path} className={selected.path === file.path ? "is-selected" : ""} onClick={() => setSelectedPath(file.path)}><span>{file.kind.endsWith("ADDED") ? "+" : file.kind.endsWith("DELETED") ? "−" : "~"}</span>{file.path}</button>)}</div>
-    <div className="compare-content">{selected.binary ? <p>二进制文件已变化。</p> : <ReactDiffViewer oldValue={selected.leftText ?? ""} newValue={selected.rightText ?? ""} splitView={false} useDarkTheme={dark} />}</div>
+    <div className="compare-content">
+      {selected.detail && <p>{selected.detail}</p>}
+      {selected.binary ? <p>二进制文件已变化。</p> : (selected.leftText !== undefined || selected.rightText !== undefined || !selected.detail)
+        && <ReactDiffViewer oldValue={selected.leftText ?? ""} newValue={selected.rightText ?? ""} splitView={false} useDarkTheme={dark} />}
+    </div>
   </div>;
 }

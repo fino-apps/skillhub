@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -114,11 +116,17 @@ func (s *SnapshotStore) Path(skillID, versionID, name string) (string, error) {
 	return target, nil
 }
 
-func (s *SnapshotStore) RemoveSkill(skillID string) error {
+func (s *SnapshotStore) Remove(skillID, versionID string) error {
 	if uuid.Validate(skillID) != nil {
 		return fmt.Errorf("invalid skill ID")
 	}
-	return os.RemoveAll(filepath.Join(s.root, skillID))
+	if versionID == "" {
+		return os.RemoveAll(filepath.Join(s.root, skillID))
+	}
+	if uuid.Validate(versionID) != nil {
+		return fmt.Errorf("invalid version ID")
+	}
+	return os.RemoveAll(filepath.Join(s.root, skillID, versionID))
 }
 
 func (s *SnapshotStore) versionPath(skillID, versionID, name string) (string, error) {
@@ -126,4 +134,48 @@ func (s *SnapshotStore) versionPath(skillID, versionID, name string) (string, er
 		return "", fmt.Errorf("invalid snapshot identity")
 	}
 	return filepath.Join(s.root, skillID, versionID, name), nil
+}
+
+func (s *SnapshotStore) Prune(referenced func(skillID, versionID string) (bool, error)) error {
+	entries, err := os.ReadDir(s.root)
+	if err != nil {
+		return err
+	}
+	for _, skill := range entries {
+		if !skill.IsDir() {
+			continue
+		}
+		if strings.HasPrefix(skill.Name(), ".snapshot-") {
+			if info, err := skill.Info(); err == nil && time.Since(info.ModTime()) > 24*time.Hour {
+				_ = os.RemoveAll(filepath.Join(s.root, skill.Name()))
+			}
+			continue
+		}
+		if uuid.Validate(skill.Name()) != nil {
+			continue
+		}
+		versions, err := os.ReadDir(filepath.Join(s.root, skill.Name()))
+		if err != nil {
+			return err
+		}
+		for _, version := range versions {
+			if !version.IsDir() || uuid.Validate(version.Name()) != nil {
+				continue
+			}
+			info, err := version.Info()
+			if err != nil || time.Since(info.ModTime()) < 24*time.Hour {
+				continue
+			}
+			keep, err := referenced(skill.Name(), version.Name())
+			if err != nil {
+				return err
+			}
+			if !keep {
+				if err := s.Remove(skill.Name(), version.Name()); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
 }

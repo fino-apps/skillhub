@@ -16,19 +16,9 @@ type comparisonSource struct {
 	cleanup func()
 }
 
-func (s skillhubServer) versionSource(ctx context.Context, skill *model.Skill, version *model.SkillVersion) (comparisonSource, error) {
-	if version.ContentDigest() != "" {
-		path, err := s.snapshots.Path(version.SkillId(), string(version.ID()), version.Name())
-		return comparisonSource{path: path}, err
-	}
-
-	if skill.RepositoryUrl() == "" || version.CommitSha() == "" {
-		return comparisonSource{}, fmt.Errorf("version has no pinned commit")
-	}
-	path, commit, cleanup, err := service.CheckoutGitHub(ctx, service.GitHubSource{
-		RepositoryURL: skill.RepositoryUrl(), SkillPath: skill.RepositoryPath(), Ref: version.CommitSha(),
-	})
-	return comparisonSource{path: path, commit: commit, cleanup: cleanup}, err
+func (s skillhubServer) versionSource(version *model.SkillVersion) (comparisonSource, error) {
+	path, err := s.versionPath(version)
+	return comparisonSource{path: path, commit: version.CommitSha()}, err
 }
 
 func (s skillhubServer) compareSource(ctx context.Context, location *pb.SkillLocation) (comparisonSource, error) {
@@ -44,25 +34,18 @@ func (s skillhubServer) compareSource(ctx context.Context, location *pb.SkillLoc
 		if err != nil {
 			return comparisonSource{}, err
 		}
-		versions, err := s.skillhubSvc.ListSkillVersions(ctx, model.ListSkillVersionQuery{Filter: model.SkillVersionFilter{SkillID: id}, PageSize: 1, SkipTotalCount: true})
+		version, err := s.ownedVersion(ctx, id, skill.DefaultVersionId())
 		if err != nil {
 			return comparisonSource{}, err
 		}
-		if len(versions.Items) == 0 {
-			return comparisonSource{}, fmt.Errorf("skill has no versions")
-		}
-		return s.versionSource(ctx, skill, versions.Items[0])
+		return s.versionSource(version)
 	}
 	if id := location.GetVersionId(); id != "" {
 		version, err := s.skillhubSvc.GetSkillVersion(ctx, model.SkillVersionID(id))
 		if err != nil {
 			return comparisonSource{}, err
 		}
-		skill, err := s.skillhubSvc.GetSkill(ctx, model.SkillID(version.SkillId()))
-		if err != nil {
-			return comparisonSource{}, err
-		}
-		return s.versionSource(ctx, skill, version)
+		return s.versionSource(version)
 	}
 	return comparisonSource{}, fmt.Errorf("source missing")
 }
@@ -95,7 +78,7 @@ func (s skillhubServer) compareSkills(ctx context.Context, in *pb.CompareSkillsR
 		if change.Kind == "deleted" {
 			kind = pb.FileChangeKind_FILE_CHANGE_KIND_DELETED
 		}
-		files = append(files, &pb.FileChangeView{Path: change.Path, Kind: kind, Binary: change.Binary, LeftText: change.LeftText, RightText: change.RightText})
+		files = append(files, &pb.FileChangeView{Path: change.Path, Kind: kind, Binary: change.Binary, LeftText: change.LeftText, RightText: change.RightText, Detail: change.Detail})
 	}
 	return &pb.CompareSkillsResponse{Files: files, LeftDigest: leftDigest, RightDigest: rightDigest, LeftCommitSha: left.commit, RightCommitSha: right.commit}, nil
 }

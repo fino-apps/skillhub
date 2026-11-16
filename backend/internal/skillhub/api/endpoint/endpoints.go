@@ -34,33 +34,57 @@ import (
 // single type that implements the Service interface. For example, you might
 // construct individual endpoints using transport/http.NewClient, combine them into an Endpoints, and return it to the caller as a Service.
 type Endpoints struct {
-	ListSkillsEndpoint        endpoint.Endpoint
-	GetSkillEndpoint          endpoint.Endpoint
-	UpdateSkillEndpoint       endpoint.Endpoint
-	DeleteSkillEndpoint       endpoint.Endpoint
-	ListVersionsEndpoint      endpoint.Endpoint
-	CreateVersionEndpoint     endpoint.Endpoint
-	ScanProjectEndpoint       endpoint.Endpoint
-	PreviewImportEndpoint     endpoint.Endpoint
-	ImportSkillEndpoint       endpoint.Endpoint
-	CompareSkillsEndpoint     endpoint.Endpoint
-	GetInstallCommandEndpoint endpoint.Endpoint
+	ListSkillsEndpoint               endpoint.Endpoint
+	GetSkillEndpoint                 endpoint.Endpoint
+	UpdateSkillEndpoint              endpoint.Endpoint
+	DeleteSkillEndpoint              endpoint.Endpoint
+	ListVersionsEndpoint             endpoint.Endpoint
+	CreateVersionEndpoint            endpoint.Endpoint
+	ScanProjectEndpoint              endpoint.Endpoint
+	PreviewImportEndpoint            endpoint.Endpoint
+	ImportSkillEndpoint              endpoint.Endpoint
+	SetDefaultVersionEndpoint        endpoint.Endpoint
+	DeleteVersionEndpoint            endpoint.Endpoint
+	GetVersionContentEndpoint        endpoint.Endpoint
+	GetVersionFileEndpoint           endpoint.Endpoint
+	SelectLocalDirectoryEndpoint     endpoint.Endpoint
+	ExportVersionToDirectoryEndpoint endpoint.Endpoint
+	RepairVersionEndpoint            endpoint.Endpoint
+	ListFacetsEndpoint               endpoint.Endpoint
+	BatchUpdateSkillMetadataEndpoint endpoint.Endpoint
+	CommitUploadEndpoint             endpoint.Endpoint
+	CreateOrganizationTaskEndpoint   endpoint.Endpoint
+	GetOrganizationTaskEndpoint      endpoint.Endpoint
+	CompareSkillsEndpoint            endpoint.Endpoint
+	GetInstallCommandEndpoint        endpoint.Endpoint
 }
 
 // NewEndpoints adapts each service method to an endpoint.
 func NewEndpoints(service pb.SkillhubServiceServer) Endpoints {
 	return Endpoints{
-		ListSkillsEndpoint:        MakeListSkillsEndpoint(service),
-		GetSkillEndpoint:          MakeGetSkillEndpoint(service),
-		UpdateSkillEndpoint:       MakeUpdateSkillEndpoint(service),
-		DeleteSkillEndpoint:       MakeDeleteSkillEndpoint(service),
-		ListVersionsEndpoint:      MakeListVersionsEndpoint(service),
-		CreateVersionEndpoint:     MakeCreateVersionEndpoint(service),
-		ScanProjectEndpoint:       MakeScanProjectEndpoint(service),
-		PreviewImportEndpoint:     MakePreviewImportEndpoint(service),
-		ImportSkillEndpoint:       MakeImportSkillEndpoint(service),
-		CompareSkillsEndpoint:     MakeCompareSkillsEndpoint(service),
-		GetInstallCommandEndpoint: MakeGetInstallCommandEndpoint(service),
+		ListSkillsEndpoint:               MakeListSkillsEndpoint(service),
+		GetSkillEndpoint:                 MakeGetSkillEndpoint(service),
+		UpdateSkillEndpoint:              MakeUpdateSkillEndpoint(service),
+		DeleteSkillEndpoint:              MakeDeleteSkillEndpoint(service),
+		ListVersionsEndpoint:             MakeListVersionsEndpoint(service),
+		CreateVersionEndpoint:            MakeCreateVersionEndpoint(service),
+		ScanProjectEndpoint:              MakeScanProjectEndpoint(service),
+		PreviewImportEndpoint:            MakePreviewImportEndpoint(service),
+		ImportSkillEndpoint:              MakeImportSkillEndpoint(service),
+		SetDefaultVersionEndpoint:        MakeSetDefaultVersionEndpoint(service),
+		DeleteVersionEndpoint:            MakeDeleteVersionEndpoint(service),
+		GetVersionContentEndpoint:        MakeGetVersionContentEndpoint(service),
+		GetVersionFileEndpoint:           MakeGetVersionFileEndpoint(service),
+		SelectLocalDirectoryEndpoint:     MakeSelectLocalDirectoryEndpoint(service),
+		ExportVersionToDirectoryEndpoint: MakeExportVersionToDirectoryEndpoint(service),
+		RepairVersionEndpoint:            MakeRepairVersionEndpoint(service),
+		ListFacetsEndpoint:               MakeListFacetsEndpoint(service),
+		BatchUpdateSkillMetadataEndpoint: MakeBatchUpdateSkillMetadataEndpoint(service),
+		CommitUploadEndpoint:             MakeCommitUploadEndpoint(service),
+		CreateOrganizationTaskEndpoint:   MakeCreateOrganizationTaskEndpoint(service),
+		GetOrganizationTaskEndpoint:      MakeGetOrganizationTaskEndpoint(service),
+		CompareSkillsEndpoint:            MakeCompareSkillsEndpoint(service),
+		GetInstallCommandEndpoint:        MakeGetInstallCommandEndpoint(service),
 	}
 }
 
@@ -219,6 +243,210 @@ func MakeImportSkillEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	}
 }
 
+func MakeSetDefaultVersionEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint SetDefaultVersion")
+		}
+		req, ok := request.(*pb.SetDefaultVersionRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected SetDefaultVersion request type %T", request)
+		}
+		v, err := s.SetDefaultVersion(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeDeleteVersionEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint DeleteVersion")
+		}
+		req, ok := request.(*pb.DeleteVersionRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected DeleteVersion request type %T", request)
+		}
+		v, err := s.DeleteVersion(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeGetVersionContentEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint GetVersionContent")
+		}
+		req, ok := request.(*pb.GetVersionContentRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected GetVersionContent request type %T", request)
+		}
+		v, err := s.GetVersionContent(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeGetVersionFileEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint GetVersionFile")
+		}
+		req, ok := request.(*pb.GetVersionFileRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected GetVersionFile request type %T", request)
+		}
+		v, err := s.GetVersionFile(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeSelectLocalDirectoryEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint SelectLocalDirectory")
+		}
+		req, ok := request.(*pb.SelectLocalDirectoryRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected SelectLocalDirectory request type %T", request)
+		}
+		v, err := s.SelectLocalDirectory(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeExportVersionToDirectoryEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint ExportVersionToDirectory")
+		}
+		req, ok := request.(*pb.ExportVersionToDirectoryRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected ExportVersionToDirectory request type %T", request)
+		}
+		v, err := s.ExportVersionToDirectory(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeRepairVersionEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint RepairVersion")
+		}
+		req, ok := request.(*pb.RepairVersionRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected RepairVersion request type %T", request)
+		}
+		v, err := s.RepairVersion(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeListFacetsEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint ListFacets")
+		}
+		req, ok := request.(*pb.ListFacetsRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected ListFacets request type %T", request)
+		}
+		v, err := s.ListFacets(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeBatchUpdateSkillMetadataEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint BatchUpdateSkillMetadata")
+		}
+		req, ok := request.(*pb.BatchUpdateSkillMetadataRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected BatchUpdateSkillMetadata request type %T", request)
+		}
+		v, err := s.BatchUpdateSkillMetadata(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeCommitUploadEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint CommitUpload")
+		}
+		req, ok := request.(*pb.CommitUploadRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected CommitUpload request type %T", request)
+		}
+		v, err := s.CommitUpload(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeCreateOrganizationTaskEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint CreateOrganizationTask")
+		}
+		req, ok := request.(*pb.CreateOrganizationTaskRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected CreateOrganizationTask request type %T", request)
+		}
+		v, err := s.CreateOrganizationTask(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeGetOrganizationTaskEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint GetOrganizationTask")
+		}
+		req, ok := request.(*pb.GetOrganizationTaskRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected GetOrganizationTask request type %T", request)
+		}
+		v, err := s.GetOrganizationTask(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
 func MakeCompareSkillsEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		if s == nil {
@@ -267,6 +495,18 @@ func (e *Endpoints) WrapAll(middleware endpoint.Middleware) {
 	e.ScanProjectEndpoint = middleware(e.ScanProjectEndpoint)
 	e.PreviewImportEndpoint = middleware(e.PreviewImportEndpoint)
 	e.ImportSkillEndpoint = middleware(e.ImportSkillEndpoint)
+	e.SetDefaultVersionEndpoint = middleware(e.SetDefaultVersionEndpoint)
+	e.DeleteVersionEndpoint = middleware(e.DeleteVersionEndpoint)
+	e.GetVersionContentEndpoint = middleware(e.GetVersionContentEndpoint)
+	e.GetVersionFileEndpoint = middleware(e.GetVersionFileEndpoint)
+	e.SelectLocalDirectoryEndpoint = middleware(e.SelectLocalDirectoryEndpoint)
+	e.ExportVersionToDirectoryEndpoint = middleware(e.ExportVersionToDirectoryEndpoint)
+	e.RepairVersionEndpoint = middleware(e.RepairVersionEndpoint)
+	e.ListFacetsEndpoint = middleware(e.ListFacetsEndpoint)
+	e.BatchUpdateSkillMetadataEndpoint = middleware(e.BatchUpdateSkillMetadataEndpoint)
+	e.CommitUploadEndpoint = middleware(e.CommitUploadEndpoint)
+	e.CreateOrganizationTaskEndpoint = middleware(e.CreateOrganizationTaskEndpoint)
+	e.GetOrganizationTaskEndpoint = middleware(e.GetOrganizationTaskEndpoint)
 	e.CompareSkillsEndpoint = middleware(e.CompareSkillsEndpoint)
 	e.GetInstallCommandEndpoint = middleware(e.GetInstallCommandEndpoint)
 }
@@ -288,6 +528,18 @@ func (e *Endpoints) WrapAllLabeled(middleware LabeledMiddleware) {
 	e.ScanProjectEndpoint = middleware("ScanProject", e.ScanProjectEndpoint)
 	e.PreviewImportEndpoint = middleware("PreviewImport", e.PreviewImportEndpoint)
 	e.ImportSkillEndpoint = middleware("ImportSkill", e.ImportSkillEndpoint)
+	e.SetDefaultVersionEndpoint = middleware("SetDefaultVersion", e.SetDefaultVersionEndpoint)
+	e.DeleteVersionEndpoint = middleware("DeleteVersion", e.DeleteVersionEndpoint)
+	e.GetVersionContentEndpoint = middleware("GetVersionContent", e.GetVersionContentEndpoint)
+	e.GetVersionFileEndpoint = middleware("GetVersionFile", e.GetVersionFileEndpoint)
+	e.SelectLocalDirectoryEndpoint = middleware("SelectLocalDirectory", e.SelectLocalDirectoryEndpoint)
+	e.ExportVersionToDirectoryEndpoint = middleware("ExportVersionToDirectory", e.ExportVersionToDirectoryEndpoint)
+	e.RepairVersionEndpoint = middleware("RepairVersion", e.RepairVersionEndpoint)
+	e.ListFacetsEndpoint = middleware("ListFacets", e.ListFacetsEndpoint)
+	e.BatchUpdateSkillMetadataEndpoint = middleware("BatchUpdateSkillMetadata", e.BatchUpdateSkillMetadataEndpoint)
+	e.CommitUploadEndpoint = middleware("CommitUpload", e.CommitUploadEndpoint)
+	e.CreateOrganizationTaskEndpoint = middleware("CreateOrganizationTask", e.CreateOrganizationTaskEndpoint)
+	e.GetOrganizationTaskEndpoint = middleware("GetOrganizationTask", e.GetOrganizationTaskEndpoint)
 	e.CompareSkillsEndpoint = middleware("CompareSkills", e.CompareSkillsEndpoint)
 	e.GetInstallCommandEndpoint = middleware("GetInstallCommand", e.GetInstallCommandEndpoint)
 }

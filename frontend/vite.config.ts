@@ -10,9 +10,9 @@ export default defineConfig(({ command, mode }) => {
 
   if (command === "serve" && !apiBase) {
     const backendDir = fileURLToPath(new URL("../backend/", import.meta.url));
-    const port = loadEnv(mode, backendDir, "SERVER_HTTP_PORT").SERVER_HTTP_PORT;
+    const port = process.env.SERVER_HTTP_PORT || loadEnv(mode, backendDir, "SERVER_HTTP_PORT").SERVER_HTTP_PORT || "31101";
     if (!port || !/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) {
-      throw new Error("Set SERVER_HTTP_PORT (1-65535) in backend/.env before starting frontend development");
+      throw new Error("SERVER_HTTP_PORT must be within 1–65535");
     }
     backendTarget = `http://127.0.0.1:${port}`;
   }
@@ -24,7 +24,7 @@ export default defineConfig(({ command, mode }) => {
     plugins: [react()],
     server: {
       proxy: {
-        ...(backendTarget ? { "/skillhub": { target: backendTarget, changeOrigin: true } } : {}),
+        ...(backendTarget ? { "/skillhub": { target: backendTarget } } : {}),
         "/monitor": {
           target: "http://127.0.0.1:3000",
           changeOrigin: true,

@@ -17,16 +17,22 @@ func SkillToRecord(entity *model.Skill) *pmodel.Skill {
 
 	snapshot := entity.Snapshot()
 	return &pmodel.Skill{
-		ID:             snapshot.ID,
-		Name:           snapshot.Name,
-		Description:    snapshot.Description,
-		Category:       snapshot.Category,
-		Notes:          snapshot.Notes,
-		RepositoryUrl:  snapshot.RepositoryUrl,
-		RepositoryPath: snapshot.RepositoryPath,
-		LocalPath:      snapshot.LocalPath,
-		CreateTime:     snapshot.CreateTime,
-		UpdateTime:     snapshot.UpdateTime,
+		ID:               snapshot.ID,
+		Name:             snapshot.Name,
+		Description:      snapshot.Description,
+		Category:         snapshot.Category,
+		Notes:            snapshot.Notes,
+		RepositoryUrl:    snapshot.RepositoryUrl,
+		RepositoryPath:   snapshot.RepositoryPath,
+		LocalPath:        snapshot.LocalPath,
+		SourceKey:        snapshot.SourceKey,
+		ImportKind:       snapshot.ImportKind,
+		Purpose:          snapshot.Purpose,
+		UpstreamName:     snapshot.UpstreamName,
+		UpstreamUrl:      snapshot.UpstreamUrl,
+		DefaultVersionId: snapshot.DefaultVersionId,
+		CreateTime:       snapshot.CreateTime,
+		UpdateTime:       snapshot.UpdateTime,
 	}
 }
 
@@ -36,16 +42,22 @@ func RecordToSkill(record *pmodel.Skill) *model.Skill {
 	}
 
 	return model.RebuildSkill(model.SkillSnapshot{
-		ID:             record.ID,
-		Name:           record.Name,
-		Description:    record.Description,
-		Category:       record.Category,
-		Notes:          record.Notes,
-		RepositoryUrl:  record.RepositoryUrl,
-		RepositoryPath: record.RepositoryPath,
-		LocalPath:      record.LocalPath,
-		CreateTime:     record.CreateTime,
-		UpdateTime:     record.UpdateTime,
+		ID:               record.ID,
+		Name:             record.Name,
+		Description:      record.Description,
+		Category:         record.Category,
+		Notes:            record.Notes,
+		RepositoryUrl:    record.RepositoryUrl,
+		RepositoryPath:   record.RepositoryPath,
+		LocalPath:        record.LocalPath,
+		SourceKey:        record.SourceKey,
+		ImportKind:       record.ImportKind,
+		Purpose:          record.Purpose,
+		UpstreamName:     record.UpstreamName,
+		UpstreamUrl:      record.UpstreamUrl,
+		DefaultVersionId: record.DefaultVersionId,
+		CreateTime:       record.CreateTime,
+		UpdateTime:       record.UpdateTime,
 	})
 }
 
@@ -80,6 +92,18 @@ func SkillFields(snapshot model.SkillSnapshot, updateMask []string) map[string]i
 			fields["repository_path"] = snapshot.RepositoryPath
 		case "localPath":
 			fields["local_path"] = snapshot.LocalPath
+		case "sourceKey":
+			fields["source_key"] = snapshot.SourceKey
+		case "importKind":
+			fields["import_kind"] = snapshot.ImportKind
+		case "purpose":
+			fields["purpose"] = snapshot.Purpose
+		case "upstreamName":
+			fields["upstream_name"] = snapshot.UpstreamName
+		case "upstreamUrl":
+			fields["upstream_url"] = snapshot.UpstreamUrl
+		case "defaultVersionId":
+			fields["default_version_id"] = snapshot.DefaultVersionId
 		case "createTime":
 			fields["create_time"] = snapshot.CreateTime
 		case "updateTime":

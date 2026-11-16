@@ -6,7 +6,7 @@ import (
 	pb "github.com/fino-io/skillhub/go/skillhub/v1"
 )
 
-// validSkillLocation restores the exclusive selection guaranteed by the original oneof.
+// validSkillLocation requires exactly one comparison source.
 func validSkillLocation(location *pb.SkillLocation) bool {
 	if location == nil {
 		return false

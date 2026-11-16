@@ -104,6 +104,78 @@ func MakeGRPCServer(endpoints endpoint.Endpoints) pb.SkillhubServiceServer {
 			EncodeGRPCImportSkillResponse,
 			serverOptions...,
 		),
+		setDefaultVersion: grpctransport.NewServer(
+			endpoints.SetDefaultVersionEndpoint,
+			DecodeGRPCSetDefaultVersionRequest,
+			EncodeGRPCSetDefaultVersionResponse,
+			serverOptions...,
+		),
+		deleteVersion: grpctransport.NewServer(
+			endpoints.DeleteVersionEndpoint,
+			DecodeGRPCDeleteVersionRequest,
+			EncodeGRPCDeleteVersionResponse,
+			serverOptions...,
+		),
+		getVersionContent: grpctransport.NewServer(
+			endpoints.GetVersionContentEndpoint,
+			DecodeGRPCGetVersionContentRequest,
+			EncodeGRPCGetVersionContentResponse,
+			serverOptions...,
+		),
+		getVersionFile: grpctransport.NewServer(
+			endpoints.GetVersionFileEndpoint,
+			DecodeGRPCGetVersionFileRequest,
+			EncodeGRPCGetVersionFileResponse,
+			serverOptions...,
+		),
+		selectLocalDirectory: grpctransport.NewServer(
+			endpoints.SelectLocalDirectoryEndpoint,
+			DecodeGRPCSelectLocalDirectoryRequest,
+			EncodeGRPCSelectLocalDirectoryResponse,
+			serverOptions...,
+		),
+		exportVersionToDirectory: grpctransport.NewServer(
+			endpoints.ExportVersionToDirectoryEndpoint,
+			DecodeGRPCExportVersionToDirectoryRequest,
+			EncodeGRPCExportVersionToDirectoryResponse,
+			serverOptions...,
+		),
+		repairVersion: grpctransport.NewServer(
+			endpoints.RepairVersionEndpoint,
+			DecodeGRPCRepairVersionRequest,
+			EncodeGRPCRepairVersionResponse,
+			serverOptions...,
+		),
+		listFacets: grpctransport.NewServer(
+			endpoints.ListFacetsEndpoint,
+			DecodeGRPCListFacetsRequest,
+			EncodeGRPCListFacetsResponse,
+			serverOptions...,
+		),
+		batchUpdateSkillMetadata: grpctransport.NewServer(
+			endpoints.BatchUpdateSkillMetadataEndpoint,
+			DecodeGRPCBatchUpdateSkillMetadataRequest,
+			EncodeGRPCBatchUpdateSkillMetadataResponse,
+			serverOptions...,
+		),
+		commitUpload: grpctransport.NewServer(
+			endpoints.CommitUploadEndpoint,
+			DecodeGRPCCommitUploadRequest,
+			EncodeGRPCCommitUploadResponse,
+			serverOptions...,
+		),
+		createOrganizationTask: grpctransport.NewServer(
+			endpoints.CreateOrganizationTaskEndpoint,
+			DecodeGRPCCreateOrganizationTaskRequest,
+			EncodeGRPCCreateOrganizationTaskResponse,
+			serverOptions...,
+		),
+		getOrganizationTask: grpctransport.NewServer(
+			endpoints.GetOrganizationTaskEndpoint,
+			DecodeGRPCGetOrganizationTaskRequest,
+			EncodeGRPCGetOrganizationTaskResponse,
+			serverOptions...,
+		),
 		compareSkills: grpctransport.NewServer(
 			endpoints.CompareSkillsEndpoint,
 			DecodeGRPCCompareSkillsRequest,
@@ -123,17 +195,29 @@ func MakeGRPCServer(endpoints endpoint.Endpoints) pb.SkillhubServiceServer {
 type grpcServer struct {
 	pb.UnimplementedSkillhubServiceServer
 
-	listSkills        grpctransport.Handler
-	getSkill          grpctransport.Handler
-	updateSkill       grpctransport.Handler
-	deleteSkill       grpctransport.Handler
-	listVersions      grpctransport.Handler
-	createVersion     grpctransport.Handler
-	scanProject       grpctransport.Handler
-	previewImport     grpctransport.Handler
-	importSkill       grpctransport.Handler
-	compareSkills     grpctransport.Handler
-	getInstallCommand grpctransport.Handler
+	listSkills               grpctransport.Handler
+	getSkill                 grpctransport.Handler
+	updateSkill              grpctransport.Handler
+	deleteSkill              grpctransport.Handler
+	listVersions             grpctransport.Handler
+	createVersion            grpctransport.Handler
+	scanProject              grpctransport.Handler
+	previewImport            grpctransport.Handler
+	importSkill              grpctransport.Handler
+	setDefaultVersion        grpctransport.Handler
+	deleteVersion            grpctransport.Handler
+	getVersionContent        grpctransport.Handler
+	getVersionFile           grpctransport.Handler
+	selectLocalDirectory     grpctransport.Handler
+	exportVersionToDirectory grpctransport.Handler
+	repairVersion            grpctransport.Handler
+	listFacets               grpctransport.Handler
+	batchUpdateSkillMetadata grpctransport.Handler
+	commitUpload             grpctransport.Handler
+	createOrganizationTask   grpctransport.Handler
+	getOrganizationTask      grpctransport.Handler
+	compareSkills            grpctransport.Handler
+	getInstallCommand        grpctransport.Handler
 }
 
 // Methods for grpcServer to implement SkillhubServiceServer interface
@@ -208,6 +292,102 @@ func (s *grpcServer) ImportSkill(ctx context.Context, req *pb.ImportSkillRequest
 		return nil, err
 	}
 	return rep.(*pb.ImportSkillResponse), nil
+}
+
+func (s *grpcServer) SetDefaultVersion(ctx context.Context, req *pb.SetDefaultVersionRequest) (*core.Null, error) {
+	_, rep, err := s.setDefaultVersion.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*core.Null), nil
+}
+
+func (s *grpcServer) DeleteVersion(ctx context.Context, req *pb.DeleteVersionRequest) (*core.Null, error) {
+	_, rep, err := s.deleteVersion.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*core.Null), nil
+}
+
+func (s *grpcServer) GetVersionContent(ctx context.Context, req *pb.GetVersionContentRequest) (*pb.GetVersionContentResponse, error) {
+	_, rep, err := s.getVersionContent.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.GetVersionContentResponse), nil
+}
+
+func (s *grpcServer) GetVersionFile(ctx context.Context, req *pb.GetVersionFileRequest) (*pb.GetVersionFileResponse, error) {
+	_, rep, err := s.getVersionFile.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.GetVersionFileResponse), nil
+}
+
+func (s *grpcServer) SelectLocalDirectory(ctx context.Context, req *pb.SelectLocalDirectoryRequest) (*pb.SelectLocalDirectoryResponse, error) {
+	_, rep, err := s.selectLocalDirectory.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.SelectLocalDirectoryResponse), nil
+}
+
+func (s *grpcServer) ExportVersionToDirectory(ctx context.Context, req *pb.ExportVersionToDirectoryRequest) (*pb.ExportVersionToDirectoryResponse, error) {
+	_, rep, err := s.exportVersionToDirectory.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.ExportVersionToDirectoryResponse), nil
+}
+
+func (s *grpcServer) RepairVersion(ctx context.Context, req *pb.RepairVersionRequest) (*core.Null, error) {
+	_, rep, err := s.repairVersion.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*core.Null), nil
+}
+
+func (s *grpcServer) ListFacets(ctx context.Context, req *pb.ListFacetsRequest) (*pb.ListFacetsResponse, error) {
+	_, rep, err := s.listFacets.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.ListFacetsResponse), nil
+}
+
+func (s *grpcServer) BatchUpdateSkillMetadata(ctx context.Context, req *pb.BatchUpdateSkillMetadataRequest) (*core.Null, error) {
+	_, rep, err := s.batchUpdateSkillMetadata.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*core.Null), nil
+}
+
+func (s *grpcServer) CommitUpload(ctx context.Context, req *pb.CommitUploadRequest) (*pb.ImportSkillResponse, error) {
+	_, rep, err := s.commitUpload.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.ImportSkillResponse), nil
+}
+
+func (s *grpcServer) CreateOrganizationTask(ctx context.Context, req *pb.CreateOrganizationTaskRequest) (*pb.OrganizationTaskView, error) {
+	_, rep, err := s.createOrganizationTask.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.OrganizationTaskView), nil
+}
+
+func (s *grpcServer) GetOrganizationTask(ctx context.Context, req *pb.GetOrganizationTaskRequest) (*pb.OrganizationTaskView, error) {
+	_, rep, err := s.getOrganizationTask.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.OrganizationTaskView), nil
 }
 
 func (s *grpcServer) CompareSkills(ctx context.Context, req *pb.CompareSkillsRequest) (*pb.CompareSkillsResponse, error) {
@@ -291,6 +471,90 @@ func DecodeGRPCImportSkillRequest(_ context.Context, grpcReq interface{}) (inter
 	return req, nil
 }
 
+// DecodeGRPCSetDefaultVersionRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC SetDefaultVersion request to a user-domain SetDefaultVersion request. Primarily useful in a server.
+func DecodeGRPCSetDefaultVersionRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.SetDefaultVersionRequest)
+	return req, nil
+}
+
+// DecodeGRPCDeleteVersionRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC DeleteVersion request to a user-domain DeleteVersion request. Primarily useful in a server.
+func DecodeGRPCDeleteVersionRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.DeleteVersionRequest)
+	return req, nil
+}
+
+// DecodeGRPCGetVersionContentRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC GetVersionContent request to a user-domain GetVersionContent request. Primarily useful in a server.
+func DecodeGRPCGetVersionContentRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.GetVersionContentRequest)
+	return req, nil
+}
+
+// DecodeGRPCGetVersionFileRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC GetVersionFile request to a user-domain GetVersionFile request. Primarily useful in a server.
+func DecodeGRPCGetVersionFileRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.GetVersionFileRequest)
+	return req, nil
+}
+
+// DecodeGRPCSelectLocalDirectoryRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC SelectLocalDirectory request to a user-domain SelectLocalDirectory request. Primarily useful in a server.
+func DecodeGRPCSelectLocalDirectoryRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.SelectLocalDirectoryRequest)
+	return req, nil
+}
+
+// DecodeGRPCExportVersionToDirectoryRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC ExportVersionToDirectory request to a user-domain ExportVersionToDirectory request. Primarily useful in a server.
+func DecodeGRPCExportVersionToDirectoryRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.ExportVersionToDirectoryRequest)
+	return req, nil
+}
+
+// DecodeGRPCRepairVersionRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC RepairVersion request to a user-domain RepairVersion request. Primarily useful in a server.
+func DecodeGRPCRepairVersionRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.RepairVersionRequest)
+	return req, nil
+}
+
+// DecodeGRPCListFacetsRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC ListFacets request to a user-domain ListFacets request. Primarily useful in a server.
+func DecodeGRPCListFacetsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.ListFacetsRequest)
+	return req, nil
+}
+
+// DecodeGRPCBatchUpdateSkillMetadataRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC BatchUpdateSkillMetadata request to a user-domain BatchUpdateSkillMetadata request. Primarily useful in a server.
+func DecodeGRPCBatchUpdateSkillMetadataRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.BatchUpdateSkillMetadataRequest)
+	return req, nil
+}
+
+// DecodeGRPCCommitUploadRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC CommitUpload request to a user-domain CommitUpload request. Primarily useful in a server.
+func DecodeGRPCCommitUploadRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.CommitUploadRequest)
+	return req, nil
+}
+
+// DecodeGRPCCreateOrganizationTaskRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC CreateOrganizationTask request to a user-domain CreateOrganizationTask request. Primarily useful in a server.
+func DecodeGRPCCreateOrganizationTaskRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.CreateOrganizationTaskRequest)
+	return req, nil
+}
+
+// DecodeGRPCGetOrganizationTaskRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC GetOrganizationTask request to a user-domain GetOrganizationTask request. Primarily useful in a server.
+func DecodeGRPCGetOrganizationTaskRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.GetOrganizationTaskRequest)
+	return req, nil
+}
+
 // DecodeGRPCCompareSkillsRequest is a transport/grpc.DecodeRequestFunc that converts a
 // gRPC CompareSkills request to a user-domain CompareSkills request. Primarily useful in a server.
 func DecodeGRPCCompareSkillsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -367,6 +631,90 @@ func EncodeGRPCPreviewImportResponse(_ context.Context, response interface{}) (i
 // user-domain ImportSkill response to a gRPC ImportSkill reply. Primarily useful in a server.
 func EncodeGRPCImportSkillResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(*pb.ImportSkillResponse)
+	return resp, nil
+}
+
+// EncodeGRPCSetDefaultVersionResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain SetDefaultVersion response to a gRPC SetDefaultVersion reply. Primarily useful in a server.
+func EncodeGRPCSetDefaultVersionResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*core.Null)
+	return resp, nil
+}
+
+// EncodeGRPCDeleteVersionResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain DeleteVersion response to a gRPC DeleteVersion reply. Primarily useful in a server.
+func EncodeGRPCDeleteVersionResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*core.Null)
+	return resp, nil
+}
+
+// EncodeGRPCGetVersionContentResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain GetVersionContent response to a gRPC GetVersionContent reply. Primarily useful in a server.
+func EncodeGRPCGetVersionContentResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.GetVersionContentResponse)
+	return resp, nil
+}
+
+// EncodeGRPCGetVersionFileResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain GetVersionFile response to a gRPC GetVersionFile reply. Primarily useful in a server.
+func EncodeGRPCGetVersionFileResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.GetVersionFileResponse)
+	return resp, nil
+}
+
+// EncodeGRPCSelectLocalDirectoryResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain SelectLocalDirectory response to a gRPC SelectLocalDirectory reply. Primarily useful in a server.
+func EncodeGRPCSelectLocalDirectoryResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.SelectLocalDirectoryResponse)
+	return resp, nil
+}
+
+// EncodeGRPCExportVersionToDirectoryResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain ExportVersionToDirectory response to a gRPC ExportVersionToDirectory reply. Primarily useful in a server.
+func EncodeGRPCExportVersionToDirectoryResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.ExportVersionToDirectoryResponse)
+	return resp, nil
+}
+
+// EncodeGRPCRepairVersionResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain RepairVersion response to a gRPC RepairVersion reply. Primarily useful in a server.
+func EncodeGRPCRepairVersionResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*core.Null)
+	return resp, nil
+}
+
+// EncodeGRPCListFacetsResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain ListFacets response to a gRPC ListFacets reply. Primarily useful in a server.
+func EncodeGRPCListFacetsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.ListFacetsResponse)
+	return resp, nil
+}
+
+// EncodeGRPCBatchUpdateSkillMetadataResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain BatchUpdateSkillMetadata response to a gRPC BatchUpdateSkillMetadata reply. Primarily useful in a server.
+func EncodeGRPCBatchUpdateSkillMetadataResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*core.Null)
+	return resp, nil
+}
+
+// EncodeGRPCCommitUploadResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain CommitUpload response to a gRPC CommitUpload reply. Primarily useful in a server.
+func EncodeGRPCCommitUploadResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.ImportSkillResponse)
+	return resp, nil
+}
+
+// EncodeGRPCCreateOrganizationTaskResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain CreateOrganizationTask response to a gRPC CreateOrganizationTask reply. Primarily useful in a server.
+func EncodeGRPCCreateOrganizationTaskResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.OrganizationTaskView)
+	return resp, nil
+}
+
+// EncodeGRPCGetOrganizationTaskResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain GetOrganizationTask response to a gRPC GetOrganizationTask reply. Primarily useful in a server.
+func EncodeGRPCGetOrganizationTaskResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.OrganizationTaskView)
 	return resp, nil
 }
 

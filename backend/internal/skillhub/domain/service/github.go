@@ -54,6 +54,9 @@ func CheckoutGitHub(ctx context.Context, source GitHubSource) (root, commit stri
 		return "", "", nil, err
 	}
 	ref := strings.TrimSpace(source.Ref)
+	if ref == "" {
+		ref = "HEAD"
+	}
 	if !validGitRef(ref) {
 		return "", "", nil, fmt.Errorf("invalid git reference")
 	}
@@ -113,24 +116,32 @@ func CheckoutGitHub(ctx context.Context, source GitHubSource) (root, commit stri
 
 // InspectGitHub reads one Skill or discovers the direct children of skills/.
 func InspectGitHub(ctx context.Context, source GitHubSource, collection bool) ([]ScannedSkill, string, error) {
-	if !collection {
-		skills, commit, err := ReadGitHubSkills(ctx, source.RepositoryURL, source.Ref, []string{source.SkillPath})
-		return skills, commit, err
-	}
 	root, commit, cleanup, err := CheckoutGitHub(ctx, GitHubSource{RepositoryURL: source.RepositoryURL, Ref: source.Ref})
 	if err != nil {
 		return nil, "", err
 	}
 	defer cleanup()
-	directory := filepath.Join(root, "skills")
-	info, err := os.Lstat(directory)
+
+	directory, err := repositoryPath(source.SkillPath)
+	if err != nil {
+		return nil, "", err
+	}
+	if !collection {
+		if skill, err := ReadGitHubSkill(root, directory); err == nil {
+			return []ScannedSkill{skill}, commit, nil
+		}
+	}
+	if directory == "" {
+		directory = "skills"
+	}
+	resolved, err := filepath.EvalSymlinks(filepath.Join(root, directory))
 	if os.IsNotExist(err) {
 		return nil, commit, nil
 	}
-	if err != nil || !info.IsDir() {
+	if err != nil || resolved != filepath.Join(root, directory) {
 		return nil, "", fmt.Errorf("invalid skills directory")
 	}
-	entries, err := os.ReadDir(directory)
+	entries, err := os.ReadDir(resolved)
 	if err != nil {
 		return nil, "", err
 	}
@@ -139,36 +150,14 @@ func InspectGitHub(ctx context.Context, source GitHubSource, collection bool) ([
 		if !entry.IsDir() || strings.HasPrefix(entry.Name(), ".") {
 			continue
 		}
-		path := "skills/" + entry.Name()
-		if _, err := repositoryPath(path); err != nil {
-			continue
-		}
-		if skill, err := readGitHubSkill(root, path); err == nil {
+		if skill, err := ReadGitHubSkill(root, directory+"/"+entry.Name()); err == nil {
 			skills = append(skills, skill)
 		}
 	}
 	return skills, commit, nil
 }
 
-// ReadGitHubSkills reads all selected paths from the same checkout.
-func ReadGitHubSkills(ctx context.Context, repository, ref string, paths []string) ([]ScannedSkill, string, error) {
-	root, commit, cleanup, err := CheckoutGitHub(ctx, GitHubSource{RepositoryURL: repository, Ref: ref})
-	if err != nil {
-		return nil, "", err
-	}
-	defer cleanup()
-	skills := make([]ScannedSkill, 0, len(paths))
-	for _, path := range paths {
-		skill, err := readGitHubSkill(root, path)
-		if err != nil {
-			return nil, "", err
-		}
-		skills = append(skills, skill)
-	}
-	return skills, commit, nil
-}
-
-func readGitHubSkill(root, path string) (ScannedSkill, error) {
+func ReadGitHubSkill(root, path string) (ScannedSkill, error) {
 	path, err := repositoryPath(path)
 	if err != nil {
 		return ScannedSkill{}, err
@@ -189,11 +178,6 @@ func readGitHubSkill(root, path string) (ScannedSkill, error) {
 	return skill, nil
 }
 
-// ReadPinnedGitHubSkills reads a reviewed commit even if its branch has moved.
-func ReadPinnedGitHubSkills(ctx context.Context, repository, commit string, paths []string) ([]ScannedSkill, error) {
-	if !commitPattern.MatchString(commit) {
-		return nil, fmt.Errorf("invalid commit SHA")
-	}
-	skills, _, err := ReadGitHubSkills(ctx, repository, commit, paths)
-	return skills, err
+func IsCommit(value string) bool {
+	return commitPattern.MatchString(value)
 }

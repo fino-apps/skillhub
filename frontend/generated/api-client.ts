@@ -214,6 +214,54 @@ export function importSkill<TResponse = unknown>(payload: ApiRequest = {}, optio
   return requestApi<TResponse>(apiRoutes.importSkill, payload, options);
 }
 
+export function setDefaultVersion<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.setDefaultVersion, payload, options);
+}
+
+export function deleteVersion<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.deleteVersion, payload, options);
+}
+
+export function getVersionContent<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.getVersionContent, payload, options);
+}
+
+export function getVersionFile<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.getVersionFile, payload, options);
+}
+
+export function selectLocalDirectory<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.selectLocalDirectory, payload, options);
+}
+
+export function exportVersionToDirectory<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.exportVersionToDirectory, payload, options);
+}
+
+export function repairVersion<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.repairVersion, payload, options);
+}
+
+export function listFacets<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.listFacets, payload, options);
+}
+
+export function batchUpdateSkillMetadata<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.batchUpdateSkillMetadata, payload, options);
+}
+
+export function commitUpload<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.commitUpload, payload, options);
+}
+
+export function createOrganizationTask<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.createOrganizationTask, payload, options);
+}
+
+export function getOrganizationTask<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.getOrganizationTask, payload, options);
+}
+
 export function compareSkills<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
   return requestApi<TResponse>(apiRoutes.compareSkills, payload, options);
 }

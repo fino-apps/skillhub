@@ -39,6 +39,7 @@ export const router = createBrowserRouter([
     HydrateFallback: RouteLoading,
     children: [
       { index: true, lazy: lazyPage(() => import("@/app/home-page")) },
+      { path: "skills/:skillId", lazy: lazyPage(() => import("@/app/skill-detail")) },
       { path: "console", lazy: lazyPage(() => import("@/app/console/page")) },
       { path: "issues", lazy: lazyPage(() => import("@/app/issues/page")) },
       { path: "*", Component: NotFoundPage },

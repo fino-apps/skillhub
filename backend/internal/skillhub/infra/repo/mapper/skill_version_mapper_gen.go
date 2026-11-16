@@ -17,15 +17,19 @@ func SkillVersionToRecord(entity *model.SkillVersion) *pmodel.SkillVersion {
 
 	snapshot := entity.Snapshot()
 	return &pmodel.SkillVersion{
-		ID:            snapshot.ID,
-		SkillId:       snapshot.SkillId,
-		Name:          snapshot.Name,
-		Notes:         snapshot.Notes,
-		SourceRef:     snapshot.SourceRef,
-		CommitSha:     snapshot.CommitSha,
-		ContentDigest: snapshot.ContentDigest,
-		CreateTime:    snapshot.CreateTime,
-		UpdateTime:    snapshot.UpdateTime,
+		ID:                 snapshot.ID,
+		SkillId:            snapshot.SkillId,
+		Name:               snapshot.Name,
+		Notes:              snapshot.Notes,
+		SourceRef:          snapshot.SourceRef,
+		CommitSha:          snapshot.CommitSha,
+		ContentDigest:      snapshot.ContentDigest,
+		Description:        snapshot.Description,
+		UpstreamCommit:     snapshot.UpstreamCommit,
+		UpstreamRepository: snapshot.UpstreamRepository,
+		UpstreamPath:       snapshot.UpstreamPath,
+		CreateTime:         snapshot.CreateTime,
+		UpdateTime:         snapshot.UpdateTime,
 	}
 }
 
@@ -35,15 +39,19 @@ func RecordToSkillVersion(record *pmodel.SkillVersion) *model.SkillVersion {
 	}
 
 	return model.RebuildSkillVersion(model.SkillVersionSnapshot{
-		ID:            record.ID,
-		SkillId:       record.SkillId,
-		Name:          record.Name,
-		Notes:         record.Notes,
-		SourceRef:     record.SourceRef,
-		CommitSha:     record.CommitSha,
-		ContentDigest: record.ContentDigest,
-		CreateTime:    record.CreateTime,
-		UpdateTime:    record.UpdateTime,
+		ID:                 record.ID,
+		SkillId:            record.SkillId,
+		Name:               record.Name,
+		Notes:              record.Notes,
+		SourceRef:          record.SourceRef,
+		CommitSha:          record.CommitSha,
+		ContentDigest:      record.ContentDigest,
+		Description:        record.Description,
+		UpstreamCommit:     record.UpstreamCommit,
+		UpstreamRepository: record.UpstreamRepository,
+		UpstreamPath:       record.UpstreamPath,
+		CreateTime:         record.CreateTime,
+		UpdateTime:         record.UpdateTime,
 	})
 }
 
@@ -76,6 +84,14 @@ func SkillVersionFields(snapshot model.SkillVersionSnapshot, updateMask []string
 			fields["commit_sha"] = snapshot.CommitSha
 		case "contentDigest":
 			fields["content_digest"] = snapshot.ContentDigest
+		case "description":
+			fields["description"] = snapshot.Description
+		case "upstreamCommit":
+			fields["upstream_commit"] = snapshot.UpstreamCommit
+		case "upstreamRepository":
+			fields["upstream_repository"] = snapshot.UpstreamRepository
+		case "upstreamPath":
+			fields["upstream_path"] = snapshot.UpstreamPath
 		case "createTime":
 			fields["create_time"] = snapshot.CreateTime
 		case "updateTime":

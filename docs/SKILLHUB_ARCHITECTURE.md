@@ -61,7 +61,7 @@ flowchart LR
 | React | 复用现有列表、主题、详情、比对和安装命令组件。元数据和本机文件夹操作走生成客户端，ZIP 走文件上传和附件响应。搜索和筛选写入 URL。 |
 | Fino 和 Go | 元数据契约以 `proto/skillhub/` 为责任源。三种输入经应用层进入同一版本保存流程。ZIP 由同源 Go HTTP handler 处理。经用户维护的装配入口挂载；模板缺少扩展点时先更新模板并重新生成。 |
 | SQLite 和快照 | 复用目录与版本事务及 `<skill-id>/<version-id>/<version-name>/` 快照布局。所有已收录来源使用同一读取入口供详情、比对、打包和安装。 |
-| 成熟工具 | 采用 Agent Skills 目录格式。复用现有 Go YAML 解析、`archive/zip`、现有 Markdown 与差异组件，目录选择复用 Go 的 `zenity.SelectFile` 和目录模式，Codex 安装沿用 Vercel `skills`。详情与版本交互参考 ClawHub。 [Agent Skills 规范](https://agentskills.io/specification) · [Go ZIP](https://pkg.go.dev/archive/zip) · [Go 原生目录选择](https://pkg.go.dev/github.com/ncruces/zenity#SelectFile) · [Vercel skills](https://github.com/vercel-labs/skills/blob/main/docs/commands.md) · [ClawHub](https://github.com/openclaw/clawhub#what-you-can-do-with-it) |
+| 成熟工具 | 采用 Agent Skills 目录格式。复用现有 Go YAML 解析、`archive/zip`、现有 Markdown 与差异组件，目录选择复用 macOS 系统窗口和 Linux `zenity`，Codex 安装沿用 Vercel `skills`。详情与版本交互参考 ClawHub。 [Agent Skills 规范](https://agentskills.io/specification) · [Go ZIP](https://pkg.go.dev/archive/zip) · [Vercel skills](https://github.com/vercel-labs/skills/blob/main/docs/commands.md) · [ClawHub](https://github.com/openclaw/clawhub#what-you-can-do-with-it) |
 
 ### 数据和迁移
 
@@ -97,11 +97,11 @@ flowchart LR
 
 ## 5. 接口范围
 
-以现有 `/skillhub/v1` 为前缀。已有 RPC 保持调用方式，新增字段和操作按 Proto 兼容演进。
+以现有 `/skillhub/v1` 为前缀。接口以当前 Proto 为准。
 
 | 用途 | 接口 |
 | --- | --- |
-| 查找和整理 | 扩展 `ListSkills`、`GetSkill`、`UpdateSkill`，增加 `BatchUpdateSkillMetadata`、`ListCategories`。 |
+| 查找和整理 | 扩展 `ListSkills`、`GetSkill`、`UpdateSkill`，增加 `BatchUpdateSkillMetadata`、`ListFacets`。 |
 | 收录和历史 | 复用 `ScanProject`、`PreviewImport`、`ImportSkill`、`CreateVersion`、`ListVersions`。增加 `GetVersionContent`、`GetVersionFile`、`SetDefaultVersion`、`DeleteVersion`，沿用 `DeleteSkill`。 |
 | 本机文件夹 | 增加 `SelectLocalDirectory` 启动系统目录选择，复用 `ScanProject` 和 `ImportSkill` 收录。增加 `ExportVersionToDirectory` 保存固定版本，列表使用默认版本 ID。 |
 | ZIP 交换 | `POST /skillhub/v1/uploads` 接收 ZIP，`CommitUpload` 确认入库。 `GET /skillhub/v1/skills/{skillId}/versions/{versionId}/archive` 下载固定版本。 |

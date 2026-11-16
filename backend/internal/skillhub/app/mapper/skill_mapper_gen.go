@@ -20,6 +20,9 @@ func ToUpdateSkillInput(in *inputpb.UpdateSkillInput, updateMask []string) (mode
 		updateMask = []string{
 			"category",
 			"notes",
+			"purpose",
+			"upstreamName",
+			"upstreamUrl",
 		}
 	}
 	if len(updateMask) == 0 {
@@ -29,15 +32,21 @@ func ToUpdateSkillInput(in *inputpb.UpdateSkillInput, updateMask []string) (mode
 		switch path {
 		case "category":
 		case "notes":
+		case "purpose":
+		case "upstreamName":
+		case "upstreamUrl":
 		default:
 			return model.UpdateSkillInput{}, fmt.Errorf("unsupported skill update field %q", path)
 		}
 	}
 
 	return model.UpdateSkillInput{
-		UpdateMask: updateMask,
-		Category:   in.GetCategory(),
-		Notes:      in.GetNotes(),
+		UpdateMask:   updateMask,
+		Category:     in.GetCategory(),
+		Notes:        in.GetNotes(),
+		Purpose:      in.GetPurpose(),
+		UpstreamName: in.GetUpstreamName(),
+		UpstreamUrl:  in.GetUpstreamUrl(),
 	}, nil
 }
 
@@ -64,6 +73,10 @@ func ToSkillView(entity *model.Skill) *inputpb.SkillView {
 		RepositoryUrl:  entity.RepositoryUrl(),
 		RepositoryPath: entity.RepositoryPath(),
 		LocalPath:      entity.LocalPath(),
+		ImportKind:     entity.ImportKind(),
+		Purpose:        entity.Purpose(),
+		UpstreamName:   entity.UpstreamName(),
+		UpstreamUrl:    entity.UpstreamUrl(),
 		CreateTime:     entity.CreateTime(),
 		UpdateTime:     entity.UpdateTime(),
 	}

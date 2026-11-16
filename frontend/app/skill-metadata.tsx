@@ -1,37 +1,80 @@
 import { useState, type FormEvent } from "react";
-import { updateSkill } from "@/generated/api-client";
+import { batchUpdateSkillMetadata, updateSkill } from "@/generated/api-client";
+import { message, tagsFrom, type Skill } from "./library-api";
+import { Failure } from "./skill-ui";
 
-type Skill = { name: string; description: string; repositoryUrl?: string; localPath?: string; repositoryPath?: string; id: string; category?: string; notes?: string; tags?: string[] };
-
-export default function SkillMetadata({ skill, onSaved }: { skill: Skill; onSaved: (skill: Skill) => void }) {
-  const [category, setCategory] = useState(skill.category ?? "");
-  const [notes, setNotes] = useState(skill.notes ?? "");
-  const [tags, setTags] = useState(skill.tags?.join("\n") ?? "");
-  const [saving, setSaving] = useState(false);
+export default function SkillMetadata({ skill, categories, onSaved }: { skill: Skill; categories: string[]; onSaved: () => void }) {
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSaving(true);
+    const values = Object.fromEntries(new FormData(event.currentTarget));
+    setBusy(true);
     setError("");
     try {
-      const result = await updateSkill<{ skill: Skill }>({
-        skillId: skill.id,
-        skill: { category, notes, tags: tags.split("\n").map((value) => value.trim()).filter(Boolean) },
-      });
-      onSaved(result.skill);
-    } catch {
-      setError("无法保存。请确认标签最多 100 个，每个不超过 128 个字符。");
+      await updateSkill({ skillId: skill.id, skill: { ...values, tags: tagsFrom(String(values.tags ?? "")) } });
+      onSaved();
+    } catch (err) {
+      setError(message(err));
     } finally {
-      setSaving(false);
+      setBusy(false);
     }
   }
 
   return <form className="github-form" onSubmit={save}>
-    <label>分类<input value={category} maxLength={128} disabled={saving} onChange={(event) => setCategory(event.target.value)} /></label>
-    <label>标签（每行一个）<textarea value={tags} rows={3} disabled={saving} onChange={(event) => setTags(event.target.value)} /></label>
-    <label>备注<textarea value={notes} placeholder="可记录请求示例或使用说明" maxLength={4096} rows={3} disabled={saving} onChange={(event) => setNotes(event.target.value)} /></label>
-    {error && <p className="intake-error" role="alert">{error}</p>}
-    <button type="submit" disabled={saving}>{saving ? "保存中…" : "保存"}</button>
+    <fieldset disabled={busy} className="skill-fields">
+      <label>短用途<input name="purpose" defaultValue={skill.purpose} maxLength={240} /></label>
+      <label>分类<input name="category" defaultValue={skill.category} maxLength={128} list="existing-categories" /></label>
+      <datalist id="existing-categories">{categories.map((name) => <option key={name} value={name} />)}</datalist>
+      <label>标签<input name="tags" defaultValue={skill.tags?.join(", ")} placeholder="用逗号分隔" /></label>
+      <label>上游名称<input name="upstreamName" defaultValue={skill.upstreamName} maxLength={120} /></label>
+      <label>上游链接<input name="upstreamUrl" defaultValue={skill.upstreamUrl} type="url" maxLength={2048} /></label>
+      <label>备注<textarea name="notes" defaultValue={skill.notes} rows={3} maxLength={4096} /></label>
+    </fieldset>
+    <Failure error={error} />
+    <button type="submit" disabled={busy}>{busy ? "保存中…" : "保存"}</button>
+  </form>;
+}
+
+export function BatchMetadata({ ids, categories, onSaved }: { ids: string[]; categories: string[]; onSaved: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [categoryMode, setCategoryMode] = useState("keep");
+
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const values = new FormData(event.currentTarget);
+    const category = categoryMode === "keep" ? undefined : String(values.get("category") ?? "");
+    const addTags = tagsFrom(String(values.get("addTags") ?? ""));
+    const removeTags = tagsFrom(String(values.get("removeTags") ?? ""));
+    if (category === undefined && !addTags.length && !removeTags.length) {
+      setError("请填写要修改的分类或标签");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      await batchUpdateSkillMetadata({ changes: ids.map((skillId) => ({ skillId, category, addTags, removeTags })) });
+      onSaved();
+    } catch (err) {
+      setError(message(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return <form className="github-form" onSubmit={save}>
+    <fieldset disabled={busy} className="skill-fields">
+      <label>分类<select value={categoryMode} onChange={(event) => setCategoryMode(event.target.value)}>
+        <option value="keep">保持原值</option><option value="set">设为指定分类</option><option value="clear">设为未分类</option>
+      </select></label>
+      {categoryMode === "set" && <label>分类名称<input name="category" list="batch-categories" maxLength={128} required /></label>}
+      <datalist id="batch-categories">{categories.map((name) => <option key={name} value={name} />)}</datalist>
+      <label>添加标签<input name="addTags" placeholder="用逗号分隔" /></label>
+      <label>移除标签<input name="removeTags" placeholder="用逗号分隔" /></label>
+    </fieldset>
+    <Failure error={error} />
+    <button type="submit" disabled={busy}>{busy ? "保存中…" : `应用到 ${ids.length} 项`}</button>
   </form>;
 }

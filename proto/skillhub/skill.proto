@@ -16,10 +16,17 @@ message Skill {
   string description = 3 [(fino.db) = {len: 1024 comment: "用途说明"}];
   string category = 5 [(fino.db) = {len: 128 index: "" comment: "分类"}];
   string notes = 6 [(fino.db) = {len: 4096 comment: "个人备注"}];
-  string repository_url = 8 [(fino.db) = {len: 2048 unique_index: "idx_skill_location" comment: "GitHub 来源地址"}];
-  string repository_path = 9 [(fino.db) = {len: 1024 unique_index: "idx_skill_location" comment: "仓库内 Skill 路径"}];
+  string repository_url = 8 [(fino.db) = {len: 2048 comment: "GitHub 来源地址"}];
+  string repository_path = 9 [(fino.db) = {len: 1024 comment: "仓库内 Skill 路径"}];
 
-  string local_path = 10 [(fino.db) = {len: 2048 default: "''" unique_index: "idx_skill_location" comment: "本机原始 Skill 目录；GitHub 来源留空"}];
+  string local_path = 10 [(fino.db) = {len: 2048 default: "''" comment: "本机原始 Skill 目录；GitHub 来源留空"}];
+
+  string source_key = 11 [(fino.db) = {len: 64 default: "''" comment: "收录来源标识"}];
+  string import_kind = 12 [(fino.db) = {len: 16 default: "''" comment: "folder、github 或 zip"}];
+  string purpose = 13 [(fino.db) = {len: 240 default: "''" comment: "用户整理的一行用途"}];
+  string upstream_name = 14 [(fino.db) = {len: 120 default: "''" comment: "展示的上游名称"}];
+  string upstream_url = 15 [(fino.db) = {len: 2048 default: "''" comment: "展示的上游链接"}];
+  string default_version_id = 16 [(fino.db) = {len: 36 default: "''" comment: "默认导出版本"}];
 
   fino.core.Timestamp create_time = 98 [(fino.db) = {comment: "创建时间"}];
   fino.core.Timestamp update_time = 99 [(fino.db) = {comment: "最后更新时间"}];
@@ -42,12 +49,17 @@ message SkillVersion {
   option (fino.model) = {generate: true services: "SkillhubService"};
 
   string id = 1 [(fino.db) = {len: 36 comment: "主键"}];
-  string skill_id = 2 [(fino.db) = {len: 36 unique_index: "idx_skill_version_source" comment: "Skill ID"}];
+  string skill_id = 2 [(fino.db) = {len: 36 comment: "Skill ID"}];
   string name = 3 [(fino.db) = {len: 64 comment: "该版本的 Skill 名称"}];
   string notes = 4 [(fino.db) = {len: 4096 comment: "版本说明"}];
   string source_ref = 7 [(fino.db) = {len: 200 comment: "用户选择的 Git 引用"}];
-  string commit_sha = 8 [(fino.db) = {len: 40 unique_index: "idx_skill_version_source" comment: "完整 commit SHA"}];
-  string content_digest = 9 [(fino.db) = {len: 64 default: "''" unique_index: "idx_skill_version_source" comment: "本地版本的内容摘要"}];
+  string commit_sha = 8 [(fino.db) = {len: 40 comment: "完整 commit SHA"}];
+  string content_digest = 9 [(fino.db) = {len: 64 default: "''" comment: "本地版本的内容摘要"}];
+
+  string description = 10 [(fino.db) = {len: 1024 default: "''" comment: "该版本的原始用途"}];
+  string upstream_commit = 11 [(fino.db) = {len: 40 default: "''" comment: "归档声明的上游 commit"}];
+  string upstream_repository = 12 [(fino.db) = {len: 2048 default: "''" comment: "归档声明的上游仓库"}];
+  string upstream_path = 13 [(fino.db) = {len: 1024 default: "''" comment: "归档声明的仓库内路径"}];
 
   fino.core.Timestamp create_time = 98 [(fino.db) = {comment: "创建时间"}];
   fino.core.Timestamp update_time = 99 [(fino.db) = {comment: "最后更新时间"}];

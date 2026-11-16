@@ -3,6 +3,32 @@ info:
   title: SkillhubService
   version: 1.0.0
 paths:
+  /skillhub/v1/directories:select:
+    post:
+      operationId: SelectLocalDirectory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.SelectLocalDirectoryRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.SelectLocalDirectoryResponse'
+  /skillhub/v1/facets:
+    get:
+      operationId: ListFacets
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.ListFacetsResponse'
   /skillhub/v1/imports:
     post:
       operationId: ImportSkill
@@ -51,6 +77,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/skillhub.v1.GetInstallCommandResponse'
+  /skillhub/v1/organization-tasks:
+    post:
+      operationId: CreateOrganizationTask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.CreateOrganizationTaskRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.OrganizationTaskView'
+  /skillhub/v1/organization-tasks/{task_id}:
+    get:
+      operationId: GetOrganizationTask
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.OrganizationTaskView'
   /skillhub/v1/projects:scan:
     post:
       operationId: ScanProject
@@ -71,6 +130,27 @@ paths:
     get:
       operationId: ListSkills
       parameters:
+        - name: keyword
+          in: query
+          schema:
+            type: string
+            maxLength: 240
+        - name: source
+          in: query
+          schema:
+            type: string
+            maxLength: 120
+        - name: tags
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+            maxItems: 30
+        - name: uncategorized
+          in: query
+          schema:
+            type: boolean
         - name: category
           in: query
           schema:
@@ -203,6 +283,144 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/skillhub.v1.CreateVersionResponse'
+  /skillhub/v1/skills/{skill_id}/versions/{version_id}:
+    delete:
+      operationId: DeleteVersion
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /skillhub/v1/skills/{skill_id}/versions/{version_id}/content:
+    get:
+      operationId: GetVersionContent
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.GetVersionContentResponse'
+  /skillhub/v1/skills/{skill_id}/versions/{version_id}/default:
+    put:
+      operationId: SetDefaultVersion
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /skillhub/v1/skills/{skill_id}/versions/{version_id}/file:
+    get:
+      operationId: GetVersionFile
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: path
+          in: query
+          required: true
+          schema:
+            type: string
+            maxLength: 2048
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.GetVersionFileResponse'
+  /skillhub/v1/skills/{skill_id}/versions/{version_id}:export:
+    post:
+      operationId: ExportVersionToDirectory
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.ExportVersionToDirectoryRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.ExportVersionToDirectoryResponse'
+  /skillhub/v1/skills/{skill_id}/versions/{version_id}:repair:
+    post:
+      operationId: RepairVersion
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
   /skillhub/v1/skills:compare:
     post:
       operationId: CompareSkills
@@ -219,8 +437,74 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/skillhub.v1.CompareSkillsResponse'
+  /skillhub/v1/skills:organize:
+    patch:
+      operationId: BatchUpdateSkillMetadata
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.BatchUpdateSkillMetadataRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+  /skillhub/v1/uploads/{upload_id}:commit:
+    post:
+      operationId: CommitUpload
+      parameters:
+        - name: upload_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.CommitUploadRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.ImportSkillResponse'
 components:
   schemas:
+    skillhub.v1.BatchUpdateSkillMetadataRequest:
+      title: skillhub.v1.BatchUpdateSkillMetadataRequest
+      type: object
+      properties:
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/skillhub.v1.SkillMetadataChange'
+          maxItems: 100
+      required:
+        - changes
+    skillhub.v1.CommitUploadRequest:
+      title: skillhub.v1.CommitUploadRequest
+      type: object
+      properties:
+        makeDefault:
+          type: boolean
+        skillPaths:
+          type: array
+          items:
+            type: string
+          maxItems: 100
+        targetSkillId:
+          type: string
+          format: uuid
+        uploadId:
+          type: string
+          format: uuid
+      required:
+        - uploadId
+        - skillPaths
     skillhub.v1.CompareSkillsRequest:
       title: skillhub.v1.CompareSkillsRequest
       type: object
@@ -248,6 +532,17 @@ components:
           type: string
         rightDigest:
           type: string
+    skillhub.v1.CreateOrganizationTaskRequest:
+      title: skillhub.v1.CreateOrganizationTaskRequest
+      type: object
+      properties:
+        skillIds:
+          type: array
+          items:
+            type: string
+          maxItems: 100
+        uncategorized:
+          type: boolean
     skillhub.v1.CreateVersionRequest:
       title: skillhub.v1.CreateVersionRequest
       type: object
@@ -277,6 +572,43 @@ components:
           maxLength: 36
       required:
         - skillId
+    skillhub.v1.DeleteVersionRequest:
+      title: skillhub.v1.DeleteVersionRequest
+      type: object
+      properties:
+        skillId:
+          type: string
+          format: uuid
+        versionId:
+          type: string
+          format: uuid
+      required:
+        - skillId
+        - versionId
+    skillhub.v1.ExportVersionToDirectoryRequest:
+      title: skillhub.v1.ExportVersionToDirectoryRequest
+      type: object
+      properties:
+        chooseDirectory:
+          type: boolean
+        directory:
+          type: string
+          maxLength: 2048
+        skillId:
+          type: string
+          format: uuid
+        versionId:
+          type: string
+          format: uuid
+      required:
+        - skillId
+        - versionId
+    skillhub.v1.ExportVersionToDirectoryResponse:
+      title: skillhub.v1.ExportVersionToDirectoryResponse
+      type: object
+      properties:
+        path:
+          type: string
     skillhub.v1.FileChangeKind:
       title: skillhub.v1.FileChangeKind
       type: string
@@ -291,6 +623,8 @@ components:
       properties:
         binary:
           type: boolean
+        detail:
+          type: string
         kind:
           $ref: '#/components/schemas/skillhub.v1.FileChangeKind'
         leftText:
@@ -322,6 +656,15 @@ components:
       properties:
         command:
           type: string
+    skillhub.v1.GetOrganizationTaskRequest:
+      title: skillhub.v1.GetOrganizationTaskRequest
+      type: object
+      properties:
+        taskId:
+          type: string
+          format: uuid
+      required:
+        - taskId
     skillhub.v1.GetSkillRequest:
       title: skillhub.v1.GetSkillRequest
       type: object
@@ -338,6 +681,59 @@ components:
       properties:
         skill:
           $ref: '#/components/schemas/skillhub.v1.SkillView'
+    skillhub.v1.GetVersionContentRequest:
+      title: skillhub.v1.GetVersionContentRequest
+      type: object
+      properties:
+        skillId:
+          type: string
+          format: uuid
+        versionId:
+          type: string
+          format: uuid
+      required:
+        - skillId
+        - versionId
+    skillhub.v1.GetVersionContentResponse:
+      title: skillhub.v1.GetVersionContentResponse
+      type: object
+      properties:
+        description:
+          type: string
+        files:
+          type: array
+          items:
+            type: string
+    skillhub.v1.GetVersionFileRequest:
+      title: skillhub.v1.GetVersionFileRequest
+      type: object
+      properties:
+        path:
+          type: string
+          maxLength: 2048
+        skillId:
+          type: string
+          format: uuid
+        versionId:
+          type: string
+          format: uuid
+      required:
+        - skillId
+        - versionId
+        - path
+    skillhub.v1.GetVersionFileResponse:
+      title: skillhub.v1.GetVersionFileResponse
+      type: object
+      properties:
+        binary:
+          type: boolean
+        size:
+          type: integer
+          format: int32
+        text:
+          type: string
+        tooLarge:
+          type: boolean
     skillhub.v1.GitHubSource:
       title: skillhub.v1.GitHubSource
       type: object
@@ -349,6 +745,14 @@ components:
           type: string
         skillPath:
           description: 空路径表示 Skill 位于仓库根目录。
+          type: string
+    skillhub.v1.ImportFailure:
+      title: skillhub.v1.ImportFailure
+      type: object
+      properties:
+        message:
+          type: string
+        path:
           type: string
     skillhub.v1.ImportSkillRequest:
       title: skillhub.v1.ImportSkillRequest
@@ -382,6 +786,31 @@ components:
         existingCount:
           type: integer
           format: int32
+        failures:
+          type: array
+          items:
+            $ref: '#/components/schemas/skillhub.v1.ImportFailure'
+    skillhub.v1.ListFacetsRequest:
+      title: skillhub.v1.ListFacetsRequest
+      type: object
+    skillhub.v1.ListFacetsResponse:
+      title: skillhub.v1.ListFacetsResponse
+      type: object
+      properties:
+        aiEnabled:
+          type: boolean
+        categories:
+          type: array
+          items:
+            type: string
+        sources:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
     skillhub.v1.ListSkillsRequest:
       title: skillhub.v1.ListSkillsRequest
       type: object
@@ -389,6 +818,9 @@ components:
         category:
           type: string
           maxLength: 128
+        keyword:
+          type: string
+          maxLength: 240
         pageSize:
           type: integer
           format: int32
@@ -397,6 +829,16 @@ components:
         pageToken:
           type: string
           maxLength: 512
+        source:
+          type: string
+          maxLength: 120
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 30
+        uncategorized:
+          type: boolean
     skillhub.v1.ListSkillsResponse:
       title: skillhub.v1.ListSkillsResponse
       type: object
@@ -435,6 +877,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/skillhub.v1.VersionView'
+    skillhub.v1.OrganizationSuggestion:
+      title: skillhub.v1.OrganizationSuggestion
+      type: object
+      properties:
+        change:
+          $ref: '#/components/schemas/skillhub.v1.SkillMetadataChange'
+        error:
+          type: string
+        name:
+          type: string
+    skillhub.v1.OrganizationTaskView:
+      title: skillhub.v1.OrganizationTaskView
+      type: object
+      properties:
+        done:
+          type: boolean
+        id:
+          type: string
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/skillhub.v1.OrganizationSuggestion'
+        total:
+          type: integer
+          format: int32
     skillhub.v1.PreviewImportRequest:
       title: skillhub.v1.PreviewImportRequest
       type: object
@@ -456,6 +923,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/skillhub.v1.SkillCandidate'
+    skillhub.v1.RepairVersionRequest:
+      title: skillhub.v1.RepairVersionRequest
+      type: object
+      properties:
+        skillId:
+          type: string
+          format: uuid
+        versionId:
+          type: string
+          format: uuid
+      required:
+        - skillId
+        - versionId
     skillhub.v1.ScanProjectRequest:
       title: skillhub.v1.ScanProjectRequest
       type: object
@@ -473,6 +953,28 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/skillhub.v1.SkillCandidate'
+    skillhub.v1.SelectLocalDirectoryRequest:
+      title: skillhub.v1.SelectLocalDirectoryRequest
+      type: object
+    skillhub.v1.SelectLocalDirectoryResponse:
+      title: skillhub.v1.SelectLocalDirectoryResponse
+      type: object
+      properties:
+        path:
+          type: string
+    skillhub.v1.SetDefaultVersionRequest:
+      title: skillhub.v1.SetDefaultVersionRequest
+      type: object
+      properties:
+        skillId:
+          type: string
+          format: uuid
+        versionId:
+          type: string
+          format: uuid
+      required:
+        - skillId
+        - versionId
     skillhub.v1.SkillCandidate:
       title: skillhub.v1.SkillCandidate
       type: object
@@ -497,6 +999,26 @@ components:
           type: string
         versionId:
           type: string
+    skillhub.v1.SkillMetadataChange:
+      title: skillhub.v1.SkillMetadataChange
+      type: object
+      properties:
+        addTags:
+          type: array
+          items:
+            type: string
+        category:
+          type: string
+        purpose:
+          type: string
+        removeTags:
+          type: array
+          items:
+            type: string
+        revision:
+          type: string
+        skillId:
+          type: string
     skillhub.v1.SkillView:
       title: skillhub.v1.SkillView
       type: object
@@ -506,15 +1028,21 @@ components:
         createTime:
           type: string
           format: date-time
+        defaultVersion:
+          $ref: '#/components/schemas/skillhub.v1.VersionView'
         description:
           type: string
         id:
+          type: string
+        importKind:
           type: string
         localPath:
           type: string
         name:
           type: string
         notes:
+          type: string
+        purpose:
           type: string
         repositoryPath:
           type: string
@@ -527,6 +1055,10 @@ components:
         updateTime:
           type: string
           format: date-time
+        upstreamName:
+          type: string
+        upstreamUrl:
+          type: string
     skillhub.v1.UpdateSkillInput:
       title: skillhub.v1.UpdateSkillInput
       description: 替换本地分类、备注和标签。
@@ -538,11 +1070,20 @@ components:
         notes:
           type: string
           maxLength: 4096
+        purpose:
+          type: string
+          maxLength: 240
         tags:
           type: array
           items:
             type: string
           maxItems: 100
+        upstreamName:
+          type: string
+          maxLength: 120
+        upstreamUrl:
+          type: string
+          maxLength: 2048
     skillhub.v1.UpdateSkillRequest:
       title: skillhub.v1.UpdateSkillRequest
       type: object
@@ -575,6 +1116,11 @@ components:
           type: string
           minLength: 64
           maxLength: 64
+        localPath:
+          type: string
+          maxLength: 2048
+        makeDefault:
+          type: boolean
         notes:
           type: string
           maxLength: 4096
@@ -585,6 +1131,8 @@ components:
       title: skillhub.v1.VersionView
       type: object
       properties:
+        available:
+          type: boolean
         commitSha:
           type: string
         contentDigest:
@@ -601,4 +1149,10 @@ components:
         skillId:
           type: string
         sourceRef:
+          type: string
+        upstreamCommit:
+          type: string
+        upstreamPath:
+          type: string
+        upstreamRepository:
           type: string

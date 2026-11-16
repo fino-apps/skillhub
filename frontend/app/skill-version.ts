@@ -1,14 +1,33 @@
 export type SkillVersion = {
   id: string;
+  name?: string;
   sourceRef?: string;
   commitSha?: string;
+  upstreamCommit?: string;
+  upstreamRepository?: string;
+  upstreamPath?: string;
   contentDigest?: string;
   createTime?: string;
   notes?: string;
+  available?: boolean;
 };
 
+export function versionDigest(version: SkillVersion) {
+  return version.commitSha || version.contentDigest || "";
+}
+
+export function shortVersion(version: SkillVersion, versions: SkillVersion[] = []) {
+  const digest = versionDigest(version);
+  let length = 8;
+  while (length < digest.length && versions.some((other) =>
+    other.id !== version.id && versionDigest(other) !== digest && versionDigest(other).startsWith(digest.slice(0, length)),
+  )) {
+    length += 1;
+  }
+  return digest.slice(0, length) || "—";
+}
+
 export function versionLabel(version: SkillVersion) {
-  if (version.commitSha) return version.sourceRef ?? "GitHub";
-  const created = version.createTime ? new Date(version.createTime) : null;
-  return created && !Number.isNaN(created.getTime()) ? created.toLocaleString("zh-CN", { hour12: false }) : "本地快照";
+  const date = version.createTime ? new Date(version.createTime) : null;
+  return date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString("zh-CN") : "未记录日期";
 }

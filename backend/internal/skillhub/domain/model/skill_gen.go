@@ -16,28 +16,40 @@ import (
 type SkillID string
 
 type CreateSkillInput struct {
-	Name           string
-	Description    string
-	Category       string
-	Notes          string
-	RepositoryUrl  string
-	RepositoryPath string
-	LocalPath      string
-	CreateTime     *core.Timestamp
-	UpdateTime     *core.Timestamp
+	Name             string
+	Description      string
+	Category         string
+	Notes            string
+	RepositoryUrl    string
+	RepositoryPath   string
+	LocalPath        string
+	SourceKey        string
+	ImportKind       string
+	Purpose          string
+	UpstreamName     string
+	UpstreamUrl      string
+	DefaultVersionId string
+	CreateTime       *core.Timestamp
+	UpdateTime       *core.Timestamp
 }
 
 type UpdateSkillInput struct {
-	Name           string
-	Description    string
-	Category       string
-	Notes          string
-	RepositoryUrl  string
-	RepositoryPath string
-	LocalPath      string
-	CreateTime     *core.Timestamp
-	UpdateTime     *core.Timestamp
-	UpdateMask     []string
+	Name             string
+	Description      string
+	Category         string
+	Notes            string
+	RepositoryUrl    string
+	RepositoryPath   string
+	LocalPath        string
+	SourceKey        string
+	ImportKind       string
+	Purpose          string
+	UpstreamName     string
+	UpstreamUrl      string
+	DefaultVersionId string
+	CreateTime       *core.Timestamp
+	UpdateTime       *core.Timestamp
+	UpdateMask       []string
 }
 
 type ListSkillQuery struct {
@@ -50,29 +62,41 @@ type ListSkillQuery struct {
 type ListSkillResult = pagination.Page[*Skill]
 
 type SkillSnapshot struct {
-	ID             SkillID
-	Name           string
-	Description    string
-	Category       string
-	Notes          string
-	RepositoryUrl  string
-	RepositoryPath string
-	LocalPath      string
-	CreateTime     *core.Timestamp
-	UpdateTime     *core.Timestamp
+	ID               SkillID
+	Name             string
+	Description      string
+	Category         string
+	Notes            string
+	RepositoryUrl    string
+	RepositoryPath   string
+	LocalPath        string
+	SourceKey        string
+	ImportKind       string
+	Purpose          string
+	UpstreamName     string
+	UpstreamUrl      string
+	DefaultVersionId string
+	CreateTime       *core.Timestamp
+	UpdateTime       *core.Timestamp
 }
 
 type Skill struct {
-	id             SkillID
-	name           string
-	description    string
-	category       string
-	notes          string
-	repositoryUrl  string
-	repositoryPath string
-	localPath      string
-	createTime     *core.Timestamp
-	updateTime     *core.Timestamp
+	id               SkillID
+	name             string
+	description      string
+	category         string
+	notes            string
+	repositoryUrl    string
+	repositoryPath   string
+	localPath        string
+	sourceKey        string
+	importKind       string
+	purpose          string
+	upstreamName     string
+	upstreamUrl      string
+	defaultVersionId string
+	createTime       *core.Timestamp
+	updateTime       *core.Timestamp
 }
 
 func NewSkill(input CreateSkillInput) (*Skill, error) {
@@ -90,31 +114,43 @@ func NewSkill(input CreateSkillInput) (*Skill, error) {
 	}
 
 	return &Skill{
-		id:             SkillID(id.String()),
-		name:           input.Name,
-		description:    input.Description,
-		category:       input.Category,
-		notes:          input.Notes,
-		repositoryUrl:  input.RepositoryUrl,
-		repositoryPath: input.RepositoryPath,
-		localPath:      input.LocalPath,
-		createTime:     input.CreateTime,
-		updateTime:     input.UpdateTime,
+		id:               SkillID(id.String()),
+		name:             input.Name,
+		description:      input.Description,
+		category:         input.Category,
+		notes:            input.Notes,
+		repositoryUrl:    input.RepositoryUrl,
+		repositoryPath:   input.RepositoryPath,
+		localPath:        input.LocalPath,
+		sourceKey:        input.SourceKey,
+		importKind:       input.ImportKind,
+		purpose:          input.Purpose,
+		upstreamName:     input.UpstreamName,
+		upstreamUrl:      input.UpstreamUrl,
+		defaultVersionId: input.DefaultVersionId,
+		createTime:       input.CreateTime,
+		updateTime:       input.UpdateTime,
 	}, nil
 }
 
 func RebuildSkill(snapshot SkillSnapshot) *Skill {
 	return &Skill{
-		id:             snapshot.ID,
-		name:           snapshot.Name,
-		description:    snapshot.Description,
-		category:       snapshot.Category,
-		notes:          snapshot.Notes,
-		repositoryUrl:  snapshot.RepositoryUrl,
-		repositoryPath: snapshot.RepositoryPath,
-		localPath:      snapshot.LocalPath,
-		createTime:     snapshot.CreateTime,
-		updateTime:     snapshot.UpdateTime,
+		id:               snapshot.ID,
+		name:             snapshot.Name,
+		description:      snapshot.Description,
+		category:         snapshot.Category,
+		notes:            snapshot.Notes,
+		repositoryUrl:    snapshot.RepositoryUrl,
+		repositoryPath:   snapshot.RepositoryPath,
+		localPath:        snapshot.LocalPath,
+		sourceKey:        snapshot.SourceKey,
+		importKind:       snapshot.ImportKind,
+		purpose:          snapshot.Purpose,
+		upstreamName:     snapshot.UpstreamName,
+		upstreamUrl:      snapshot.UpstreamUrl,
+		defaultVersionId: snapshot.DefaultVersionId,
+		createTime:       snapshot.CreateTime,
+		updateTime:       snapshot.UpdateTime,
 	}
 }
 
@@ -144,6 +180,18 @@ func (e *Skill) ApplyUpdate(input UpdateSkillInput) error {
 			updated.repositoryPath = input.RepositoryPath
 		case "localPath":
 			updated.localPath = input.LocalPath
+		case "sourceKey":
+			updated.sourceKey = input.SourceKey
+		case "importKind":
+			updated.importKind = input.ImportKind
+		case "purpose":
+			updated.purpose = input.Purpose
+		case "upstreamName":
+			updated.upstreamName = input.UpstreamName
+		case "upstreamUrl":
+			updated.upstreamUrl = input.UpstreamUrl
+		case "defaultVersionId":
+			updated.defaultVersionId = input.DefaultVersionId
 		case "createTime":
 			updated.createTime = input.CreateTime
 		case "updateTime":
@@ -163,16 +211,22 @@ func (e *Skill) Snapshot() SkillSnapshot {
 	}
 
 	return SkillSnapshot{
-		ID:             e.id,
-		Name:           e.name,
-		Description:    e.description,
-		Category:       e.category,
-		Notes:          e.notes,
-		RepositoryUrl:  e.repositoryUrl,
-		RepositoryPath: e.repositoryPath,
-		LocalPath:      e.localPath,
-		CreateTime:     e.createTime,
-		UpdateTime:     e.updateTime,
+		ID:               e.id,
+		Name:             e.name,
+		Description:      e.description,
+		Category:         e.category,
+		Notes:            e.notes,
+		RepositoryUrl:    e.repositoryUrl,
+		RepositoryPath:   e.repositoryPath,
+		LocalPath:        e.localPath,
+		SourceKey:        e.sourceKey,
+		ImportKind:       e.importKind,
+		Purpose:          e.purpose,
+		UpstreamName:     e.upstreamName,
+		UpstreamUrl:      e.upstreamUrl,
+		DefaultVersionId: e.defaultVersionId,
+		CreateTime:       e.createTime,
+		UpdateTime:       e.updateTime,
 	}
 }
 
@@ -238,6 +292,54 @@ func (e *Skill) LocalPath() string {
 		return zero
 	}
 	return e.localPath
+}
+
+func (e *Skill) SourceKey() string {
+	if e == nil {
+		var zero string
+		return zero
+	}
+	return e.sourceKey
+}
+
+func (e *Skill) ImportKind() string {
+	if e == nil {
+		var zero string
+		return zero
+	}
+	return e.importKind
+}
+
+func (e *Skill) Purpose() string {
+	if e == nil {
+		var zero string
+		return zero
+	}
+	return e.purpose
+}
+
+func (e *Skill) UpstreamName() string {
+	if e == nil {
+		var zero string
+		return zero
+	}
+	return e.upstreamName
+}
+
+func (e *Skill) UpstreamUrl() string {
+	if e == nil {
+		var zero string
+		return zero
+	}
+	return e.upstreamUrl
+}
+
+func (e *Skill) DefaultVersionId() string {
+	if e == nil {
+		var zero string
+		return zero
+	}
+	return e.defaultVersionId
 }
 
 func (e *Skill) CreateTime() *core.Timestamp {

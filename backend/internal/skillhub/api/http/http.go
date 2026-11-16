@@ -261,6 +261,246 @@ func RegisterHttpHandler(router *mux.Router, endpoints endpoint.Endpoints, cfg *
 
 	{
 		route := httpmw.Route{
+			MethodName:  "SetDefaultVersion",
+			BindingName: "SetDefaultVersion",
+			Method:      "PUT",
+			Path:        "/skillhub/v1/skills/{skill_id}/versions/{version_id}/default",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.SetDefaultVersionEndpoint,
+					DecodeHTTPSetDefaultVersionRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "DeleteVersion",
+			BindingName: "DeleteVersion",
+			Method:      "DELETE",
+			Path:        "/skillhub/v1/skills/{skill_id}/versions/{version_id}",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.DeleteVersionEndpoint,
+					DecodeHTTPDeleteVersionRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "GetVersionContent",
+			BindingName: "GetVersionContent",
+			Method:      "GET",
+			Path:        "/skillhub/v1/skills/{skill_id}/versions/{version_id}/content",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.GetVersionContentEndpoint,
+					DecodeHTTPGetVersionContentRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "GetVersionFile",
+			BindingName: "GetVersionFile",
+			Method:      "GET",
+			Path:        "/skillhub/v1/skills/{skill_id}/versions/{version_id}/file",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.GetVersionFileEndpoint,
+					DecodeHTTPGetVersionFileRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "SelectLocalDirectory",
+			BindingName: "SelectLocalDirectory",
+			Method:      "POST",
+			Path:        "/skillhub/v1/directories:select",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.SelectLocalDirectoryEndpoint,
+					DecodeHTTPSelectLocalDirectoryRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "ExportVersionToDirectory",
+			BindingName: "ExportVersionToDirectory",
+			Method:      "POST",
+			Path:        "/skillhub/v1/skills/{skill_id}/versions/{version_id}:export",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.ExportVersionToDirectoryEndpoint,
+					DecodeHTTPExportVersionToDirectoryRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "RepairVersion",
+			BindingName: "RepairVersion",
+			Method:      "POST",
+			Path:        "/skillhub/v1/skills/{skill_id}/versions/{version_id}:repair",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.RepairVersionEndpoint,
+					DecodeHTTPRepairVersionRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "ListFacets",
+			BindingName: "ListFacets",
+			Method:      "GET",
+			Path:        "/skillhub/v1/facets",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.ListFacetsEndpoint,
+					DecodeHTTPListFacetsRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "BatchUpdateSkillMetadata",
+			BindingName: "BatchUpdateSkillMetadata",
+			Method:      "PATCH",
+			Path:        "/skillhub/v1/skills:organize",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.BatchUpdateSkillMetadataEndpoint,
+					DecodeHTTPBatchUpdateSkillMetadataRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "CommitUpload",
+			BindingName: "CommitUpload",
+			Method:      "POST",
+			Path:        "/skillhub/v1/uploads/{upload_id}:commit",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.CommitUploadEndpoint,
+					DecodeHTTPCommitUploadRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "CreateOrganizationTask",
+			BindingName: "CreateOrganizationTask",
+			Method:      "POST",
+			Path:        "/skillhub/v1/organization-tasks",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.CreateOrganizationTaskEndpoint,
+					DecodeHTTPCreateOrganizationTaskRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "GetOrganizationTask",
+			BindingName: "GetOrganizationTask",
+			Method:      "GET",
+			Path:        "/skillhub/v1/organization-tasks/{task_id}",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.GetOrganizationTaskEndpoint,
+					DecodeHTTPGetOrganizationTaskRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
 			MethodName:  "CompareSkills",
 			BindingName: "CompareSkills",
 			Method:      "POST",
@@ -435,6 +675,26 @@ func DecodeHTTPListSkillsRequest(_ context.Context, r *http.Request) (interface{
 
 	queryParams := core.NewUrlQueryFrom(r.URL.Query())
 	_ = queryParams
+
+	err = unmarshalQueryParam(queryParams, &req.Keyword, "keyword")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the keyword query parameter")
+	}
+
+	err = unmarshalQueryParam(queryParams, &req.Source, "source")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the source query parameter")
+	}
+
+	err = unmarshalQueryParam(queryParams, &req.Tags, "tags")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the tags query parameter")
+	}
+
+	err = unmarshalQueryParam(queryParams, &req.Uncategorized, "uncategorized")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the uncategorized query parameter")
+	}
 
 	err = unmarshalQueryParam(queryParams, &req.Category, "category")
 	if err != nil && !core.IsNotFoundError(err) {
@@ -682,6 +942,335 @@ func DecodeHTTPImportSkillRequest(_ context.Context, r *http.Request) (interface
 
 	queryParams := core.NewUrlQueryFrom(r.URL.Query())
 	_ = queryParams
+
+	return &req, nil
+}
+
+// DecodeHTTPSetDefaultVersionRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded setdefaultversion request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPSetDefaultVersionRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.SetDefaultVersionRequest
+	var err error
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	err = unmarshalPathParam(pathParams, &req.SkillId, "skill_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
+	}
+
+	err = unmarshalPathParam(pathParams, &req.VersionId, "version_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the version_id path parameter")
+	}
+
+	return &req, nil
+}
+
+// DecodeHTTPDeleteVersionRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded deleteversion request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPDeleteVersionRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.DeleteVersionRequest
+	var err error
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	err = unmarshalPathParam(pathParams, &req.SkillId, "skill_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
+	}
+
+	err = unmarshalPathParam(pathParams, &req.VersionId, "version_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the version_id path parameter")
+	}
+
+	return &req, nil
+}
+
+// DecodeHTTPGetVersionContentRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded getversioncontent request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPGetVersionContentRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.GetVersionContentRequest
+	var err error
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	err = unmarshalPathParam(pathParams, &req.SkillId, "skill_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
+	}
+
+	err = unmarshalPathParam(pathParams, &req.VersionId, "version_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the version_id path parameter")
+	}
+
+	return &req, nil
+}
+
+// DecodeHTTPGetVersionFileRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded getversionfile request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPGetVersionFileRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.GetVersionFileRequest
+	var err error
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	err = unmarshalPathParam(pathParams, &req.SkillId, "skill_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
+	}
+
+	err = unmarshalPathParam(pathParams, &req.VersionId, "version_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the version_id path parameter")
+	}
+
+	err = unmarshalQueryParam(queryParams, &req.Path, "path")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the path query parameter")
+	}
+
+	return &req, nil
+}
+
+// DecodeHTTPSelectLocalDirectoryRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded selectlocaldirectory request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPSelectLocalDirectoryRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.SelectLocalDirectoryRequest
+
+	buf, err := readHTTPBody(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(buf) > 0 {
+		if err = protojson.Unmarshal(buf, &req); err != nil {
+			return nil, nhttp.WrapError(err,
+				http.StatusBadRequest,
+				"cannot parse request body as JSON",
+			)
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+	return &req, nil
+}
+
+// DecodeHTTPExportVersionToDirectoryRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded exportversiontodirectory request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPExportVersionToDirectoryRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.ExportVersionToDirectoryRequest
+
+	buf, err := readHTTPBody(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(buf) > 0 {
+		if err = protojson.Unmarshal(buf, &req); err != nil {
+			return nil, nhttp.WrapError(err,
+				http.StatusBadRequest,
+				"cannot parse request body as JSON",
+			)
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	err = unmarshalPathParam(pathParams, &req.SkillId, "skill_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
+	}
+
+	err = unmarshalPathParam(pathParams, &req.VersionId, "version_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the version_id path parameter")
+	}
+
+	return &req, nil
+}
+
+// DecodeHTTPRepairVersionRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded repairversion request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPRepairVersionRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.RepairVersionRequest
+	var err error
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	err = unmarshalPathParam(pathParams, &req.SkillId, "skill_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
+	}
+
+	err = unmarshalPathParam(pathParams, &req.VersionId, "version_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the version_id path parameter")
+	}
+
+	return &req, nil
+}
+
+// DecodeHTTPListFacetsRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded listfacets request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPListFacetsRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.ListFacetsRequest
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+	return &req, nil
+}
+
+// DecodeHTTPBatchUpdateSkillMetadataRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded batchupdateskillmetadata request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPBatchUpdateSkillMetadataRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.BatchUpdateSkillMetadataRequest
+
+	buf, err := readHTTPBody(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(buf) > 0 {
+		if err = protojson.Unmarshal(buf, &req); err != nil {
+			return nil, nhttp.WrapError(err,
+				http.StatusBadRequest,
+				"cannot parse request body as JSON",
+			)
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	return &req, nil
+}
+
+// DecodeHTTPCommitUploadRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded commitupload request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPCommitUploadRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.CommitUploadRequest
+
+	buf, err := readHTTPBody(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(buf) > 0 {
+		if err = protojson.Unmarshal(buf, &req); err != nil {
+			return nil, nhttp.WrapError(err,
+				http.StatusBadRequest,
+				"cannot parse request body as JSON",
+			)
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	err = unmarshalPathParam(pathParams, &req.UploadId, "upload_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the upload_id path parameter")
+	}
+
+	return &req, nil
+}
+
+// DecodeHTTPCreateOrganizationTaskRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded createorganizationtask request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPCreateOrganizationTaskRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.CreateOrganizationTaskRequest
+
+	buf, err := readHTTPBody(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(buf) > 0 {
+		if err = protojson.Unmarshal(buf, &req); err != nil {
+			return nil, nhttp.WrapError(err,
+				http.StatusBadRequest,
+				"cannot parse request body as JSON",
+			)
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	return &req, nil
+}
+
+// DecodeHTTPGetOrganizationTaskRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded getorganizationtask request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPGetOrganizationTaskRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.GetOrganizationTaskRequest
+	var err error
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	err = unmarshalPathParam(pathParams, &req.TaskId, "task_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the task_id path parameter")
+	}
 
 	return &req, nil
 }

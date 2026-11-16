@@ -2,152 +2,185 @@ package app
 
 import (
 	"context"
+	"crypto/sha256"
+	"errors"
+	"fmt"
+	"net/url"
+	"strconv"
 	"strings"
+	"unicode/utf8"
 
+	"github.com/fino-io/core/go/fino/core"
+	"github.com/fino-io/skillhub/backend/internal/skillhub/app/mapper"
 	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/model"
 	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/repo"
-	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/service"
 	"github.com/fino-io/skillhub/backend/pkg/errcode"
 	pb "github.com/fino-io/skillhub/go/skillhub/v1"
+	"github.com/google/uuid"
 )
 
-func githubSource(source *pb.GitHubSource) service.GitHubSource {
-	return service.GitHubSource{RepositoryURL: source.GetRepositoryUrl(), SkillPath: source.GetSkillPath(), Ref: source.GetRef()}
-}
-
-func (s skillhubServer) previewImport(ctx context.Context, in *pb.PreviewImportRequest) (*pb.PreviewImportResponse, error) {
-	skills, commit, err := service.InspectGitHub(ctx, githubSource(in.GetSource()), in.GetScanCollection())
-	if err != nil {
-		return nil, errcode.WrapPlatformBadRequest(err)
+func (s skillhubServer) listSkills(ctx context.Context, in *pb.ListSkillsRequest) (*pb.ListSkillsResponse, error) {
+	size := int(in.GetPageSize())
+	if size <= 0 || size > 100 {
+		size = 40
 	}
-	items := make([]*pb.SkillCandidate, 0, len(skills))
-	for _, skill := range skills {
-		items = append(items, &pb.SkillCandidate{Path: skill.Path, Name: skill.Name, Description: skill.Description})
-	}
-	return &pb.PreviewImportResponse{Skills: items, ResolvedCommitSha: commit}, nil
-}
-
-func (s skillhubServer) importSkill(ctx context.Context, in *pb.ImportSkillRequest) (*pb.ImportSkillResponse, error) {
-	ref := strings.TrimSpace(in.GetSourceRef())
-	paths := in.GetSkillPaths()
-	if len(paths) == 0 || len(paths) > 100 {
-		return nil, errcode.NewPlatformBadRequest()
-	}
-	if in.GetRepositoryUrl() == "" {
-		if ref != "" || in.GetCommitSha() != "" {
+	scope := fmt.Sprintf("%x", sha256.Sum256([]byte(fmt.Sprintf("%q/%q/%q/%q/%t",
+		in.GetKeyword(), in.GetCategory(), in.GetSource(), in.GetTags(), in.GetUncategorized()))))
+	offset := 0
+	if token := in.GetPageToken(); token != "" {
+		prefix, value, ok := strings.Cut(token, ".")
+		var err error
+		offset, err = strconv.Atoi(value)
+		if !ok || prefix != scope || err != nil || offset < 0 {
 			return nil, errcode.NewPlatformBadRequest()
 		}
-		return s.importLocalSkills(ctx, paths)
 	}
-	if ref == "" || len(ref) > 200 {
-		return nil, errcode.NewPlatformBadRequest()
-	}
-	repository, err := service.NormalizeRepository(in.GetRepositoryUrl())
-	if err != nil {
-		return nil, errcode.WrapPlatformBadRequest(err)
-	}
-	commit := in.GetCommitSha()
-	skills, err := service.ReadPinnedGitHubSkills(ctx, repository, commit, paths)
-	if err != nil {
-		return nil, errcode.WrapPlatformBadRequest(err)
-	}
-	entries := make([]repo.CatalogEntry, 0, len(skills))
-	seen := make(map[string]bool, len(skills))
-	for _, item := range skills {
-		if seen[item.Path] {
-			continue
-		}
-		seen[item.Path] = true
-		skill, err := model.NewSkill(model.CreateSkillInput{
-			Name: item.Name, Description: item.Description, RepositoryUrl: repository, RepositoryPath: item.Path,
-		})
-		if err != nil {
-			return nil, errcode.WrapPlatformBadRequest(err)
-		}
-		version, err := pinnedVersion(string(skill.ID()), item.Name, ref, commit, "")
-		if err != nil {
-			return nil, errcode.WrapPlatformBadRequest(err)
-		}
-		entries = append(entries, repo.CatalogEntry{Skill: skill, Version: version})
-	}
-	added, err := s.catalog.AddSkills(ctx, entries)
-	if err != nil {
-		return nil, errcode.WrapCreateSkillhubFailed(err)
-	}
-	return &pb.ImportSkillResponse{AddedCount: int32(len(added)), ExistingCount: int32(len(entries) - len(added))}, nil
-}
 
-func pinnedVersion(skillID, name, ref, commit, notes string) (*model.SkillVersion, error) {
-	return model.NewSkillVersion(model.CreateSkillVersionInput{
-		SkillId: skillID, Name: name, SourceRef: ref, CommitSha: commit, Notes: notes,
+	skills, err := s.catalog.List(ctx, repo.CatalogQuery{
+		Keyword: strings.TrimSpace(in.GetKeyword()), Category: in.GetCategory(), Source: in.GetSource(),
+		Tags: in.GetTags(), Uncategorized: in.GetUncategorized(), Offset: offset, Limit: size + 1,
 	})
-}
-
-func versionView(version *model.SkillVersion) *pb.VersionView {
-	return &pb.VersionView{
-		Id: string(version.ID()), SkillId: version.SkillId(), Name: version.Name(),
-		Notes: version.Notes(), SourceRef: version.SourceRef(), CommitSha: version.CommitSha(),
-		ContentDigest: version.ContentDigest(), CreateTime: version.CreateTime(),
+	if err != nil {
+		return nil, catalogError(err)
 	}
+	var next string
+	if len(skills) > size {
+		skills = skills[:size]
+		next = scope + "." + strconv.Itoa(offset+size)
+	}
+	views, err := s.skillViews(ctx, skills)
+	if err != nil {
+		return nil, catalogError(err)
+	}
+	return &pb.ListSkillsResponse{Skills: views, NextPageToken: next}, nil
 }
 
-func (s skillhubServer) createVersion(ctx context.Context, in *pb.CreateVersionRequest) (*pb.CreateVersionResponse, error) {
+func (s skillhubServer) getSkill(ctx context.Context, in *pb.GetSkillRequest) (*pb.GetSkillResponse, error) {
 	skill, err := s.skillhubSvc.GetSkill(ctx, model.SkillID(in.GetSkillId()))
 	if err != nil {
-		return nil, errcode.WrapPlatformNotFound(err)
+		return nil, catalogError(err)
 	}
-	input := in.GetVersion()
-	if input == nil {
+	views, err := s.skillViews(ctx, []*model.Skill{skill})
+	if err != nil {
+		return nil, catalogError(err)
+	}
+	return &pb.GetSkillResponse{Skill: views[0]}, nil
+}
+
+func (s skillhubServer) skillViews(ctx context.Context, skills []*model.Skill) ([]*pb.SkillView, error) {
+	ids := make([]model.SkillID, 0, len(skills))
+	for _, skill := range skills {
+		ids = append(ids, skill.ID())
+	}
+	tags, err := s.catalog.Tags(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+	versions, err := s.catalog.DefaultVersions(ctx, skills)
+	if err != nil {
+		return nil, err
+	}
+	views := mapper.ToSkillViews(skills)
+	for i, id := range ids {
+		views[i].Tags = tags[id]
+		if version := versions[id]; version != nil {
+			views[i].DefaultVersion = s.versionView(version)
+		}
+	}
+	return views, nil
+}
+
+func (s skillhubServer) updateSkill(ctx context.Context, in *pb.UpdateSkillRequest) (*pb.UpdateSkillResponse, error) {
+	value := in.GetSkill()
+	if value == nil {
 		return nil, errcode.NewPlatformBadRequest()
 	}
-	if skill.LocalPath() != "" {
-		if input.GetSourceRef() != "" || input.GetCommitSha() != "" {
+	tags, err := normalizeTags(value.GetTags())
+	if err != nil {
+		return nil, errcode.WrapPlatformBadRequest(err)
+	}
+	link := strings.TrimSpace(value.GetUpstreamUrl())
+	if link != "" && !validSourceURL(link) {
+		return nil, errcode.WrapPlatformBadRequest(errors.New("上游链接必须是 HTTP 或 HTTPS"))
+	}
+	update := repo.Metadata{
+		SkillID: model.SkillID(in.GetSkillId()), Category: clean(value.GetCategory()),
+		Purpose: clean(value.GetPurpose()), Notes: clean(value.GetNotes()),
+		UpstreamName: clean(value.GetUpstreamName()), UpstreamURL: &link, ReplaceTags: tags,
+	}
+	if err := s.catalog.UpdateMetadata(ctx, []repo.Metadata{update}); err != nil {
+		return nil, catalogError(err)
+	}
+	result, err := s.getSkill(ctx, &pb.GetSkillRequest{SkillId: in.GetSkillId()})
+	if err != nil {
+		return nil, err
+	}
+	return &pb.UpdateSkillResponse{Skill: result.Skill}, nil
+}
+
+func (s skillhubServer) batchUpdateSkillMetadata(ctx context.Context, in *pb.BatchUpdateSkillMetadataRequest) (*core.Null, error) {
+	updates := make([]repo.Metadata, 0, len(in.GetChanges()))
+	for _, change := range in.GetChanges() {
+		if uuid.Validate(change.GetSkillId()) != nil || utf8.RuneCountInString(change.GetCategory()) > 128 ||
+			utf8.RuneCountInString(change.GetPurpose()) > 240 {
 			return nil, errcode.NewPlatformBadRequest()
 		}
-		return s.captureVersion(ctx, skill, input)
+		add, err := normalizeTags(change.GetAddTags())
+		if err != nil {
+			return nil, errcode.WrapPlatformBadRequest(err)
+		}
+		remove, err := normalizeTags(change.GetRemoveTags())
+		if err != nil {
+			return nil, errcode.WrapPlatformBadRequest(err)
+		}
+		update := repo.Metadata{SkillID: model.SkillID(change.GetSkillId()), Revision: change.GetRevision(), AddTags: add, RemoveTags: remove}
+		if change.Category != nil {
+			update.Category = clean(change.GetCategory())
+		}
+		if change.Purpose != nil {
+			update.Purpose = clean(change.GetPurpose())
+		}
+		updates = append(updates, update)
 	}
-	if input.GetExpectedDigest() != "" {
-		return nil, errcode.NewPlatformBadRequest()
+	if err := s.catalog.UpdateMetadata(ctx, updates); err != nil {
+		return nil, catalogError(err)
 	}
-	ref, commit := strings.TrimSpace(input.GetSourceRef()), input.GetCommitSha()
-	if ref == "" || len(ref) > 200 {
-		return nil, errcode.NewPlatformBadRequest()
-	}
-	items, err := service.ReadPinnedGitHubSkills(ctx, skill.RepositoryUrl(), commit, []string{skill.RepositoryPath()})
-	if err != nil {
-		return nil, errcode.WrapPlatformBadRequest(err)
-	}
-	version, err := pinnedVersion(in.GetSkillId(), items[0].Name, ref, commit, input.GetNotes())
-	if err != nil {
-		return nil, errcode.WrapPlatformBadRequest(err)
-	}
-	return s.saveVersion(ctx, version, items[0].Description)
+	return &core.Null{}, nil
 }
 
-func (s skillhubServer) saveVersion(ctx context.Context, version *model.SkillVersion, description string) (*pb.CreateVersionResponse, error) {
-	created, err := s.catalog.AddVersion(ctx, version, description)
-	if err != nil {
-		return nil, errcode.WrapCreateSkillhubFailed(err)
-	}
-	if !created {
-		return nil, errcode.NewPlatformConflict()
-	}
-	return &pb.CreateVersionResponse{Version: versionView(version)}, nil
+func clean(value string) *string {
+	value = strings.TrimSpace(value)
+	return &value
 }
 
-func (s skillhubServer) listVersions(ctx context.Context, in *pb.ListVersionsRequest) (*pb.ListVersionsResponse, error) {
-	if _, err := s.skillhubSvc.GetSkill(ctx, model.SkillID(in.GetSkillId())); err != nil {
-		return nil, errcode.WrapPlatformNotFound(err)
+func normalizeTags(items []string) ([]string, error) {
+	if len(items) > 100 {
+		return nil, errors.New("标签不能超过 100 项")
 	}
-	result, err := s.skillhubSvc.ListSkillVersions(ctx, model.ListSkillVersionQuery{
-		Filter: model.SkillVersionFilter{SkillID: in.GetSkillId()}, PageSize: int(in.GetPageSize()), PageToken: in.GetPageToken(), SkipTotalCount: true,
-	})
-	if err != nil {
-		return nil, errcode.WrapPlatformBadRequest(err)
+	tags := make([]string, 0, len(items))
+	for _, value := range items {
+		tag := strings.TrimSpace(value)
+		if tag == "" || utf8.RuneCountInString(tag) > 128 {
+			return nil, errors.New("标签必须为 1 至 128 个字符")
+		}
+		tags = append(tags, tag)
 	}
-	versions := make([]*pb.VersionView, 0, len(result.Items))
-	for _, version := range result.Items {
-		versions = append(versions, versionView(version))
+	return tags, nil
+}
+
+func validSourceURL(link string) bool {
+	parsed, err := url.Parse(link)
+	return err == nil && (parsed.Scheme == "https" || parsed.Scheme == "http") &&
+		parsed.Hostname() != "" && parsed.User == nil
+}
+
+func catalogError(err error) error {
+	switch {
+	case errors.Is(err, repo.ErrConflict):
+		return errcode.WrapPlatformConflict(err)
+	case core.IsNotFoundError(err):
+		return errcode.WrapPlatformNotFound(err)
+	default:
+		return errcode.WrapGetSkillhubFailed(err)
 	}
-	return &pb.ListVersionsResponse{Versions: versions, NextPageToken: result.NextPageToken}, nil
 }
