@@ -75,6 +75,8 @@ function Detail({ skillId }: { skillId: string }) {
   const view = versions.find((item) => item.id === params.get("version")) ?? skill?.defaultVersion;
   const versionsTab = params.get("tab") === "versions";
   const busy = !!operation.busy;
+  const updateSource = skill?.repositoryUrl ? "github" : "folder";
+  const canCompare = versions.filter((version) => version.available).length >= 2;
 
   function repair(version: SkillVersion) {
     void operation.run(version.id, async () => {
@@ -162,14 +164,12 @@ function Detail({ skillId }: { skillId: string }) {
         : <p className="skillhub-empty">暂无版本</p>)}
       {versionsTab && <section className="skill-versions">
         <div className="library-actions">
-          {skill.repositoryUrl && <button type="button" className="secondary" onClick={() => setPanel({ kind: "update", source: "github" })}>检查更新</button>}
-          {skill.localPath && <button type="button" className="secondary" onClick={() => setPanel({ kind: "update", source: "folder" })}>从原目录保存版本</button>}
-          {!skill.repositoryUrl && !skill.localPath && <button type="button" className="secondary"
-            onClick={() => setPanel({ kind: "update", source: "folder" })}>选择文件夹保存新版本</button>}
-          <button type="button" className="secondary" disabled={versions.filter((version) => version.available).length < 2}
-            onClick={() => setPanel({ kind: "compare" })}>比对版本</button>
+          <button type="button" className="secondary" onClick={() => setPanel({ kind: "update", source: updateSource })}>
+            {updateSource === "github" ? "检查更新" : "保存新版本"}
+          </button>
+          {canCompare && <button type="button" className="secondary" onClick={() => setPanel({ kind: "compare" })}>比对版本</button>}
           <Menu label="版本更多操作">
-            {(skill.repositoryUrl || skill.localPath) && <button type="button" onClick={() => setPanel({ kind: "update", source: "folder" })}>选择文件夹保存新版本</button>}
+            {updateSource === "github" && <button type="button" onClick={() => setPanel({ kind: "update", source: "folder" })}>从文件夹保存版本</button>}
             <button type="button" onClick={() => setPanel({ kind: "zip" })}>从 ZIP 保存版本</button>
           </Menu>
         </div>
@@ -183,16 +183,10 @@ function Detail({ skillId }: { skillId: string }) {
               <span>{isDefault ? "默认" : ""}{view?.id === version.id && !isDefault ? "正在查看" : ""}</span>
               <time dateTime={version.createTime}>{versionLabel(version)}</time>
               <span className="version-notes-text">{version.available ? version.notes : "待补齐"}</span>
-              <Menu label={`版本 ${shortVersion(version, versions)} 更多操作`}>
-                {version.available ? <>
-                  <button type="button" disabled={busy} onClick={() => void operation.save(skillId, version.id)}>保存到本机</button>
-                  {!isDefault && <button type="button" disabled={busy} onClick={() => makeDefault(version)}>设为默认</button>}
-                  <button type="button" onClick={() => { operation.dismiss(); setPanel({ kind: "export", version }); }}>另存到…</button>
-                  <a href={archiveURL(skillId, version.id)}>下载 ZIP</a>
-                  <button type="button" onClick={() => setPanel({ kind: "install", version })}>复制安装命令</button>
-                </> : <button type="button" disabled={busy} onClick={() => repair(version)}>补齐版本</button>}
-                {!isDefault && <button type="button" disabled={busy} className="skill-danger" onClick={() => removeVersion(version)}>删除版本</button>}
-              </Menu>
+              {!isDefault && <Menu label={`版本 ${shortVersion(version, versions)} 管理`}>
+                {version.available && <button type="button" disabled={busy} onClick={() => makeDefault(version)}>设为默认</button>}
+                <button type="button" disabled={busy} className="skill-danger" onClick={() => removeVersion(version)}>删除版本</button>
+              </Menu>}
             </li>;
           })}
         </ul>

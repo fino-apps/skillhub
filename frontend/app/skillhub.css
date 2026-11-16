@@ -128,7 +128,7 @@
 .library-table thead th:nth-child(1) { width: 42px; }
 .library-table thead th:nth-child(3) { width: 14%; }
 .library-table thead th:nth-child(4) { width: 22%; }
-.library-table thead th:nth-child(5) { width: 202px; }
+.library-table thead th:nth-child(5) { width: 158px; }
 .library-table .skillhub-entry td { vertical-align: middle; }
 .library-table .skillhub-entry[data-selected] td { background: var(--surface-muted); }
 .library-table .library-name { display: inline-block; color: var(--text); font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
@@ -214,7 +214,7 @@
 @media (max-width: 760px) {
   .library-table :is(.library-source, .library-classification, th:nth-child(3), th:nth-child(4)) { display: none; }
   .library-mobile-source { display: block; font-size: 12px; }
-  .library-table thead th:nth-child(5) { width: 132px; }
+  .library-table thead th:nth-child(5) { width: 96px; }
   .library-row-controls > code { display: none; }
 }
 @media (max-width: 480px) {

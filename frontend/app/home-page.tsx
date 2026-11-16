@@ -1,11 +1,11 @@
 import { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { deleteSkill, listFacets, listSkills, repairVersion } from "@/generated/api-client";
+import { listFacets, listSkills, repairVersion } from "@/generated/api-client";
 import GitHubIntake from "./github-intake";
 import LocalIntake, { ZipIntake } from "./local-intake";
-import SkillMetadata, { BatchMetadata } from "./skill-metadata";
-import { archiveURL, fetchAllSkills, libraryNavigation, message, sourceLabel, sourceNames, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
-import { Dialog, ExportLocation, Failure, Menu, OperationFeedback, Popover, useSkillOperation } from "./skill-ui";
+import { BatchMetadata } from "./skill-metadata";
+import { fetchAllSkills, libraryNavigation, message, sourceLabel, sourceNames, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
+import { Dialog, Failure, Menu, OperationFeedback, Popover, useSkillOperation } from "./skill-ui";
 import { shortVersion, versionDigest } from "./skill-version";
 
 import "./skillhub.css";
@@ -16,9 +16,7 @@ const OrganizePanel = lazy(() => import("./organize-panel"));
 
 type Panel =
   | { kind: "folder" | "github" | "zip" | "batch" | "ai" }
-  | { kind: "metadata"; skill: Skill }
   | { kind: "new-version"; skill: Skill; path: string }
-  | { kind: "export"; skill: Skill; versionId: string }
   | { kind: "compare"; skills: Skill[] };
 
 function Filters({ params, facets, onChange }: {
@@ -172,14 +170,6 @@ export default function HomePage() {
     await operation.run("compare", async () => setPanel({ kind: "compare", skills: await fetchAllSkills() }));
   }
 
-  function remove(skill: Skill) {
-    if (!window.confirm(`删除「${skill.name}」及其已保存版本？`)) return;
-    void operation.run(skill.id, async () => {
-      await deleteSkill({ skillId: skill.id });
-      reload();
-    });
-  }
-
   const uncategorized = params.get("category") === "~";
   const selectable = skills.slice(0, 100);
   const allSelected = selectable.length > 0 && selectable.every(({ id }) => selected.includes(id));
@@ -205,7 +195,7 @@ export default function HomePage() {
       </div>
     </div>
     <Filters params={params} facets={facets} onChange={updateFilters} />
-    {panel?.kind !== "export" && <OperationFeedback {...operation} floating />}
+    <OperationFeedback {...operation} floating />
     {(selected.length > 0 || (uncategorized && skills.length > 0)) && <div className="library-actions library-selection">
       {selected.length > 0 && <>
         <span role="status">已选 {selected.length} 项</span>
@@ -221,8 +211,7 @@ export default function HomePage() {
     {loading && skills.length === 0 && <p className="skillhub-empty" role="status">加载中…</p>}
     {!loading && !error && skills.length === 0 && <div className="skillhub-empty">
       <p>{scope ? "没有匹配的 Skill" : "还没有 Skill"}</p>
-      {scope ? <button type="button" className="secondary" onClick={() => updateFilters(new URLSearchParams())}>清除筛选</button>
-        : <button type="button" onClick={() => setPanel({ kind: "folder" })}>导入文件夹</button>}
+      {scope && <button type="button" className="secondary" onClick={() => updateFilters(new URLSearchParams())}>清除筛选</button>}
     </div>}
     {skills.length > 0 && <table className="skillhub-table library-table" aria-busy={loading}>
       <thead><tr>
@@ -256,14 +245,6 @@ export default function HomePage() {
                 operation.setNotice("版本已补齐，可以保存到本机。");
                 reload();
               })}>补齐版本</button>)}
-            <Menu label={`${skill.name} 更多操作`}>
-              {version?.available && <>
-                <button type="button" onClick={() => { operation.dismiss(); setPanel({ kind: "export", skill, versionId: version.id }); }}>另存到…</button>
-                <a href={archiveURL(skill.id, version.id)}>下载 ZIP</a>
-              </>}
-              <button type="button" onClick={() => setPanel({ kind: "metadata", skill })}>编辑整理信息</button>
-              <button type="button" className="skill-danger" onClick={() => remove(skill)}>删除</button>
-            </Menu>
           </div></td>
         </tr>;
       })}</tbody>
@@ -276,9 +257,6 @@ export default function HomePage() {
     </Dialog>}
     {panel?.kind === "github" && <Dialog title="导入 GitHub" compact onClose={() => setPanel(null)}><GitHubIntake onComplete={imported} /></Dialog>}
     {panel?.kind === "zip" && <Dialog title="导入 ZIP" compact onClose={() => setPanel(null)}><ZipIntake onComplete={imported} /></Dialog>}
-    {panel?.kind === "metadata" && <Dialog title="编辑整理信息" compact onClose={() => setPanel(null)}>
-      <SkillMetadata skill={panel.skill} categories={facets.categories ?? []} onSaved={editComplete} />
-    </Dialog>}
     {panel?.kind === "new-version" && <Dialog title="保存新版本" onClose={() => setPanel(null)}>
       <Suspense fallback={<p>加载中…</p>}><VersionPanel skill={panel.skill} from="folder" path={panel.path} onSaved={editComplete} /></Suspense>
     </Dialog>}
@@ -293,10 +271,6 @@ export default function HomePage() {
     </Dialog>}
     {panel?.kind === "compare" && <Dialog title="比对 Skill" onClose={() => setPanel(null)}>
       <Suspense fallback={<p>加载中…</p>}><ComparePanel skills={panel.skills} /></Suspense>
-    </Dialog>}
-    {panel?.kind === "export" && <Dialog title="另存到本机" compact onClose={() => setPanel(null)}>
-      <ExportLocation busy={!!operation.busy} onSave={(directory) => void operation.save(panel.skill.id, panel.versionId, directory === undefined, directory)} />
-      <OperationFeedback {...operation} />
     </Dialog>}
   </main>;
 }
