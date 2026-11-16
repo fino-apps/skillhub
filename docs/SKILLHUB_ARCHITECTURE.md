@@ -16,7 +16,7 @@ SkillHub 是本机单用户的 Skill 资料库。自有 Skill 和第三方 Skill
 | 更新和比对 | 在详情选择文件夹、读取原目录或检查 GitHub 更新，预览差异后保存 | 版本保存后可与任意已保存版本比对。版本区可指定默认下载版本。 |
 | 保存到本机 | 在列表或版本历史点击「保存到本机」。需要换位置时使用「另存到…」 | 列表取默认版本，历史入口取指定版本。直接生成可用的 Skill 文件夹，完成后显示保存位置。分享时可从详情选择「下载 ZIP」。 |
 
-首页每行只显示名称、一行用途、来源、分类标签和默认版本。详情显示 `SKILL.md`、文件、来源链接和版本历史。导入入口优先显示「导入文件夹」和「导入 GitHub」。编辑用途、设为默认、删除、复制安装命令和 ZIP 操作放在相应条目或版本的菜单中。新条目默认取 `SKILL.md` 的 `description` 作为用途，用户填写的用途随条目保存。
+首页每行显示名称、一行用途、来源、分类标签和默认版本。详情显示 `SKILL.md`、文件、来源链接和版本历史。导入入口优先显示「导入文件夹」和「导入 GitHub」。新条目的短用途可留空，此时列表预览默认版本的 `description`。用户填写的短用途与原始描述分别保存，切换或更新默认版本时保留用户填写的内容。
 
 「线上版本上传下载」的首版范围是 GitHub 版本收录到本机并可下载。是否需要从 SkillHub 发布到有写权限的 GitHub 仓库，按实际发布频率单独确定。
 
@@ -24,8 +24,8 @@ SkillHub 是本机单用户的 Skill 资料库。自有 Skill 和第三方 Skill
 
 ### 来源和导入方式
 
-- 来源记录 Skill 的出处，例如 GitHub 仓库及目录、本机原目录或未知。导入方式记录 GitHub、目录扫描或 ZIP。列表优先显示可识别的来源，详情显示导入方式和具体位置。
-- GitHub 直连条目按规范化的仓库和子目录去重，本机目录按真实路径去重。ZIP 同名时提示「保存到已有 Skill」或「新建独立条目」。同名 Skill 可来自不同作者或项目。
+- 上游出处记录可选名称和链接，例如 Fino、OpenAI 或 Vercel。GitHub 直连可用仓库所有者和链接作为默认出处，本机目录和 ZIP 可根据项目 `README` 或 Skill 的 `NOTICE.txt` 手动补录。列表优先显示记录的出处，详情显示出处、导入方式和实际更新绑定。补录出处只影响展示和筛选，更新操作使用独立绑定的仓库或本机目录。
+- GitHub 直连条目按规范化的仓库和子目录去重，本机目录按解析后的真实路径去重。例如本项目的 `.agents/skills` 指向 `skills/`，两种入口扫描到同一 Skill 时只收录一次。目录入口允许解析项目内的别名，快照仍按现有规则检查 Skill 内容。ZIP 同名时提示「保存到已有 Skill」或「新建独立条目」。
 - 从 SkillHub 导出的带来源 ZIP 可包含顶层 `.skillhub.json`，记录该版本的上游仓库、目录和完整 commit 等可移植来源信息。元数据与 Skill 目录并列，导入时独立校验。ZIP 声明的来源可在详情追溯，内容以实际归档为准。它不会自动绑定 GitHub 更新、覆盖已收录的同来源条目，或改写条目的可信来源。导出包省略本机绝对路径、备注和凭据。
 - 普通 ZIP 无来源信息时显示「ZIP」。文件夹导出保留原有 Skill 目录，重新收录时按本机目录来源处理。需要将原 GitHub 来源一并传给另一份库时，使用带来源的 ZIP。GitHub 收录保留 Skill 目录内的许可文件，并展示可获取的许可信息。
 
@@ -67,7 +67,7 @@ flowchart LR
 
 | 模型 | 变更 |
 | --- | --- |
-| `Skill` | 保留 ID、名称、说明、分类、备注和时间戳。增加来源类型、导入方式、唯一来源键、可空用途和默认版本 ID。上游说明从默认版本读取，整理字段单独维护。 |
+| `Skill` | 保留 ID、名称、说明、分类、备注和时间戳。增加来源类型、导入方式、唯一来源键、可选上游名称与链接、可空短用途及默认版本 ID。原始描述从默认版本读取，短用途独立保存。 |
 | `SkillTag` | 保留 `(skill_id, tag)` 唯一约束。批量更新在数据库事务提交，分类和标签名称经去空白处理。 |
 | `SkillVersion` | 保留版本 ID、名称、备注、来源 ref、完整 commit 和内容摘要。增加版本描述、快照状态、新版摘要，以及按版本保存的可移植来源信息。 |
 | AI 整理任务 | 启用 AI 阶段后保存任务状态、逐条建议、失败原因和候选条目的元数据修订值。 |
@@ -85,7 +85,8 @@ flowchart LR
 - 文件夹和 ZIP 支持单个 Skill 或集合。单文件上限为 20 MiB，每个 Skill 最多 64 MiB、10,000 个文件。ZIP 另限制压缩体积、总解包量、候选数量和同时暂存量。拒绝目录穿越、重名路径、符号链接、特殊文件和嵌套 Skill 根。渲染 Markdown 时限制原始 HTML 和远程图片，脚本以文本查看。
 - 确认收录时复用预览锁定的 commit、目录内容摘要或 ZIP 会话。相同 ZIP 会话、候选重试沿用同一个条目 ID。写入时先在快照根目录下暂存和校验，再原子重命名版本目录，最后提交数据库索引和默认版本变更。事务失败清理本次快照。批量按单条提交并返回新增、重复或失败，可只重试失败项。
 - 单版下载用 `<version-name>.zip`，主体为同名 Skill 目录，可附来源元数据。先在有界临时文件完成归档，再发送附件，完成或取消后清理。已收录的 GitHub 版本从本机快照打包。
-- 搜索与筛选在 SQLite 分页前完成，分页使用稳定排序。查询覆盖名称、用途、分类和标签，可按来源和未分类状态筛选。
+- 搜索与筛选在 SQLite 分页前完成，分页使用稳定排序。查询覆盖名称、短用途、默认版本的原始描述、分类和标签，可按展示来源和未分类状态筛选。
+- 版本文件预览按 Skill ID、版本 ID 和规范相对路径读取快照。Markdown 的相对文件链接以当前文档所在目录解析，只读取该版本根目录内的普通文件。文件缺失或无法预览时提示原因，保留返回正文的入口。文本预览按大小限制读取，脚本仅作为文本展示。
 
 ## 4. AI 批量整理
 
@@ -101,7 +102,7 @@ flowchart LR
 | 用途 | 接口 |
 | --- | --- |
 | 查找和整理 | 扩展 `ListSkills`、`GetSkill`、`UpdateSkill`，增加 `BatchUpdateSkillMetadata`、`ListCategories`。 |
-| 收录和历史 | 复用 `ScanProject`、`PreviewImport`、`ImportSkill`、`CreateVersion`、`ListVersions`。增加 `GetVersionContent`、`SetDefaultVersion`、`DeleteVersion`，沿用 `DeleteSkill`。 |
+| 收录和历史 | 复用 `ScanProject`、`PreviewImport`、`ImportSkill`、`CreateVersion`、`ListVersions`。增加 `GetVersionContent`、`GetVersionFile`、`SetDefaultVersion`、`DeleteVersion`，沿用 `DeleteSkill`。 |
 | 本机文件夹 | 增加 `SelectLocalDirectory` 启动系统目录选择，复用 `ScanProject` 和 `ImportSkill` 收录。增加 `ExportVersionToDirectory` 保存固定版本，列表使用默认版本 ID。 |
 | ZIP 交换 | `POST /skillhub/v1/uploads` 接收 ZIP，`CommitUpload` 确认入库。 `GET /skillhub/v1/skills/{skillId}/versions/{versionId}/archive` 下载固定版本。 |
 | 比对和安装 | 复用 `CompareSkills`、`GetInstallCommand`。 |
