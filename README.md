@@ -54,4 +54,4 @@ go -C backend test ./...
 cd frontend && npm run build
 ```
 
-架构和接口范围见 [设计文档](docs/DESIGN.md)。
+目标架构和接口规划见 [SkillHub 技能库架构方案](docs/SKILLHUB_ARCHITECTURE.md)。
