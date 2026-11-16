@@ -30,7 +30,7 @@ export default function SkillMetadata({ skill, onSaved }: { skill: Skill; onSave
   return <form className="github-form" onSubmit={save}>
     <label>分类<input value={category} maxLength={128} disabled={saving} onChange={(event) => setCategory(event.target.value)} /></label>
     <label>标签（每行一个）<textarea value={tags} rows={3} disabled={saving} onChange={(event) => setTags(event.target.value)} /></label>
-    <label>备注<textarea value={notes} maxLength={4096} rows={3} disabled={saving} onChange={(event) => setNotes(event.target.value)} /></label>
+    <label>备注<textarea value={notes} placeholder="可记录请求示例或使用说明" maxLength={4096} rows={3} disabled={saving} onChange={(event) => setNotes(event.target.value)} /></label>
     {error && <p className="intake-error" role="alert">{error}</p>}
     <button type="submit" disabled={saving}>{saving ? "保存中…" : "保存"}</button>
   </form>;
