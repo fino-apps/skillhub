@@ -1,8 +1,6 @@
 package app
 
 import (
-	"context"
-
 	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/service"
 	pb "github.com/fino-io/skillhub/go/skillhub/v1"
 )
@@ -17,11 +15,7 @@ func location(input *pb.SkillLocation) service.Location {
 	return result
 }
 
-func (s skillhubServer) compare(ctx context.Context, in *pb.CompareSkillsRequest) (*pb.CompareSkillsResponse, error) {
-	diff, err := s.library.Compare(ctx, location(in.GetLeft()), location(in.GetRight()))
-	if err != nil {
-		return nil, failure(err)
-	}
+func comparisonView(diff *service.Comparison) *pb.CompareSkillsResponse {
 	result := &pb.CompareSkillsResponse{
 		LeftDigest: diff.LeftDigest, RightDigest: diff.RightDigest,
 		LeftCommitSha: diff.LeftCommit, RightCommitSha: diff.RightCommit,
@@ -38,5 +32,5 @@ func (s skillhubServer) compare(ctx context.Context, in *pb.CompareSkillsRequest
 			Path: file.Path, Kind: kind, Binary: file.Binary, LeftText: file.LeftText, RightText: file.RightText, Detail: file.Detail,
 		})
 	}
-	return result, nil
+	return result
 }

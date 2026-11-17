@@ -87,12 +87,12 @@ bootstrap -> app -> domain/service -> domain/model
 
 - RPC 第一行记录方法名，如 `logs.Ctx(ctx).Debugw("CreateBook")`。
 - 请求缺失、输入无效和预期业务结果用 `Warnw`；意外失败用 `Errorw`；成功写入用 `Infow`，成功读取/列表用 `Debugw`。事件名稳定，信息使用结构化 key/value。
-- app 记录请求日志、预期业务结果并映射错误；意外失败优先复用已接入的公共 transport 错误日志，未被公共层覆盖时才在 app 记录。domain/service、domain/model、domain/repo 不加日志；infra/repo 和 DAO 仅按运维规范记录必要技术事件。
+- app 在 RPC 方法中记录请求和业务结果。领域用例发生意外失败时，app 用 `Errorw` 记录具体操作，并用该操作的兜底业务错误包装 cause。domain/service、domain/model、domain/repo 不加日志；infra/repo 和 DAO 仅按运维规范记录必要技术事件。
 - 不记录原始请求、凭据、token、敏感载荷或不透明动态值。
-- 每次失败由明确负责的层记录一次，保留操作、必要阶段、稳定 `reason` 和安全标识；不要在 app、endpoint 和 transport 重复记录同一异常。cause 安全时记 `error`，可能含敏感数据时只记类别。公共日志和共享映射不替代用例对预期结果的分类。
+- 每次失败由负责该阶段的层记录一次，保留操作、必要阶段、稳定 `reason` 和安全标识。endpoint 和 transport 负责各自阶段发生的失败，已由 app 记录的用例失败沿错误链传递并完成协议转换。cause 安全时记 `error`，可能含敏感数据时只记类别。
 - 普通 unary RPC 直接返回响应复合字面量；复合字面量多行、每字段一行，即使只有一个字段。streaming/messaging 按其生成契约。
 
-以下示例复用公共 transport 的意外异常日志；实体、方法和错误符号需替换为项目真实定义，不能直接复制不存在的符号：
+以下示例由 app 记录创建用例的意外失败，再返回操作级兜底错误。实体、方法和错误符号使用项目里的实际定义。
 
 ```go
 // CreateBook implements Interface. fino:req-fields 1=Book
