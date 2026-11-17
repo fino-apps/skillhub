@@ -31,7 +31,7 @@ docker compose --env-file deploy/compose/.env \
 | `SKILLHUB_DATA_DIR` | 系统用户配置目录下的 `SkillHub`，保存数据库和快照 |
 | `SKILLHUB_EXPORT_DIR` | 默认使用数据目录下的 `exports` |
 
-备份时先停止后端，再复制 Docker 卷或本地数据目录。若显式设置 `SKILLHUB_DATABASE` 或 `SKILLHUB_SNAPSHOT_DIR`，备份时一并复制这些位置。旧 GitHub 条目若只有 commit 记录，可在页面补齐对应版本副本。
+备份时先停止后端，再复制 Docker 卷或本地数据目录。若显式设置 `SKILLHUB_DATABASE` 或 `SKILLHUB_SNAPSHOT_DIR`，备份时一并复制这些位置。版本快照以 ZIP 保存在快照目录。缺少快照的 GitHub 版本可按原 commit 重新拉取。
 
 ## 日常使用
 
@@ -46,13 +46,17 @@ docker compose --env-file deploy/compose/.env \
 修改契约后从项目根目录重新生成。
 
 ```bash
-fino doctor --output=. --targets=service,frontend
-fino build --output=. --targets=service,frontend
+fino doctor --output=. --targets=api,service
+fino build --output=. --targets=api,service
 go -C go test ./...
 go -C backend test ./...
 npm --prefix frontend run build
 ```
 
+前端继续使用仓库已有的 API 客户端。调整 HTTP 契约时，增加 `frontend` 生成目标并重新构建前端。
+
 开发时先执行 `npm --prefix frontend ci`，再分别运行 `go -C backend run ./cmd/skillhub-server` 与 `npm --prefix frontend run dev`。Vite 将业务 API 代理到本机后端，本机目录选择和 Git 使用当前用户的环境。
 
-[技能库架构方案](docs/SKILLHUB_ARCHITECTURE.md) · [前端页面设计](docs/SKILLHUB_FRONTEND_DESIGN.md)
+## 后端分层
+
+`cmd/skillhub-server` 负责配置、建表和依赖装配。Fino 生成的 HTTP 与 gRPC 路由进入 `app`，由 App 转换 Proto 入参、组装响应并映射业务错误。`domain/service` 管理收录、版本快照和元数据规则，通过 `domain/repo` 的仓储接口访问数据。`infra/repo` 负责 SQLite 查询、事务和游标分页。

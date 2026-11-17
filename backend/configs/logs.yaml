@@ -1,0 +1,15 @@
+logs:
+  level: info
+  encode: json
+  # output: file
+  initFields:
+    package: skillhub.v1
+    server: skillhub-server
+    # version: 1.0.0
+  file:
+    path: ./logs/app.log
+    maxSize: 100
+    maxBackups: 10
+    maxAge: 28
+    encode: json
+    # Compress: false

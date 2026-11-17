@@ -1,0 +1,24 @@
+{
+  "title": "skillhub.SkillTag",
+  "description": "SkillTag 保存 Skill 的标签，同一 Skill 的标签唯一。",
+  "type": "object",
+  "properties": {
+    "createTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "id": {
+      "type": "string"
+    },
+    "skillId": {
+      "type": "string"
+    },
+    "tag": {
+      "type": "string"
+    },
+    "updateTime": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

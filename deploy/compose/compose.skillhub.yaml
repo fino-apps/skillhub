@@ -1,0 +1,15 @@
+services:
+  skillhub-server:
+    ports: !reset []
+    environment:
+      SERVER_HTTP_HOST: 0.0.0.0
+      SKILLHUB_DATA_DIR: /app/data
+    volumes:
+      - skillhub_data:/app/data
+
+  frontend:
+    ports: !override
+      - "127.0.0.1:${SKILLHUB_FRONTEND_PORT}:80"
+
+volumes:
+  skillhub_data:
