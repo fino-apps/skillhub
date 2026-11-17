@@ -43,6 +43,7 @@ func PreviewGitHub(ctx context.Context, source Source, collection bool) (*Previe
 	if collection && path == "" {
 		path = "skills"
 	}
+
 	dir, err := Within(root, path)
 	if err != nil {
 		return nil, invalid(err)
@@ -52,6 +53,7 @@ func PreviewGitHub(ctx context.Context, source Source, collection bool) (*Previe
 			return &Preview{Commit: commit, Items: []Candidate{{Path: path, Manifest: manifest}}}, nil
 		}
 	}
+
 	items, err := Scan(dir)
 	if err != nil {
 		return nil, invalid(err)
@@ -70,6 +72,7 @@ func (s *Library) ImportDirectories(ctx context.Context, repositoryURL, ref, sha
 		if err != nil || !CommitPattern.MatchString(sha) {
 			return nil, ErrInvalid
 		}
+
 		dir, commit, cleanup, err := Checkout(ctx, repository, sha)
 		if err != nil {
 			return nil, invalid(err)
@@ -91,6 +94,7 @@ func (s *Library) ImportDirectories(ctx context.Context, repositoryURL, ref, sha
 				source.Path = ""
 			}
 		}
+
 		created := false
 		if err == nil {
 			_, created, err = s.saveDirectory(ctx, dir, "", source, VersionInput{})
@@ -115,6 +119,7 @@ func (s *Library) StageArchive(file []byte) (*Upload, error) {
 	if len(file) == 0 {
 		return nil, ErrInvalid
 	}
+
 	id := uuid.NewString()
 	dir := filepath.Join(s.uploads, id)
 	if err := os.Mkdir(dir, 0700); err != nil {
@@ -129,6 +134,7 @@ func (s *Library) StageArchive(file []byte) (*Upload, error) {
 	if err := Unpack(file, dir); err != nil {
 		return nil, invalid(err)
 	}
+
 	items, err := Scan(dir)
 	if err != nil {
 		return nil, err
@@ -165,6 +171,7 @@ func (s *Library) ImportArchive(ctx context.Context, upload, target string, path
 		}
 		accountImport(&result, path, created, err)
 	}
+
 	if len(result.Failures) == 0 {
 		_ = os.RemoveAll(root)
 	}
@@ -176,6 +183,7 @@ func (s *Library) CreateVersion(ctx context.Context, skillID, path, ref, commitS
 	if err != nil {
 		return model.SkillVersionSnapshot{}, err
 	}
+
 	source := Source{Kind: "folder"}
 	if path == "" && skill.RepositoryUrl != "" {
 		if !CommitPattern.MatchString(commitSHA) {
@@ -197,6 +205,7 @@ func (s *Library) CreateVersion(ctx context.Context, skillID, path, ref, commitS
 			return model.SkillVersionSnapshot{}, err
 		}
 	}
+
 	version, _, err := s.saveDirectory(ctx, path, skillID, source, input)
 	if err != nil {
 		return model.SkillVersionSnapshot{}, err

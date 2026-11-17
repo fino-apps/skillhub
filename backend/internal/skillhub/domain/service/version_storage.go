@@ -27,6 +27,7 @@ func (s *Library) saveDirectory(ctx context.Context, dir, target string, source 
 	if err != nil {
 		return model.SkillVersionSnapshot{}, false, invalid(err)
 	}
+
 	data, digest, err := Archive(dir)
 	if err != nil {
 		return model.SkillVersionSnapshot{}, false, invalid(err)
@@ -34,6 +35,7 @@ func (s *Library) saveDirectory(ctx context.Context, dir, target string, source 
 	if input.ExpectedDigest != "" && input.ExpectedDigest != digest {
 		return model.SkillVersionSnapshot{}, false, ErrConflict
 	}
+
 	value := dir
 	switch source.Kind {
 	case "github":
@@ -41,6 +43,7 @@ func (s *Library) saveDirectory(ctx context.Context, dir, target string, source 
 	case "zip":
 		value = digest
 	}
+
 	key := fmt.Sprintf("%x", sha256.Sum256([]byte(source.Kind+"\x00"+value)))
 	s.writes.Lock()
 	defer s.writes.Unlock()
@@ -62,6 +65,7 @@ func (s *Library) saveDirectory(ctx context.Context, dir, target string, source 
 			} else if !errors.Is(err, repo.ErrNotFound) {
 				return err
 			}
+
 			id, err := uuid.NewV7()
 			if err != nil {
 				return err
@@ -79,6 +83,7 @@ func (s *Library) saveDirectory(ctx context.Context, dir, target string, source 
 				return err
 			}
 		}
+
 		existing, err := tx.MatchingVersion(string(skill.ID), source.Commit, digest)
 		switch {
 		case err == nil:
@@ -95,6 +100,7 @@ func (s *Library) saveDirectory(ctx context.Context, dir, target string, source 
 			if err := os.WriteFile(savedFile, data, 0600); err != nil {
 				return err
 			}
+
 			if err := tx.CreateVersion(version); err != nil {
 				return err
 			}
@@ -102,6 +108,7 @@ func (s *Library) saveDirectory(ctx context.Context, dir, target string, source 
 		default:
 			return err
 		}
+
 		if skill.DefaultVersionId == "" || input.MakeDefault {
 			return setDefault(tx, skill, version)
 		}
@@ -118,6 +125,7 @@ func (s *Library) Repair(ctx context.Context, skillID, versionID string) error {
 	if err != nil {
 		return err
 	}
+
 	row, err := s.store.Version(ctx, skillID, versionID)
 	if err != nil {
 		return err
@@ -128,6 +136,7 @@ func (s *Library) Repair(ctx context.Context, skillID, versionID string) error {
 	if skill.RepositoryUrl == "" || !CommitPattern.MatchString(row.CommitSha) {
 		return ErrConflict
 	}
+
 	root, _, cleanup, err := Checkout(ctx, skill.RepositoryUrl, row.CommitSha)
 	if err != nil {
 		return invalid(err)
@@ -137,6 +146,7 @@ func (s *Library) Repair(ctx context.Context, skillID, versionID string) error {
 	if err != nil {
 		return invalid(err)
 	}
+
 	data, digest, err := Archive(dir)
 	if err != nil {
 		return invalid(err)
@@ -149,6 +159,7 @@ func (s *Library) Repair(ctx context.Context, skillID, versionID string) error {
 	if _, err := s.store.Version(ctx, skillID, versionID); err != nil {
 		return err
 	}
+
 	temporary, err := os.CreateTemp(s.snapshots, ".repair-")
 	if err != nil {
 		return err

@@ -355,6 +355,7 @@ func (s skillhubServer) DownloadZip(ctx context.Context, in *pb.DownloadZipReque
 	if err != nil {
 		return nil, rpcError(ctx, "DownloadZip", err)
 	}
+
 	data, err := s.library.ReadArchive(row)
 	if err != nil {
 		return nil, rpcError(ctx, "DownloadZip", err)
@@ -465,6 +466,7 @@ func (s skillhubServer) BatchUpdateSkillMetadata(ctx context.Context, in *pb.Bat
 			AddTags: change.GetAddTags(), RemoveTags: change.GetRemoveTags(),
 		})
 	}
+
 	if err := s.library.Organize(ctx, input); err != nil {
 		return nil, rpcError(ctx, "BatchUpdateSkillMetadata", err)
 	}

@@ -21,6 +21,7 @@ func GitHubURL(raw string) (string, error) {
 	if err != nil || u.Scheme != "https" || u.Host != "github.com" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
 		return "", errors.New("需要 GitHub HTTPS 仓库地址")
 	}
+
 	owner, name, ok := strings.Cut(strings.Trim(u.Path, "/"), "/")
 	name = strings.TrimSuffix(name, ".git")
 	for _, part := range []string{owner, name} {
@@ -42,6 +43,7 @@ func Checkout(ctx context.Context, raw, ref string) (string, string, func(), err
 	if strings.HasPrefix(ref, "-") || strings.ContainsAny(ref, ": \t\r\n") {
 		return "", "", nil, errors.New("无效的 Git 引用")
 	}
+
 	dir, err := os.MkdirTemp("", "skillhub-git-")
 	if err != nil {
 		return "", "", nil, err
@@ -57,12 +59,14 @@ func Checkout(ctx context.Context, raw, ref string) (string, string, func(), err
 		}
 		return strings.TrimSpace(string(out)), nil
 	}
+
 	for _, args := range [][]string{{"init", "-q"}, {"-c", "protocol.file.allow=never", "fetch", "-q", "--depth=1", "--", repository, ref}, {"checkout", "-q", "--detach", "FETCH_HEAD"}} {
 		if _, err := run(args...); err != nil {
 			cleanup()
 			return "", "", nil, err
 		}
 	}
+
 	commit, err := run("rev-parse", "HEAD")
 	if err != nil {
 		cleanup()
@@ -78,6 +82,7 @@ func Within(dir, path string) (string, error) {
 	if !fs.ValidPath(path) || strings.ContainsAny(path, "\\:") {
 		return "", errors.New("无效的 Skill 路径")
 	}
+
 	dir, err := filepath.EvalSymlinks(dir)
 	if err != nil {
 		return "", err
@@ -94,11 +99,13 @@ func Within(dir, path string) (string, error) {
 	if !info.IsDir() {
 		return "", errors.New("Skill 路径必须是目录")
 	}
+
 	full := filepath.Join(dir, filepath.FromSlash(path))
 	resolved, err := filepath.EvalSymlinks(full)
 	if err != nil {
 		return "", err
 	}
+
 	rel, err := filepath.Rel(dir, resolved)
 	if err != nil || !filepath.IsLocal(rel) {
 		return "", errors.New("Skill 路径超出根目录")

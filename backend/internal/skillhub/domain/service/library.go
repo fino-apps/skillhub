@@ -80,6 +80,7 @@ func (s *Library) details(ctx context.Context, rows []model.SkillSnapshot) ([]Sk
 	if len(rows) == 0 {
 		return result, nil
 	}
+
 	ids := make([]string, 0, len(rows))
 	var versions []string
 	for _, row := range rows {
@@ -88,18 +89,22 @@ func (s *Library) details(ctx context.Context, rows []model.SkillSnapshot) ([]Sk
 			versions = append(versions, row.DefaultVersionId)
 		}
 	}
+
 	tags, err := s.store.Tags(ctx, ids)
 	if err != nil {
 		return nil, err
 	}
+
 	defaults, err := s.store.DefaultVersions(ctx, versions)
 	if err != nil {
 		return nil, err
 	}
+
 	byID := make(map[string]*model.SkillVersionSnapshot, len(defaults))
 	for i := range defaults {
 		byID[string(defaults[i].ID)] = &defaults[i]
 	}
+
 	for _, row := range rows {
 		version := byID[row.DefaultVersionId]
 		if version != nil && version.SkillId != string(row.ID) {
@@ -178,6 +183,7 @@ func (s *Library) Organize(ctx context.Context, changes []MetadataChange) error 
 			if change.Revision != "" && change.Revision != skill.UpdateTime.Format() {
 				return ErrConflict
 			}
+
 			fields := []string{"updateTime"}
 			if change.Category != nil {
 				skill.Category = strings.TrimSpace(*change.Category)
@@ -193,6 +199,7 @@ func (s *Library) Organize(ctx context.Context, changes []MetadataChange) error 
 				}
 				fields = append(fields, "purpose")
 			}
+
 			add, err := normalizeTags(change.AddTags)
 			if err != nil {
 				return err
@@ -205,6 +212,7 @@ func (s *Library) Organize(ctx context.Context, changes []MetadataChange) error 
 			if err := tx.UpdateSkill(skill, fields...); err != nil {
 				return err
 			}
+
 			if err := tx.ChangeTags(change.SkillID, false, add, remove); err != nil {
 				return err
 			}

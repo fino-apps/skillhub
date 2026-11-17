@@ -17,6 +17,7 @@ func prepareLibraryPaths() (libraryPaths, error) {
 		exports:   cmp.Or(os.Getenv("SKILLHUB_EXPORT_DIR"), filepath.Join(base, "exports")),
 		uploads:   filepath.Join(base, "uploads"),
 	}
+
 	for _, path := range []*string{&paths.snapshots, &paths.exports, &paths.uploads} {
 		absolute, err := filepath.Abs(*path)
 		if err != nil {

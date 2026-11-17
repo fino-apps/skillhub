@@ -56,6 +56,7 @@ func serve(ctx context.Context, cfg nserver.Config) error {
 	if err != nil {
 		return err
 	}
+
 	infra, err := newInfra()
 	if err != nil {
 		return err

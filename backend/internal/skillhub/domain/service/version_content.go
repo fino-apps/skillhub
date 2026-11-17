@@ -32,10 +32,12 @@ func (s *Library) openVersion(ctx context.Context, skill, id string) (model.Skil
 	if err != nil {
 		return row, nil, err
 	}
+
 	data, err := s.ReadArchive(row)
 	if err != nil {
 		return row, nil, err
 	}
+
 	reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 	return row, reader, err
 }
@@ -45,6 +47,7 @@ func (s *Library) VersionContents(ctx context.Context, skill, id string) (Versio
 	if err != nil {
 		return VersionContents{}, err
 	}
+
 	response := VersionContents{Description: row.Description}
 	for _, file := range archive.File {
 		if !file.FileInfo().IsDir() {
@@ -59,15 +62,18 @@ func (s *Library) VersionFile(ctx context.Context, skill, id, path string) (File
 	if err != nil {
 		return FilePreview{}, err
 	}
+
 	for _, file := range archive.File {
 		if file.Name != path || file.FileInfo().IsDir() {
 			continue
 		}
+
 		result := FilePreview{Size: int32(file.UncompressedSize64)}
 		if file.UncompressedSize64 > PreviewLimit {
 			result.TooLarge = true
 			return result, nil
 		}
+
 		r, err := file.Open()
 		if err != nil {
 			return FilePreview{}, err
@@ -91,10 +97,12 @@ func (s *Library) Export(ctx context.Context, skill, version, base string, choos
 	if err != nil {
 		return "", err
 	}
+
 	data, err := s.ReadArchive(row)
 	if err != nil {
 		return "", err
 	}
+
 	if choose {
 		base, err = PickDirectory(ctx)
 		if err != nil {
@@ -105,9 +113,11 @@ func (s *Library) Export(ctx context.Context, skill, version, base string, choos
 	if !filepath.IsAbs(base) {
 		return "", ErrInvalid
 	}
+
 	if err := os.MkdirAll(base, 0700); err != nil {
 		return "", err
 	}
+
 	dir := filepath.Join(base, SafeName(row.Name))
 	if err := os.Mkdir(dir, 0700); errors.Is(err, os.ErrExist) {
 		dir, err = os.MkdirTemp(base, SafeName(row.Name)+"-")
@@ -117,6 +127,7 @@ func (s *Library) Export(ctx context.Context, skill, version, base string, choos
 	} else if err != nil {
 		return "", err
 	}
+
 	if err := Unpack(data, dir); err != nil {
 		_ = os.RemoveAll(dir)
 		return "", err
@@ -132,6 +143,7 @@ func (s *Library) InstallCommand(ctx context.Context, skill, version string, glo
 	if !s.Available(row) {
 		return "", repo.ErrNotFound
 	}
+
 	quote := func(value string) string { return "'" + strings.ReplaceAll(value, "'", "'\"'\"'") + "'" }
 	target := quote("./.agents/skills/" + SafeName(row.Name))
 	if global {

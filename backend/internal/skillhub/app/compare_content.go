@@ -20,6 +20,7 @@ func comparisonView(diff *service.Comparison) *pb.CompareSkillsResponse {
 		LeftDigest: diff.LeftDigest, RightDigest: diff.RightDigest,
 		LeftCommitSha: diff.LeftCommit, RightCommitSha: diff.RightCommit,
 	}
+
 	for _, file := range diff.Files {
 		kind := pb.FileChangeKind_FILE_CHANGE_KIND_MODIFIED
 		switch file.Kind {

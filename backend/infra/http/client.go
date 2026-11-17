@@ -39,6 +39,7 @@ func (c *Client) DoHTTPRequest(ctx context.Context, requestParam *RequestParam) 
 	if requestParam == nil {
 		return fmt.Errorf("request param is nil")
 	}
+
 	ctx, cancel := requestContext(ctx, requestParam.Timeout)
 	defer cancel()
 
@@ -78,9 +79,11 @@ func newRequest(ctx context.Context, requestParam *RequestParam) (*http.Request,
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
+
 	for key, value := range requestParam.Header {
 		req.Header.Set(key, value)
 	}
+
 	if requestParam.Body != nil && isJSONBody && req.Header.Get(contentTypeHeader) == "" {
 		req.Header.Set(contentTypeHeader, jsonContentType)
 	}
@@ -116,12 +119,14 @@ func decodeResponse(bodyBytes []byte, target any) error {
 	if len(bytes.TrimSpace(bodyBytes)) == 0 {
 		return nil
 	}
+
 	if writer, ok := target.(io.Writer); ok {
 		if _, err := writer.Write(bodyBytes); err != nil {
 			return fmt.Errorf("failed to write response body: %w", err)
 		}
 		return nil
 	}
+
 	if err := jsoniter.ConfigFastest.Unmarshal(bodyBytes, target); err != nil {
 		return fmt.Errorf("failed to unmarshal response body: %w", err)
 	}

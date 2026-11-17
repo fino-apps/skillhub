@@ -39,10 +39,12 @@ func (r *Library) session(ctx context.Context) *gorm.DB {
 
 func (r *Library) Skills(ctx context.Context, filter port.SkillFilter, size int, token string) ([]domain.SkillSnapshot, string, error) {
 	query := r.session(ctx).Model(&model.Skill{})
+
 	if filter.Keyword != "" {
 		value := filter.Keyword
 		query = query.Where("instr(lower(name), lower(?)) > 0 OR instr(lower(description), lower(?)) > 0 OR instr(lower(purpose), lower(?)) > 0", value, value, value)
 	}
+
 	if filter.Uncategorized || filter.Category != "" {
 		category := filter.Category
 		if filter.Uncategorized {
@@ -50,13 +52,17 @@ func (r *Library) Skills(ctx context.Context, filter port.SkillFilter, size int,
 		}
 		query = query.Where("category = ?", category)
 	}
+
 	if filter.Source != "" {
 		query = query.Where("import_kind = ? OR upstream_name = ?", filter.Source, filter.Source)
 	}
+
 	for _, tag := range filter.Tags {
 		query = query.Where("id IN (SELECT skill_id FROM skill_tag WHERE tag = ?)", tag)
 	}
+
 	rows, next, err := page[model.Skill](r.cursor, query, "skills", filter, size, token, func(x model.Skill) string { return string(x.ID) })
+
 	result := make([]domain.SkillSnapshot, 0, len(rows))
 	for _, row := range rows {
 		result = append(result, domain.SkillSnapshot(row))
@@ -75,16 +81,20 @@ func page[T any](codec *pagination.CursorCodec, query *gorm.DB, scope string, fi
 	if err != nil {
 		return nil, "", port.ErrPageToken
 	}
+
 	if after != "" {
 		query = query.Where("id < ?", after)
 	}
+
 	var rows []T
 	if err := query.Order("id DESC").Limit(size + 1).Find(&rows).Error; err != nil {
 		return nil, "", err
 	}
+
 	if len(rows) <= size {
 		return rows, "", nil
 	}
+
 	next, err := codec.EncodeKeyset(id(rows[size-1]), binding)
 	return rows[:size], next, err
 }
@@ -108,6 +118,7 @@ func (r *Library) Version(ctx context.Context, skill, id string) (domain.SkillVe
 func (r *Library) Tags(ctx context.Context, ids []string) (map[string][]string, error) {
 	var tags []model.SkillTag
 	err := r.session(ctx).Where("skill_id IN ?", ids).Order("tag").Find(&tags).Error
+
 	result := make(map[string][]string)
 	for _, tag := range tags {
 		result[tag.SkillId] = append(result[tag.SkillId], tag.Tag)
@@ -119,6 +130,7 @@ func (r *Library) DefaultVersions(ctx context.Context, ids []string) ([]domain.S
 	if len(ids) == 0 {
 		return nil, nil
 	}
+
 	var rows []model.SkillVersion
 	err := r.session(ctx).Where("id IN ?", ids).Find(&rows).Error
 	return versionSnapshots(rows), err
@@ -135,6 +147,7 @@ func versionSnapshots(rows []model.SkillVersion) []domain.SkillVersionSnapshot {
 func (r *Library) Facets(ctx context.Context) (port.Facets, error) {
 	db := r.session(ctx)
 	var result port.Facets
+
 	for _, field := range []struct {
 		model  any
 		column string
@@ -175,6 +188,7 @@ func (tx libraryTx) Version(skill, id string) (domain.SkillVersionSnapshot, erro
 	if skill != "" {
 		db = db.Where("skill_id = ?", skill)
 	}
+
 	var row model.SkillVersion
 	err := db.Take(&row, "id = ?", id).Error
 	return domain.SkillVersionSnapshot(row), notFound(err)
@@ -187,6 +201,7 @@ func (tx libraryTx) MatchingVersion(skill, commit, digest string) (domain.SkillV
 	} else {
 		db = db.Where("commit_sha = ?", commit)
 	}
+
 	var row model.SkillVersion
 	err := db.Take(&row).Error
 	return domain.SkillVersionSnapshot(row), notFound(err)
@@ -218,6 +233,7 @@ func (tx libraryTx) ChangeTags(skill string, clear bool, add, remove []string) e
 			return err
 		}
 	}
+
 	for _, tag := range add {
 		now := core.Now()
 		row := model.SkillTag{ID: domain.SkillTagID(uuid.NewString()), SkillId: skill, Tag: tag, CreateTime: now, UpdateTime: now}
@@ -239,12 +255,14 @@ func (tx libraryTx) DeleteSkill(skill domain.SkillSnapshot) ([]string, error) {
 	if err := tx.db.Model(&model.SkillVersion{}).Where("skill_id = ?", id).Pluck("id", &versions).Error; err != nil {
 		return nil, err
 	}
+
 	if err := tx.db.Where("skill_id = ?", id).Delete(&model.SkillVersion{}).Error; err != nil {
 		return nil, err
 	}
 	if err := tx.db.Where("skill_id = ?", id).Delete(&model.SkillTag{}).Error; err != nil {
 		return nil, err
 	}
+
 	row := model.Skill(skill)
 	return versions, tx.db.Delete(&row).Error
 }

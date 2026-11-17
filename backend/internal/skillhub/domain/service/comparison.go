@@ -74,6 +74,7 @@ func (s *Library) comparisonSource(ctx context.Context, location Location) (comp
 		if _, err := ReadManifest(dir); err != nil {
 			return source, invalid(err)
 		}
+
 		data, digest, err := Archive(dir)
 		if err != nil {
 			return source, invalid(err)
@@ -93,10 +94,12 @@ func (s *Library) comparisonSource(ctx context.Context, location Location) (comp
 			}
 			id = skill.DefaultVersionId
 		}
+
 		row, err := s.Version(ctx, skillID, id)
 		if err != nil {
 			return source, err
 		}
+
 		data, err := s.ReadArchive(row)
 		if err != nil {
 			return source, err
@@ -118,6 +121,7 @@ func readForComparison(file *zip.File) ([32]byte, string, bool, error) {
 	if file == nil {
 		return [32]byte{}, "", false, nil
 	}
+
 	r, err := file.Open()
 	if err != nil {
 		return [32]byte{}, "", false, err
@@ -141,10 +145,12 @@ func (s *Library) Compare(ctx context.Context, leftLocation, rightLocation Locat
 	if err != nil {
 		return nil, err
 	}
+
 	right, err := s.comparisonSource(ctx, rightLocation)
 	if err != nil {
 		return nil, err
 	}
+
 	response := &Comparison{LeftDigest: left.digest, RightDigest: right.digest, LeftCommit: left.commit, RightCommit: right.commit}
 	paths := make([]string, 0, len(left.files)+len(right.files))
 	for path := range left.files {
@@ -162,10 +168,12 @@ func (s *Library) Compare(ctx context.Context, leftLocation, rightLocation Locat
 		if err != nil {
 			return nil, err
 		}
+
 		rDigest, rightText, rightBinary, err := readForComparison(r)
 		if err != nil {
 			return nil, err
 		}
+
 		switch {
 		case l == nil:
 			change.Kind = Added

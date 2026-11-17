@@ -46,6 +46,7 @@ func ReadManifest(dir string) (Manifest, error) {
 	if len(data) > PreviewLimit {
 		return Manifest{}, errors.New("SKILL.md 太大")
 	}
+
 	text := strings.ReplaceAll(string(data), "\r\n", "\n")
 	text, ok := strings.CutPrefix(text, "---\n")
 	if !ok {
@@ -83,6 +84,7 @@ func Scan(dir string) ([]Candidate, error) {
 		if !entry.Type().IsRegular() || entry.Name() != "SKILL.md" {
 			return nil
 		}
+
 		rel, err := filepath.Rel(dir, filepath.Dir(path))
 		if err != nil {
 			return err
@@ -115,6 +117,7 @@ func Files(dir string) ([]string, error) {
 		if !entry.Type().IsRegular() {
 			return fmt.Errorf("不支持非常规文件 %s", entry.Name())
 		}
+
 		relative, err := filepath.Rel(dir, path)
 		if err != nil {
 			return err
@@ -133,6 +136,7 @@ func Archive(dir string) ([]byte, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
+
 	root, err := os.OpenRoot(dir)
 	if err != nil {
 		return nil, "", err
@@ -147,6 +151,7 @@ func Archive(dir string) ([]byte, string, error) {
 		if err != nil {
 			return nil, "", err
 		}
+
 		info, err := f.Stat()
 		if err != nil {
 			f.Close()
@@ -157,6 +162,7 @@ func Archive(dir string) ([]byte, string, error) {
 			f.Close()
 			return nil, "", errors.New("Skill 文件大小超过限制")
 		}
+
 		header := &zip.FileHeader{Name: path, Method: zip.Deflate}
 		header.SetMode(0600 | info.Mode().Perm()&0111)
 		dst, err := writer.CreateHeader(header)
@@ -173,6 +179,7 @@ func Archive(dir string) ([]byte, string, error) {
 			return nil, "", err
 		}
 	}
+
 	if err := writer.Close(); err != nil {
 		return nil, "", err
 	}
@@ -183,6 +190,7 @@ func Unpack(data []byte, dir string) error {
 	if len(data) > ArchiveLimit {
 		return errors.New("ZIP 大小超过限制")
 	}
+
 	reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
 		return err
@@ -190,6 +198,7 @@ func Unpack(data []byte, dir string) error {
 	if len(reader.File) > 10000 {
 		return errors.New("ZIP 文件数量超过限制")
 	}
+
 	root, err := os.OpenRoot(dir)
 	if err != nil {
 		return err
@@ -201,6 +210,7 @@ func Unpack(data []byte, dir string) error {
 		if !fs.ValidPath(path) || path == "." || strings.ContainsAny(path, "\\:") {
 			return errors.New("ZIP 包含无效路径")
 		}
+
 		if file.FileInfo().IsDir() {
 			if err := root.MkdirAll(path, 0700); err != nil {
 				return err
@@ -213,15 +223,18 @@ func Unpack(data []byte, dir string) error {
 		if err := root.MkdirAll(filepath.Dir(path), 0700); err != nil {
 			return err
 		}
+
 		input, err := file.Open()
 		if err != nil {
 			return err
 		}
+
 		output, err := root.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600|file.Mode().Perm()&0111)
 		if err != nil {
 			input.Close()
 			return err
 		}
+
 		n, copyErr := io.Copy(output, io.LimitReader(input, remaining+1))
 		err = errors.Join(copyErr, output.Close(), input.Close())
 		if err != nil {
@@ -245,6 +258,7 @@ func PickDirectory(ctx context.Context) (string, error) {
 	default:
 		return "", errors.New("当前平台不支持目录选择器")
 	}
+
 	out, err := cmd.Output()
 	if err != nil {
 		return "", err
