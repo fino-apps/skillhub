@@ -161,15 +161,25 @@
 .library-table :is(th:last-child, .library-row-actions) { padding-inline-end: 3px; text-align: right; }
 .library-row-controls { display: flex; justify-content: flex-end; align-items: center; gap: 8px; white-space: nowrap; }
 .library-row-controls > button { min-height: 36px; }
+.library-overlays {
+  position: fixed;
+  z-index: 5;
+  inset-inline: 12px;
+  inset-block-end: max(12px, env(safe-area-inset-bottom));
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.library-overlays > :not([hidden]) { pointer-events: auto; }
 .library-selection {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  margin-block-start: 8px;
+  max-width: 100%;
+  gap: 8px;
   padding: 8px 12px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px #0002;
   color: var(--muted);
   font-size: 13px;
 }
@@ -192,6 +202,12 @@
   border-radius: 8px;
   background: var(--surface);
   box-shadow: 0 8px 24px #0002;
+}
+.library-overlays > .operation-feedback-floating:not([hidden]) {
+  position: static;
+  justify-self: end;
+  width: min(460px, 100%);
+  margin: 0;
 }
 .operation-feedback .dialog-close { width: 24px; font-size: 18px; line-height: 1; }
 .skill-import-feedback { margin-block: 10px; font-size: 13px; }

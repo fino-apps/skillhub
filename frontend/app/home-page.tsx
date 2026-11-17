@@ -213,8 +213,9 @@ export default function HomePage() {
     <LibraryToolbar params={params} facets={facets} onChange={updateFilters} status={<>
       <span role="status">{!current && loading
         ? "正在查找技能…" : current && `${token ? "已加载" : "共"} ${skills.length} 项`}</span>
-      {!selected.length && uncategorized && skills.length > 0 &&
-        <button type="button" className="secondary" onClick={() => setPanel({ kind: "ai" })}>AI 整理</button>}
+      {uncategorized && skills.length > 0 &&
+        <button type="button" className="secondary" style={{ visibility: selected.length ? "hidden" : undefined }}
+          onClick={() => setPanel({ kind: "ai" })}>AI 整理</button>}
     </>}>
       <div className="library-actions library-import-actions">
         <button type="button" onClick={() => setPanel({ kind: "folder" })}>导入文件夹</button>
@@ -225,16 +226,18 @@ export default function HomePage() {
         </Menu>
       </div>
     </LibraryToolbar>
-    <OperationFeedback {...operation} floating />
-    {selected.length > 0 && <div className="library-actions library-selection">
-      <span role="status">已选 {selected.length} 项</span>
-      <button type="button" className="secondary" onClick={() => setPanel({ kind: "batch" })}>批量编辑</button>
-      <button type="button" className="secondary" onClick={() => setPanel({ kind: "ai" })}>AI 整理</button>
-      <button type="button" className="skillhub-text-button" onClick={() => {
-        setSelected([]);
-        selectAll.current?.focus();
-      }}>清除选择</button>
-    </div>}
+    <div className="library-overlays">
+      <OperationFeedback {...operation} floating />
+      {selected.length > 0 && <div className="library-actions library-selection" role="group" aria-label="批量操作">
+        <span role="status">已选 {selected.length} 项</span>
+        <button type="button" className="secondary" onClick={() => setPanel({ kind: "batch" })}>批量编辑</button>
+        <button type="button" className="secondary" onClick={() => setPanel({ kind: "ai" })}>AI 整理</button>
+        <button type="button" className="skillhub-text-button" onClick={() => {
+          setSelected([]);
+          selectAll.current?.focus({ preventScroll: true });
+        }}>清除选择</button>
+      </div>}
+    </div>
     {error && !error.pageToken && <div className="library-actions"><Failure error={error.message} /><button type="button" className="secondary" onClick={() => void load("")}>重试</button></div>}
     {!loading && !error && skills.length === 0 && <div className="skillhub-empty">
       <p>{scope ? "没有匹配的 Skill" : "还没有 Skill"}</p>
