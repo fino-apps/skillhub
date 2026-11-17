@@ -326,7 +326,6 @@ p {
   :root {
     --site-content-width: calc(100% - 32px);
   }
-  .site-tools .observability-link { display: none; }
 }
 
 @media (max-width: 520px) {

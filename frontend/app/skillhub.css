@@ -217,10 +217,7 @@
 .skill-detail-meta dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 12px; overflow-wrap: anywhere; }
 .skill-detail-meta dd { margin: 0; color: var(--text); }
 .skill-detail-purpose, .skill-markdown { max-inline-size: 960px; }
-.skill-detail-purpose { margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.55; }
-.skill-detail-purpose p { margin: 0; overflow-wrap: anywhere; }
-.skill-purpose-preview { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-.skill-detail-purpose button { min-height: 28px; }
+.skill-detail-purpose { margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
 .skill-tabs { display: flex; gap: 6px; margin-block: 14px 12px; border-bottom: 1px solid var(--line); }
 .skillhub-shell .skill-tabs button { border: 0; border-radius: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); }
 .skillhub-shell .skill-tabs button:hover { color: var(--text); }

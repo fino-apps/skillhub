@@ -35,7 +35,6 @@ function Detail({ skillId }: { skillId: string }) {
   const [refresh, setRefresh] = useState(0);
   const [error, setError] = useState("");
   const [panel, setPanel] = useState<Panel | null>(null);
-  const [purposeExpanded, setPurposeExpanded] = useState(false);
   const operation = useSkillOperation();
 
   useEffect(() => {
@@ -79,7 +78,6 @@ function Detail({ skillId }: { skillId: string }) {
   const updateSource = skill?.repositoryUrl ? "github" : "folder";
   const canCompare = versions.filter((version) => version.available).length >= 2;
   const purpose = skill?.purpose || skill?.description || "";
-  const hasLongPurpose = purpose.length > 220;
 
   function repair(version: SkillVersion) {
     void operation.run(version.id, async () => {
@@ -156,11 +154,7 @@ function Detail({ skillId }: { skillId: string }) {
         {skill.category && <span>{skill.category}</span>}
         {skill.tags?.map((tag) => <span key={tag}>{tag}</span>)}
       </div>
-      {purpose && <div className="skill-detail-purpose">
-        <p id="skill-purpose" className={hasLongPurpose && !purposeExpanded ? "skill-purpose-preview" : undefined}>{purpose}</p>
-        {hasLongPurpose && <button type="button" className="skillhub-text-button" aria-expanded={purposeExpanded} aria-controls="skill-purpose"
-          onClick={() => setPurposeExpanded(!purposeExpanded)}>{purposeExpanded ? "收起用途" : "展开用途"}</button>}
-      </div>}
+      {purpose && <p className="skill-detail-purpose">{purpose}</p>}
       {panel?.kind !== "export" && <OperationFeedback {...operation} floating />}
       <nav className="skill-tabs" aria-label="Skill 详情">
         <button type="button" aria-pressed={!versionsTab} onClick={() => routeValue("tab", "")}>内容</button>
