@@ -1,10 +1,12 @@
 package main
 
 import (
+	"cmp"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -35,22 +37,30 @@ func loadConfig() (nserver.Config, error) {
 	if err := godotenv.Load(); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return nserver.Config{}, err
 	}
-	port := "31101"
-	if value := os.Getenv("SERVER_HTTP_PORT"); value != "" {
-		port = value
+	apiPort, err := serverPort("SERVER_HTTP_PORT", "31101")
+	if err != nil {
+		return nserver.Config{}, err
 	}
-	if number, err := strconv.Atoi(port); err != nil || number < 1 || number > 65535 {
-		return nserver.Config{}, errors.New("SERVER_HTTP_PORT must be between 1 and 65535")
+	debugPort, err := serverPort("SERVER_DEBUG_PORT", "31103")
+	if err != nil {
+		return nserver.Config{}, err
 	}
 	defaults := []byte(`{"transport":{"rateLimit":{"enabled":false},"accessLog":{},"http":{"cors":{"allowedOrigins":[]}}}}`)
 	if err := config.InitDefault(config.WithWatcherDisabled(), config.WithSource(memory.NewSource(memory.WithJSON(defaults)))); err != nil {
 		return nserver.Config{}, err
 	}
-	host := os.Getenv("SERVER_HTTP_HOST")
-	if host == "" {
-		host = "127.0.0.1"
+	return nserver.Config{
+		HttpAddr:  net.JoinHostPort(cmp.Or(os.Getenv("SERVER_HTTP_HOST"), "127.0.0.1"), apiPort),
+		DebugAddr: net.JoinHostPort("127.0.0.1", debugPort),
+	}, nil
+}
+
+func serverPort(env, fallback string) (string, error) {
+	port := cmp.Or(os.Getenv(env), fallback)
+	if number, err := strconv.Atoi(port); err != nil || number < 1 || number > 65535 {
+		return "", fmt.Errorf("%s must be between 1 and 65535", env)
 	}
-	return nserver.Config{HttpAddr: net.JoinHostPort(host, port)}, nil
+	return port, nil
 }
 
 func newAPIHandler(ctx context.Context) (handler http.Handler, close func() error, err error) {
@@ -134,7 +144,7 @@ func newAPIHandler(ctx context.Context) (handler http.Handler, close func() erro
 	tracer := noop.NewTracerProvider().Tracer("skillhub")
 	api := finohttp.NewHandler(endpointmw.WrapEndpoints(endpoint.NewEndpoints(svc), endpointmw.DefaultOptions(tracer)),
 		tracer, gokitmetrics.Disabled().HTTPMiddleware)
-	return apiHandler(api, svc), provider.Close, nil
+	return finohttp.WithLocalRequests(api), provider.Close, nil
 }
 
 func serve(ctx context.Context, cfg nserver.Config) error {
@@ -149,20 +159,30 @@ func serve(ctx context.Context, cfg nserver.Config) error {
 	}
 	defer close()
 
-	server := &http.Server{
+	debugListener, err := net.Listen("tcp", cfg.DebugAddr)
+	if err != nil {
+		return err
+	}
+	defer debugListener.Close()
+
+	apiServer := &http.Server{
 		Handler: handler, ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second,
 	}
-	log.Printf("SkillHub http://%s", listener.Addr())
-	stopped := make(chan error, 1)
-	go func() { stopped <- server.Serve(listener) }()
-	select {
-	case err := <-stopped:
-		return err
-	case <-ctx.Done():
-		shutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		return server.Shutdown(shutdown)
+	debugServer := &http.Server{
+		Handler:           nserver.NewDebugHandler(listener.Addr().String(), gokitmetrics.Disabled().Handler()),
+		ReadHeaderTimeout: 5 * time.Second,
 	}
+	log.Printf("SkillHub http://%s", listener.Addr())
+	stopped := make(chan error, 2)
+	go func() { stopped <- apiServer.Serve(listener) }()
+	go func() { stopped <- debugServer.Serve(debugListener) }()
+	select {
+	case err = <-stopped:
+	case <-ctx.Done():
+	}
+	shutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	return errors.Join(err, debugServer.Shutdown(shutdown), apiServer.Shutdown(shutdown))
 }
 
 func dataDirectory() (string, error) {

@@ -406,6 +406,33 @@ GET /skillhub/v1/skills/{skill_id}/versions/{version_id}/file
 | `tooLarge` | `boolean` |  | 否 |  |  |
 
 
+## Download Zip
+
+### 请求路径
+
+```http
+GET /skillhub/v1/skills/{skill_id}/versions/{version_id}/archive
+```
+
+### 请求参数
+
+#### Path 参数
+
+| 参数名 | 参数类型 | 格式类型 | 说明 |
+|---|---|---|---|
+| `skill_id` | `string` |  | UUID |
+| `version_id` | `string` |  | UUID |
+
+### 返回值
+
+#### 返回对象
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `archive` | `google.api.HttpBody` |  | 否 |  |  |
+| `filename` | `string` |  | 否 |  |  |
+
+
 ## Select Local Directory
 
 ### 请求路径
@@ -529,6 +556,32 @@ PATCH /skillhub/v1/skills:organize
 #### 返回对象
 
 对象为空
+
+
+## Upload Zip
+
+### 请求路径
+
+```http
+POST /skillhub/v1/uploads
+```
+
+### 请求参数
+
+#### Body 请求对象
+
+| type | description |
+|---|---|
+| `string` |  |
+
+### 返回值
+
+#### 返回对象
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `uploadId` | `string` |  | 否 |  |  |
+| `skills` | `Array<skillhub.v1.SkillCandidate>` |  | 否 |  |  |
 
 
 ## Commit Upload
@@ -685,6 +738,21 @@ POST /skillhub/v1/install-commands:generate
 |---|---|---|---|---|---|
 | `path` | `string` |  | 否 |  |  |
 | `message` | `string` |  | 否 |  |  |
+
+### `google.api.HttpBody`
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `contentType` | `string` |  | 否 |  |  |
+| `data` | `string` | `Bytes` | 否 |  |  |
+| `extensions` | `Array<google.protobuf.Any>` |  | 否 |  |  |
+
+### `google.protobuf.Any`
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `typeUrl` | `string` |  | 否 |  |  |
+| `value` | `string` | `Bytes` | 否 |  |  |
 
 ### `skillhub.v1.SkillMetadataChange`
 

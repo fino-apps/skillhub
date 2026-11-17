@@ -9,6 +9,8 @@ export type ApiRoute = {
   pathParams: readonly string[];
   queryParams: readonly string[];
   body: string;
+  requestFormat?: "raw" | "multipart";
+  rawResponse?: boolean;
   defaultPayload: Record<string, unknown>;
 };
 
@@ -219,6 +221,21 @@ export const apiRoutes = {
       path: "",
     },
   },
+  downloadZip: {
+    service: "SkillhubService",
+    rpc: "DownloadZip",
+    binding: "DownloadZip",
+    method: "GET",
+    path: "/skillhub/v1/skills/{skill_id}/versions/{version_id}/archive",
+    pathParams: ["skill_id", "version_id"],
+    queryParams: [],
+    body: "",
+    rawResponse: true,
+    defaultPayload: {
+      skillId: "",
+      versionId: "",
+    },
+  },
   selectLocalDirectory: {
     service: "SkillhubService",
     rpc: "SelectLocalDirectory",
@@ -282,6 +299,20 @@ export const apiRoutes = {
     body: "*",
     defaultPayload: {
       changes: [],
+    },
+  },
+  uploadZip: {
+    service: "SkillhubService",
+    rpc: "UploadZip",
+    binding: "UploadZip",
+    method: "POST",
+    path: "/skillhub/v1/uploads",
+    pathParams: [],
+    queryParams: [],
+    body: "file",
+    requestFormat: "multipart",
+    defaultPayload: {
+      file: "",
     },
   },
   commitUpload: {

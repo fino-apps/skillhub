@@ -5,7 +5,7 @@ go 1.25.13
 replace github.com/fino-io/skillhub/go => ../go
 
 require (
-	github.com/fino-io/core/go v0.0.0-20261004152146-cab0df6e5304
+	github.com/fino-io/core/go v0.0.0-20261117055404-d850525540af
 	github.com/fino-io/finokit v0.0.0-20261029031056-3fa7f43790c4
 	github.com/fino-io/gokit v0.0.0-20261030085555-52d931eff932
 	github.com/fino-io/nacos-sdk-go/v2 v2.0.0-20261030084314-029ddba39424
@@ -21,6 +21,7 @@ require (
 	go.opentelemetry.io/otel v1.45.0
 	go.opentelemetry.io/otel/trace v1.45.0
 	go.uber.org/automaxprocs v1.6.0
+	google.golang.org/genproto/googleapis/api v0.0.0-20260817212433-ac3dfec99bb1
 	google.golang.org/grpc v1.86.0-dev
 	google.golang.org/protobuf v1.36.12
 	gopkg.in/yaml.v3 v3.0.1
@@ -93,7 +94,6 @@ require (
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260817212433-ac3dfec99bb1 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260817212433-ac3dfec99bb1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect

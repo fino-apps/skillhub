@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -11,30 +12,38 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fino-io/finokit/errorx"
 	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/model"
 	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/service"
 	"github.com/fino-io/skillhub/backend/pkg/errcode"
 	pb "github.com/fino-io/skillhub/go/skillhub/v1"
 	"github.com/google/uuid"
+	"google.golang.org/genproto/googleapis/api/httpbody"
 )
 
-type UploadPreview struct {
-	ID     string               `json:"uploadId"`
-	Skills []*pb.SkillCandidate `json:"skills"`
+func (s skillhubServer) uploadZip(file []byte) (*pb.UploadZipResponse, error) {
+	preview, err := s.stageUpload(file)
+	if err != nil {
+		return nil, errcode.WrapPlatformBadRequest(err, errorx.WithExtraMessage(err.Error()))
+	}
+	return preview, nil
 }
 
-func (s skillhubServer) StageUpload(source io.Reader) (UploadPreview, error) {
+func (s skillhubServer) stageUpload(file []byte) (*pb.UploadZipResponse, error) {
+	if len(file) > 64<<20 {
+		return nil, errors.New("ZIP 最大为 64 MiB")
+	}
 	s.uploads.Lock()
 	defer s.uploads.Unlock()
 	entries, err := os.ReadDir(s.uploadDir)
 	if err != nil {
-		return UploadPreview{}, err
+		return nil, err
 	}
 	active := 0
 	for _, entry := range entries {
 		info, err := entry.Info()
 		if err != nil {
-			return UploadPreview{}, err
+			return nil, err
 		}
 		if time.Since(info.ModTime()) > 30*time.Minute {
 			_ = os.RemoveAll(filepath.Join(s.uploadDir, entry.Name()))
@@ -43,12 +52,12 @@ func (s skillhubServer) StageUpload(source io.Reader) (UploadPreview, error) {
 		}
 	}
 	if active >= 8 {
-		return UploadPreview{}, errors.New("当前暂存的 ZIP 过多，请稍后再试")
+		return nil, errors.New("当前暂存的 ZIP 过多，请稍后再试")
 	}
 	id := uuid.NewString()
 	session := filepath.Join(s.uploadDir, id)
 	if err := os.Mkdir(session, 0700); err != nil {
-		return UploadPreview{}, err
+		return nil, err
 	}
 	keep := false
 	defer func() {
@@ -57,34 +66,27 @@ func (s skillhubServer) StageUpload(source io.Reader) (UploadPreview, error) {
 		}
 	}()
 
-	file, err := os.Create(filepath.Join(session, "upload.zip"))
-	if err != nil {
-		return UploadPreview{}, err
-	}
-	size, err := io.Copy(file, io.LimitReader(source, (64<<20)+1))
-	if err := errors.Join(err, file.Close()); err != nil {
-		return UploadPreview{}, err
-	}
-	if size > 64<<20 {
-		return UploadPreview{}, errors.New("ZIP 最大为 64 MiB")
+	zipPath := filepath.Join(session, "upload.zip")
+	if err := os.WriteFile(zipPath, file, 0600); err != nil {
+		return nil, err
 	}
 	root := filepath.Join(session, "files")
 	if err := os.Mkdir(root, 0700); err != nil {
-		return UploadPreview{}, err
+		return nil, err
 	}
-	if err := service.ExtractArchive(file.Name(), root); err != nil {
-		return UploadPreview{}, err
+	if err := service.ExtractArchive(zipPath, root); err != nil {
+		return nil, err
 	}
-	_ = os.Remove(file.Name())
+	_ = os.Remove(zipPath)
 	items, err := service.ArchiveCandidates(root)
 	if err != nil {
-		return UploadPreview{}, err
+		return nil, err
 	}
 	if len(items) == 0 {
-		return UploadPreview{}, errors.New("ZIP 中没有可收录的 Skill")
+		return nil, errors.New("ZIP 中没有可收录的 Skill")
 	}
 	keep = true
-	return UploadPreview{ID: id, Skills: candidates(items)}, nil
+	return &pb.UploadZipResponse{UploadId: id, Skills: candidates(items)}, nil
 }
 
 func (s skillhubServer) commitUpload(ctx context.Context, in *pb.CommitUploadRequest) (*pb.ImportSkillResponse, error) {
@@ -173,7 +175,19 @@ func readArchiveOrigin(root string) service.ArchiveOrigin {
 	return origin
 }
 
-func (s skillhubServer) Archive(ctx context.Context, skillID, versionID string, target io.Writer) (string, error) {
+func (s skillhubServer) downloadZip(ctx context.Context, in *pb.DownloadZipRequest) (*pb.DownloadZipResponse, error) {
+	var data bytes.Buffer
+	filename, err := s.writeArchive(ctx, in.GetSkillId(), in.GetVersionId(), &data)
+	if err != nil {
+		return nil, errcode.WrapPlatformNotFound(err)
+	}
+	return &pb.DownloadZipResponse{
+		Archive:  &httpbody.HttpBody{ContentType: "application/zip", Data: data.Bytes()},
+		Filename: filename,
+	}, nil
+}
+
+func (s skillhubServer) writeArchive(ctx context.Context, skillID, versionID string, target io.Writer) (string, error) {
 	s.files.RLock()
 	defer s.files.RUnlock()
 	version, err := s.ownedVersion(ctx, skillID, versionID)

@@ -15,6 +15,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -41,6 +42,7 @@ import (
 	"github.com/fino-io/skillhub/backend/pkg/contexts"
 	"github.com/fino-io/skillhub/backend/pkg/errcode"
 	pb "github.com/fino-io/skillhub/go/skillhub/v1"
+	"google.golang.org/genproto/googleapis/api/httpbody"
 )
 
 const (
@@ -341,6 +343,29 @@ func RegisterHttpHandler(router *mux.Router, endpoints endpoint.Endpoints, cfg *
 
 	{
 		route := httpmw.Route{
+			MethodName:  "DownloadZip",
+			BindingName: "DownloadZip",
+			Method:      "GET",
+			Path:        "/skillhub/v1/skills/{skill_id}/versions/{version_id}/archive",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.DownloadZipEndpoint,
+					DecodeHTTPDownloadZipRequest,
+					func(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+						r := response.(*pb.DownloadZipResponse)
+						return writeRawHTTPBody(w, r.GetArchive(), r.GetFilename())
+					},
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
 			MethodName:  "SelectLocalDirectory",
 			BindingName: "SelectLocalDirectory",
 			Method:      "POST",
@@ -432,6 +457,26 @@ func RegisterHttpHandler(router *mux.Router, endpoints endpoint.Endpoints, cfg *
 				httptransport.NewServer(
 					endpoints.BatchUpdateSkillMetadataEndpoint,
 					DecodeHTTPBatchUpdateSkillMetadataRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "UploadZip",
+			BindingName: "UploadZip",
+			Method:      "POST",
+			Path:        "/skillhub/v1/uploads",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.UploadZipEndpoint,
+					DecodeHTTPUploadZipRequest,
 					encodeResponse,
 					serverOptions...,
 				),
@@ -1015,6 +1060,32 @@ func DecodeHTTPGetVersionFileRequest(_ context.Context, r *http.Request) (interf
 	return &req, nil
 }
 
+// DecodeHTTPDownloadZipRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded downloadzip request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPDownloadZipRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.DownloadZipRequest
+	var err error
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	err = unmarshalPathParam(pathParams, &req.SkillId, "skill_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
+	}
+
+	err = unmarshalPathParam(pathParams, &req.VersionId, "version_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the version_id path parameter")
+	}
+
+	return &req, nil
+}
+
 // DecodeHTTPSelectLocalDirectoryRequest is a transport/http.DecodeRequestFunc that
 // decodes a JSON-encoded selectlocaldirectory request from the HTTP request
 // body. Primarily useful in a server.
@@ -1151,6 +1222,26 @@ func DecodeHTTPBatchUpdateSkillMetadataRequest(_ context.Context, r *http.Reques
 	return &req, nil
 }
 
+// DecodeHTTPUploadZipRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded uploadzip request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPUploadZipRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.UploadZipRequest
+	file, err := readMultipartHTTPFile(r, "file", 67108864)
+	if err != nil {
+		return nil, err
+	}
+	req.File = file
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	return &req, nil
+}
+
 // DecodeHTTPCommitUploadRequest is a transport/http.DecodeRequestFunc that
 // decodes a JSON-encoded commitupload request from the HTTP request
 // body. Primarily useful in a server.
@@ -1241,6 +1332,53 @@ func DecodeHTTPGetInstallCommandRequest(_ context.Context, r *http.Request) (int
 	_ = queryParams
 
 	return &req, nil
+}
+
+func readMultipartHTTPFile(r *http.Request, field string, limit int64) ([]byte, error) {
+	const envelopeLimit int64 = 1 << 20
+	if r.ContentLength > limit+envelopeLimit {
+		return nil, wrapHTTPBodyReadError(&http.MaxBytesError{Limit: limit + envelopeLimit})
+	}
+	r.Body = http.MaxBytesReader(nil, r.Body, limit+envelopeLimit)
+	reader, err := r.MultipartReader()
+	if err != nil {
+		return nil, wrapHTTPBodyReadError(err)
+	}
+	part, err := reader.NextPart()
+	if err != nil {
+		return nil, wrapHTTPBodyReadError(err)
+	}
+	if part.FormName() != field || part.FileName() == "" {
+		return nil, wrapHTTPBodyReadError(fmt.Errorf("expected multipart file %q", field))
+	}
+	data, err := io.ReadAll(http.MaxBytesReader(nil, part, limit))
+	if err != nil {
+		return nil, wrapHTTPBodyReadError(err)
+	}
+	if _, err := reader.NextPart(); err != io.EOF {
+		if err == nil {
+			err = errors.New("expected exactly one multipart file")
+		}
+		return nil, wrapHTTPBodyReadError(err)
+	}
+	return data, nil
+}
+
+func writeRawHTTPBody(w http.ResponseWriter, body *httpbody.HttpBody, filename string) error {
+	if body == nil {
+		return nil
+	}
+	mediaType := body.GetContentType()
+	if mediaType == "" {
+		mediaType = "application/octet-stream"
+	}
+	w.Header().Set("Content-Type", mediaType)
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	if filename != "" {
+		w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": filename}))
+	}
+	_, err := w.Write(body.GetData())
+	return err
 }
 
 // encodeHTTPGenericResponse is a transport/http.EncodeResponseFunc that encodes

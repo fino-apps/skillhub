@@ -3,7 +3,7 @@ module github.com/fino-io/skillhub/go
 go 1.25.9
 
 require (
-	github.com/fino-io/core/go v0.0.0-20261004152146-cab0df6e5304
+	github.com/fino-io/core/go v0.0.0-20261117055404-d850525540af
 	google.golang.org/genproto/googleapis/api v0.0.0-20260720211330-0afa2a65878a
 	google.golang.org/grpc v1.82.1
 	google.golang.org/protobuf v1.36.12

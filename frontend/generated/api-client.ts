@@ -42,17 +42,35 @@ export async function requestApi<TResponse = unknown>(
 
   const body = requestBody(route, payload);
   const headers = new Headers(requestOptions.headers);
-  if (body !== undefined && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
-
   const init: RequestInit = {
     ...requestOptions,
     method: route.method,
     headers,
   };
 
-  if (body !== undefined) {
+  if (route.requestFormat === "multipart") {
+    if (!(body instanceof Blob)) {
+      throw new Error("multipart request requires a file");
+    }
+    const form = new FormData();
+    form.append(route.body, body);
+    headers.delete("Content-Type");
+    init.body = form;
+  } else if (route.requestFormat === "raw") {
+    const raw = body as { data?: unknown; contentType?: string } | undefined;
+    const data = raw?.data;
+    const contentType = raw?.contentType;
+    if (!(data instanceof Blob) && !(data instanceof ArrayBuffer) && typeof data !== "string") {
+      throw new Error("raw request requires Blob, ArrayBuffer or string data");
+    }
+    if (!headers.has("Content-Type")) {
+      headers.set("Content-Type", typeof contentType === "string" && contentType || (data instanceof Blob && data.type) || "application/octet-stream");
+    }
+    init.body = data;
+  } else if (body !== undefined) {
+    if (!headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
     init.body = JSON.stringify(body);
   }
 
@@ -67,6 +85,16 @@ export async function requestApi<TResponse = unknown>(
       size: 0,
     });
     return undefined as TResponse;
+  }
+  if (route.rawResponse && response.ok) {
+    const body = await response.blob();
+    onResponseMeta?.({
+      status: response.status,
+      statusText: response.statusText,
+      durationMs: Math.round(performance.now() - startedAt),
+      size: body.size,
+    });
+    return body as TResponse;
   }
   const text = await response.text();
   onResponseText?.(text);
@@ -230,6 +258,10 @@ export function getVersionFile<TResponse = unknown>(payload: ApiRequest = {}, op
   return requestApi<TResponse>(apiRoutes.getVersionFile, payload, options);
 }
 
+export function downloadZip(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<Blob> {
+  return requestApi<Blob>(apiRoutes.downloadZip, payload, options);
+}
+
 export function selectLocalDirectory<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
   return requestApi<TResponse>(apiRoutes.selectLocalDirectory, payload, options);
 }
@@ -248,6 +280,10 @@ export function listFacets<TResponse = unknown>(payload: ApiRequest = {}, option
 
 export function batchUpdateSkillMetadata<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
   return requestApi<TResponse>(apiRoutes.batchUpdateSkillMetadata, payload, options);
+}
+
+export function uploadZip<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.uploadZip, payload, options);
 }
 
 export function commitUpload<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {

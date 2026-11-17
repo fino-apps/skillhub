@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -31,14 +32,18 @@ func TestCatalogWorkflow(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, close()) })
 
-	request := func(method, path string, body io.Reader, contentType string, status int) []byte {
+	performRequest := func(method, path string, body io.Reader, contentType string, status int) *httptest.ResponseRecorder {
 		t.Helper()
 		r := httptest.NewRequest(method, "http://127.0.0.1"+path, body)
 		r.Header.Set("Content-Type", contentType)
 		reply := httptest.NewRecorder()
 		handler.ServeHTTP(reply, r)
 		require.Equal(t, status, reply.Code, "%s %s: %s", method, path, reply.Body)
-		return reply.Body.Bytes()
+		return reply
+	}
+	request := func(method, path string, body io.Reader, contentType string, status int) []byte {
+		t.Helper()
+		return performRequest(method, path, body, contentType, status).Body.Bytes()
 	}
 	api := func(method, path string, body, result any) {
 		t.Helper()
@@ -138,7 +143,14 @@ func TestCatalogWorkflow(t *testing.T) {
 	require.NoError(t, err)
 	require.NotZero(t, info.Mode().Perm()&0100)
 
-	archive := request("GET", "/skillhub/v1"+versionPath+"/archive", http.NoBody, "", http.StatusOK)
+	download := performRequest("GET", "/skillhub/v1"+versionPath+"/archive", http.NoBody, "", http.StatusOK)
+	require.Equal(t, "application/zip", download.Header().Get("Content-Type"))
+	disposition, parameters, err := mime.ParseMediaType(download.Header().Get("Content-Disposition"))
+	require.NoError(t, err)
+	require.Equal(t, "attachment", disposition)
+	require.Equal(t, "sample.zip", parameters["filename"])
+	request("GET", "/skillhub/v1"+resource+"/versions/00000000-0000-4000-8000-000000000001/archive", http.NoBody, "", http.StatusNotFound)
+	archive := download.Body.Bytes()
 	require.NotEmpty(t, archive)
 	reader, err := zip.NewReader(bytes.NewReader(archive), int64(len(archive)))
 	require.NoError(t, err)
@@ -155,6 +167,20 @@ func TestCatalogWorkflow(t *testing.T) {
 	require.NoError(t, json.Unmarshal(preview, &upload))
 	api("POST", "/uploads/"+upload.UploadID+":commit", map[string]any{"skillPaths": []string{"sample"}}, &imported)
 	require.EqualValues(t, 1, imported.AddedCount, "%+v", imported.Failures)
+	var invalidForm bytes.Buffer
+	invalidUpload := multipart.NewWriter(&invalidForm)
+	invalidPart, err := invalidUpload.CreateFormFile("file", "invalid.zip")
+	require.NoError(t, err)
+	_, err = io.WriteString(invalidPart, "this is not a ZIP archive")
+	require.NoError(t, err)
+	require.NoError(t, invalidUpload.Close())
+	request("POST", "/skillhub/v1/uploads", &invalidForm, invalidUpload.FormDataContentType(), http.StatusBadRequest)
+	oversized := httptest.NewRequest("POST", "http://127.0.0.1/skillhub/v1/uploads", http.NoBody)
+	oversized.Header.Set("Content-Type", invalidUpload.FormDataContentType())
+	oversized.ContentLength = (65 << 20) + 1
+	reply := httptest.NewRecorder()
+	handler.ServeHTTP(reply, oversized)
+	require.Equal(t, http.StatusRequestEntityTooLarge, reply.Code)
 	api("DELETE", versionPath, nil, nil)
 	api("DELETE", resource, nil, nil)
 }

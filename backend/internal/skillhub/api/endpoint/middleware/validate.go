@@ -108,6 +108,8 @@ func validateRequest(request interface{}) error {
 		return validateGetVersionContentRequest(request)
 	case *pb.GetVersionFileRequest:
 		return validateGetVersionFileRequest(request)
+	case *pb.DownloadZipRequest:
+		return validateDownloadZipRequest(request)
 	case *pb.ExportVersionToDirectoryRequest:
 		return validateExportVersionToDirectoryRequest(request)
 	case *pb.RepairVersionRequest:
@@ -336,6 +338,18 @@ func validateGetVersionFileRequest(req *pb.GetVersionFileRequest) error {
 
 	if err := requestValidator.Var(req.GetPath(), "required,max=2048"); err != nil {
 		return newRequestValidationError("path", err)
+	}
+
+	return nil
+}
+
+func validateDownloadZipRequest(req *pb.DownloadZipRequest) error {
+	if err := requestValidator.Var(req.GetSkillId(), "required,uuid"); err != nil {
+		return newRequestValidationError("skill_id", err)
+	}
+
+	if err := requestValidator.Var(req.GetVersionId(), "required,uuid"); err != nil {
+		return newRequestValidationError("version_id", err)
 	}
 
 	return nil

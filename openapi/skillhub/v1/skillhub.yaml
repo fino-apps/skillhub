@@ -269,6 +269,35 @@ paths:
       responses:
         "200":
           description: OK
+  /skillhub/v1/skills/{skill_id}/versions/{version_id}/archive:
+    get:
+      operationId: DownloadZip
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: version_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          headers:
+            Content-Disposition:
+              description: Attachment with the suggested filename.
+              schema:
+                type: string
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
   /skillhub/v1/skills/{skill_id}/versions/{version_id}/content:
     get:
       operationId: GetVersionContent
@@ -416,6 +445,28 @@ paths:
       responses:
         "200":
           description: OK
+  /skillhub/v1/uploads:
+    post:
+      operationId: UploadZip
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+                - file
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.UploadZipResponse'
   /skillhub/v1/uploads/{upload_id}:commit:
     post:
       operationId: CommitUpload
@@ -441,6 +492,19 @@ paths:
                 $ref: '#/components/schemas/skillhub.v1.ImportSkillResponse'
 components:
   schemas:
+    google.api.HttpBody:
+      title: google.api.HttpBody
+      type: object
+      properties:
+        contentType:
+          type: string
+        data:
+          type: string
+          format: byte
+        extensions:
+          type: array
+          items:
+            type: object
     skillhub.v1.BatchUpdateSkillMetadataRequest:
       title: skillhub.v1.BatchUpdateSkillMetadataRequest
       type: object
@@ -541,6 +605,27 @@ components:
       required:
         - skillId
         - versionId
+    skillhub.v1.DownloadZipRequest:
+      title: skillhub.v1.DownloadZipRequest
+      type: object
+      properties:
+        skillId:
+          type: string
+          format: uuid
+        versionId:
+          type: string
+          format: uuid
+      required:
+        - skillId
+        - versionId
+    skillhub.v1.DownloadZipResponse:
+      title: skillhub.v1.DownloadZipResponse
+      type: object
+      properties:
+        archive:
+          $ref: '#/components/schemas/google.api.HttpBody'
+        filename:
+          type: string
     skillhub.v1.ExportVersionToDirectoryRequest:
       title: skillhub.v1.ExportVersionToDirectoryRequest
       type: object
@@ -1023,6 +1108,23 @@ components:
       properties:
         skill:
           $ref: '#/components/schemas/skillhub.v1.SkillView'
+    skillhub.v1.UploadZipRequest:
+      title: skillhub.v1.UploadZipRequest
+      type: object
+      properties:
+        file:
+          type: string
+          format: byte
+    skillhub.v1.UploadZipResponse:
+      title: skillhub.v1.UploadZipResponse
+      type: object
+      properties:
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/skillhub.v1.SkillCandidate'
+        uploadId:
+          type: string
     skillhub.v1.VersionInput:
       title: skillhub.v1.VersionInput
       type: object

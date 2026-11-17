@@ -8,9 +8,6 @@ services:
       SKILLHUB_EXPORT_DIR: /app/data/exports
     volumes:
       - skillhub_data:/app/data
-    entrypoint: ["/app/bin/main"]
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:$${SERVER_HTTP_PORT}/readyz"]
 
   frontend:
     ports: !override

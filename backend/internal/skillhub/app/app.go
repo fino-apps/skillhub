@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/fino-io/core/go/fino/core"
+	"github.com/fino-io/finokit/logs"
 	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/model"
 	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/repo"
 	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/service"
@@ -174,4 +175,26 @@ func (s skillhubServer) BatchUpdateSkillMetadata(ctx context.Context, in *pb.Bat
 // CommitUpload implements Interface. fino:req-fields 1=UploadId,2=SkillPaths,3=TargetSkillId,4=MakeDefault
 func (s skillhubServer) CommitUpload(ctx context.Context, in *pb.CommitUploadRequest) (*pb.ImportSkillResponse, error) {
 	return s.commitUpload(ctx, in)
+}
+
+// DownloadZip implements Interface. fino:req-fields 1=SkillId,2=VersionId
+func (s skillhubServer) DownloadZip(ctx context.Context, in *pb.DownloadZipRequest) (*pb.DownloadZipResponse, error) {
+	logs.Ctx(ctx).Debugw("DownloadZip")
+	if in == nil {
+		logs.Ctx(ctx).Warnw("invalid download_zip request", "reason", "request_missing")
+		return nil, errcode.NewSkillhubRequestMissing()
+	}
+
+	return s.downloadZip(ctx, in)
+}
+
+// UploadZip implements Interface. fino:req-fields 1=File
+func (s skillhubServer) UploadZip(ctx context.Context, in *pb.UploadZipRequest) (*pb.UploadZipResponse, error) {
+	logs.Ctx(ctx).Debugw("UploadZip")
+	if in == nil {
+		logs.Ctx(ctx).Warnw("invalid upload_zip request", "reason", "request_missing")
+		return nil, errcode.NewSkillhubRequestMissing()
+	}
+
+	return s.uploadZip(in.GetFile())
 }

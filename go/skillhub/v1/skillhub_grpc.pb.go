@@ -33,11 +33,13 @@ const (
 	SkillhubService_DeleteVersion_FullMethodName            = "/skillhub.v1.SkillhubService/DeleteVersion"
 	SkillhubService_GetVersionContent_FullMethodName        = "/skillhub.v1.SkillhubService/GetVersionContent"
 	SkillhubService_GetVersionFile_FullMethodName           = "/skillhub.v1.SkillhubService/GetVersionFile"
+	SkillhubService_DownloadZip_FullMethodName              = "/skillhub.v1.SkillhubService/DownloadZip"
 	SkillhubService_SelectLocalDirectory_FullMethodName     = "/skillhub.v1.SkillhubService/SelectLocalDirectory"
 	SkillhubService_ExportVersionToDirectory_FullMethodName = "/skillhub.v1.SkillhubService/ExportVersionToDirectory"
 	SkillhubService_RepairVersion_FullMethodName            = "/skillhub.v1.SkillhubService/RepairVersion"
 	SkillhubService_ListFacets_FullMethodName               = "/skillhub.v1.SkillhubService/ListFacets"
 	SkillhubService_BatchUpdateSkillMetadata_FullMethodName = "/skillhub.v1.SkillhubService/BatchUpdateSkillMetadata"
+	SkillhubService_UploadZip_FullMethodName                = "/skillhub.v1.SkillhubService/UploadZip"
 	SkillhubService_CommitUpload_FullMethodName             = "/skillhub.v1.SkillhubService/CommitUpload"
 	SkillhubService_CompareSkills_FullMethodName            = "/skillhub.v1.SkillhubService/CompareSkills"
 	SkillhubService_GetInstallCommand_FullMethodName        = "/skillhub.v1.SkillhubService/GetInstallCommand"
@@ -60,11 +62,13 @@ type SkillhubServiceClient interface {
 	DeleteVersion(ctx context.Context, in *DeleteVersionRequest, opts ...grpc.CallOption) (*core.Null, error)
 	GetVersionContent(ctx context.Context, in *GetVersionContentRequest, opts ...grpc.CallOption) (*GetVersionContentResponse, error)
 	GetVersionFile(ctx context.Context, in *GetVersionFileRequest, opts ...grpc.CallOption) (*GetVersionFileResponse, error)
+	DownloadZip(ctx context.Context, in *DownloadZipRequest, opts ...grpc.CallOption) (*DownloadZipResponse, error)
 	SelectLocalDirectory(ctx context.Context, in *SelectLocalDirectoryRequest, opts ...grpc.CallOption) (*SelectLocalDirectoryResponse, error)
 	ExportVersionToDirectory(ctx context.Context, in *ExportVersionToDirectoryRequest, opts ...grpc.CallOption) (*ExportVersionToDirectoryResponse, error)
 	RepairVersion(ctx context.Context, in *RepairVersionRequest, opts ...grpc.CallOption) (*core.Null, error)
 	ListFacets(ctx context.Context, in *ListFacetsRequest, opts ...grpc.CallOption) (*ListFacetsResponse, error)
 	BatchUpdateSkillMetadata(ctx context.Context, in *BatchUpdateSkillMetadataRequest, opts ...grpc.CallOption) (*core.Null, error)
+	UploadZip(ctx context.Context, in *UploadZipRequest, opts ...grpc.CallOption) (*UploadZipResponse, error)
 	CommitUpload(ctx context.Context, in *CommitUploadRequest, opts ...grpc.CallOption) (*ImportSkillResponse, error)
 	CompareSkills(ctx context.Context, in *CompareSkillsRequest, opts ...grpc.CallOption) (*CompareSkillsResponse, error)
 	GetInstallCommand(ctx context.Context, in *GetInstallCommandRequest, opts ...grpc.CallOption) (*GetInstallCommandResponse, error)
@@ -195,6 +199,15 @@ func (c *skillhubServiceClient) GetVersionFile(ctx context.Context, in *GetVersi
 	return out, nil
 }
 
+func (c *skillhubServiceClient) DownloadZip(ctx context.Context, in *DownloadZipRequest, opts ...grpc.CallOption) (*DownloadZipResponse, error) {
+	out := new(DownloadZipResponse)
+	err := c.cc.Invoke(ctx, SkillhubService_DownloadZip_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *skillhubServiceClient) SelectLocalDirectory(ctx context.Context, in *SelectLocalDirectoryRequest, opts ...grpc.CallOption) (*SelectLocalDirectoryResponse, error) {
 	out := new(SelectLocalDirectoryResponse)
 	err := c.cc.Invoke(ctx, SkillhubService_SelectLocalDirectory_FullMethodName, in, out, opts...)
@@ -234,6 +247,15 @@ func (c *skillhubServiceClient) ListFacets(ctx context.Context, in *ListFacetsRe
 func (c *skillhubServiceClient) BatchUpdateSkillMetadata(ctx context.Context, in *BatchUpdateSkillMetadataRequest, opts ...grpc.CallOption) (*core.Null, error) {
 	out := new(core.Null)
 	err := c.cc.Invoke(ctx, SkillhubService_BatchUpdateSkillMetadata_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *skillhubServiceClient) UploadZip(ctx context.Context, in *UploadZipRequest, opts ...grpc.CallOption) (*UploadZipResponse, error) {
+	out := new(UploadZipResponse)
+	err := c.cc.Invoke(ctx, SkillhubService_UploadZip_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -284,11 +306,13 @@ type SkillhubServiceServer interface {
 	DeleteVersion(context.Context, *DeleteVersionRequest) (*core.Null, error)
 	GetVersionContent(context.Context, *GetVersionContentRequest) (*GetVersionContentResponse, error)
 	GetVersionFile(context.Context, *GetVersionFileRequest) (*GetVersionFileResponse, error)
+	DownloadZip(context.Context, *DownloadZipRequest) (*DownloadZipResponse, error)
 	SelectLocalDirectory(context.Context, *SelectLocalDirectoryRequest) (*SelectLocalDirectoryResponse, error)
 	ExportVersionToDirectory(context.Context, *ExportVersionToDirectoryRequest) (*ExportVersionToDirectoryResponse, error)
 	RepairVersion(context.Context, *RepairVersionRequest) (*core.Null, error)
 	ListFacets(context.Context, *ListFacetsRequest) (*ListFacetsResponse, error)
 	BatchUpdateSkillMetadata(context.Context, *BatchUpdateSkillMetadataRequest) (*core.Null, error)
+	UploadZip(context.Context, *UploadZipRequest) (*UploadZipResponse, error)
 	CommitUpload(context.Context, *CommitUploadRequest) (*ImportSkillResponse, error)
 	CompareSkills(context.Context, *CompareSkillsRequest) (*CompareSkillsResponse, error)
 	GetInstallCommand(context.Context, *GetInstallCommandRequest) (*GetInstallCommandResponse, error)
@@ -338,6 +362,9 @@ func (UnimplementedSkillhubServiceServer) GetVersionContent(context.Context, *Ge
 func (UnimplementedSkillhubServiceServer) GetVersionFile(context.Context, *GetVersionFileRequest) (*GetVersionFileResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetVersionFile not implemented")
 }
+func (UnimplementedSkillhubServiceServer) DownloadZip(context.Context, *DownloadZipRequest) (*DownloadZipResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DownloadZip not implemented")
+}
 func (UnimplementedSkillhubServiceServer) SelectLocalDirectory(context.Context, *SelectLocalDirectoryRequest) (*SelectLocalDirectoryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SelectLocalDirectory not implemented")
 }
@@ -352,6 +379,9 @@ func (UnimplementedSkillhubServiceServer) ListFacets(context.Context, *ListFacet
 }
 func (UnimplementedSkillhubServiceServer) BatchUpdateSkillMetadata(context.Context, *BatchUpdateSkillMetadataRequest) (*core.Null, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchUpdateSkillMetadata not implemented")
+}
+func (UnimplementedSkillhubServiceServer) UploadZip(context.Context, *UploadZipRequest) (*UploadZipResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UploadZip not implemented")
 }
 func (UnimplementedSkillhubServiceServer) CommitUpload(context.Context, *CommitUploadRequest) (*ImportSkillResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CommitUpload not implemented")
@@ -609,6 +639,24 @@ func _SkillhubService_GetVersionFile_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SkillhubService_DownloadZip_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DownloadZipRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SkillhubServiceServer).DownloadZip(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SkillhubService_DownloadZip_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SkillhubServiceServer).DownloadZip(ctx, req.(*DownloadZipRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SkillhubService_SelectLocalDirectory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SelectLocalDirectoryRequest)
 	if err := dec(in); err != nil {
@@ -695,6 +743,24 @@ func _SkillhubService_BatchUpdateSkillMetadata_Handler(srv interface{}, ctx cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SkillhubServiceServer).BatchUpdateSkillMetadata(ctx, req.(*BatchUpdateSkillMetadataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SkillhubService_UploadZip_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadZipRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SkillhubServiceServer).UploadZip(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SkillhubService_UploadZip_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SkillhubServiceServer).UploadZip(ctx, req.(*UploadZipRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -813,6 +879,10 @@ var SkillhubService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SkillhubService_GetVersionFile_Handler,
 		},
 		{
+			MethodName: "DownloadZip",
+			Handler:    _SkillhubService_DownloadZip_Handler,
+		},
+		{
 			MethodName: "SelectLocalDirectory",
 			Handler:    _SkillhubService_SelectLocalDirectory_Handler,
 		},
@@ -831,6 +901,10 @@ var SkillhubService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BatchUpdateSkillMetadata",
 			Handler:    _SkillhubService_BatchUpdateSkillMetadata_Handler,
+		},
+		{
+			MethodName: "UploadZip",
+			Handler:    _SkillhubService_UploadZip_Handler,
 		},
 		{
 			MethodName: "CommitUpload",

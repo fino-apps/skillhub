@@ -1,4 +1,5 @@
-import { listSkills, listVersions, selectLocalDirectory } from "@/generated/api-client";
+import { listSkills, listVersions, selectLocalDirectory, uploadZip } from "@/generated/api-client";
+import { apiRoutes } from "@/generated/api-routes";
 import { config } from "@/lib/config";
 import type { SkillVersion } from "./skill-version";
 
@@ -70,16 +71,14 @@ export async function fetchAllVersions(skillId: string, signal: AbortSignal) {
 }
 
 export function archiveURL(skillId: string, versionId: string) {
-  return new URL(`/skillhub/v1/skills/${skillId}/versions/${versionId}/archive`, config.apiBase || window.location.origin).href;
+  const path = apiRoutes.downloadZip.path
+    .replace("{skill_id}", encodeURIComponent(skillId))
+    .replace("{version_id}", encodeURIComponent(versionId));
+  return new URL(path, config.apiBase || window.location.origin).href;
 }
 
-export async function stageZip(file: File) {
-  const form = new FormData();
-  form.append("file", file);
-  const response = await fetch(new URL("/skillhub/v1/uploads", config.apiBase || window.location.origin), { method: "POST", body: form });
-  const result = await response.json() as { uploadId: string; skills?: Candidate[]; message?: string };
-  if (!response.ok) throw new Error(result.message || "无法读取 ZIP");
-  return result;
+export function stageZip(file: File) {
+  return uploadZip<{ uploadId: string; skills?: Candidate[] }>({ file });
 }
 
 type ListSnapshot = { scope: string; skills: Skill[]; token: string; scroll: number; skillId: string; revision: number };

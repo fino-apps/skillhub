@@ -128,6 +128,12 @@ func MakeGRPCServer(endpoints endpoint.Endpoints) pb.SkillhubServiceServer {
 			EncodeGRPCGetVersionFileResponse,
 			serverOptions...,
 		),
+		downloadZip: grpctransport.NewServer(
+			endpoints.DownloadZipEndpoint,
+			DecodeGRPCDownloadZipRequest,
+			EncodeGRPCDownloadZipResponse,
+			serverOptions...,
+		),
 		selectLocalDirectory: grpctransport.NewServer(
 			endpoints.SelectLocalDirectoryEndpoint,
 			DecodeGRPCSelectLocalDirectoryRequest,
@@ -156,6 +162,12 @@ func MakeGRPCServer(endpoints endpoint.Endpoints) pb.SkillhubServiceServer {
 			endpoints.BatchUpdateSkillMetadataEndpoint,
 			DecodeGRPCBatchUpdateSkillMetadataRequest,
 			EncodeGRPCBatchUpdateSkillMetadataResponse,
+			serverOptions...,
+		),
+		uploadZip: grpctransport.NewServer(
+			endpoints.UploadZipEndpoint,
+			DecodeGRPCUploadZipRequest,
+			EncodeGRPCUploadZipResponse,
 			serverOptions...,
 		),
 		commitUpload: grpctransport.NewServer(
@@ -196,11 +208,13 @@ type grpcServer struct {
 	deleteVersion            grpctransport.Handler
 	getVersionContent        grpctransport.Handler
 	getVersionFile           grpctransport.Handler
+	downloadZip              grpctransport.Handler
 	selectLocalDirectory     grpctransport.Handler
 	exportVersionToDirectory grpctransport.Handler
 	repairVersion            grpctransport.Handler
 	listFacets               grpctransport.Handler
 	batchUpdateSkillMetadata grpctransport.Handler
+	uploadZip                grpctransport.Handler
 	commitUpload             grpctransport.Handler
 	compareSkills            grpctransport.Handler
 	getInstallCommand        grpctransport.Handler
@@ -312,6 +326,14 @@ func (s *grpcServer) GetVersionFile(ctx context.Context, req *pb.GetVersionFileR
 	return rep.(*pb.GetVersionFileResponse), nil
 }
 
+func (s *grpcServer) DownloadZip(ctx context.Context, req *pb.DownloadZipRequest) (*pb.DownloadZipResponse, error) {
+	_, rep, err := s.downloadZip.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.DownloadZipResponse), nil
+}
+
 func (s *grpcServer) SelectLocalDirectory(ctx context.Context, req *pb.SelectLocalDirectoryRequest) (*pb.SelectLocalDirectoryResponse, error) {
 	_, rep, err := s.selectLocalDirectory.ServeGRPC(ctx, req)
 	if err != nil {
@@ -350,6 +372,14 @@ func (s *grpcServer) BatchUpdateSkillMetadata(ctx context.Context, req *pb.Batch
 		return nil, err
 	}
 	return rep.(*core.Null), nil
+}
+
+func (s *grpcServer) UploadZip(ctx context.Context, req *pb.UploadZipRequest) (*pb.UploadZipResponse, error) {
+	_, rep, err := s.uploadZip.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.UploadZipResponse), nil
 }
 
 func (s *grpcServer) CommitUpload(ctx context.Context, req *pb.CommitUploadRequest) (*pb.ImportSkillResponse, error) {
@@ -469,6 +499,13 @@ func DecodeGRPCGetVersionFileRequest(_ context.Context, grpcReq interface{}) (in
 	return req, nil
 }
 
+// DecodeGRPCDownloadZipRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC DownloadZip request to a user-domain DownloadZip request. Primarily useful in a server.
+func DecodeGRPCDownloadZipRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.DownloadZipRequest)
+	return req, nil
+}
+
 // DecodeGRPCSelectLocalDirectoryRequest is a transport/grpc.DecodeRequestFunc that converts a
 // gRPC SelectLocalDirectory request to a user-domain SelectLocalDirectory request. Primarily useful in a server.
 func DecodeGRPCSelectLocalDirectoryRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -501,6 +538,13 @@ func DecodeGRPCListFacetsRequest(_ context.Context, grpcReq interface{}) (interf
 // gRPC BatchUpdateSkillMetadata request to a user-domain BatchUpdateSkillMetadata request. Primarily useful in a server.
 func DecodeGRPCBatchUpdateSkillMetadataRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*pb.BatchUpdateSkillMetadataRequest)
+	return req, nil
+}
+
+// DecodeGRPCUploadZipRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC UploadZip request to a user-domain UploadZip request. Primarily useful in a server.
+func DecodeGRPCUploadZipRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.UploadZipRequest)
 	return req, nil
 }
 
@@ -618,6 +662,13 @@ func EncodeGRPCGetVersionFileResponse(_ context.Context, response interface{}) (
 	return resp, nil
 }
 
+// EncodeGRPCDownloadZipResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain DownloadZip response to a gRPC DownloadZip reply. Primarily useful in a server.
+func EncodeGRPCDownloadZipResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.DownloadZipResponse)
+	return resp, nil
+}
+
 // EncodeGRPCSelectLocalDirectoryResponse is a transport/grpc.EncodeResponseFunc that converts a
 // user-domain SelectLocalDirectory response to a gRPC SelectLocalDirectory reply. Primarily useful in a server.
 func EncodeGRPCSelectLocalDirectoryResponse(_ context.Context, response interface{}) (interface{}, error) {
@@ -650,6 +701,13 @@ func EncodeGRPCListFacetsResponse(_ context.Context, response interface{}) (inte
 // user-domain BatchUpdateSkillMetadata response to a gRPC BatchUpdateSkillMetadata reply. Primarily useful in a server.
 func EncodeGRPCBatchUpdateSkillMetadataResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(*core.Null)
+	return resp, nil
+}
+
+// EncodeGRPCUploadZipResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain UploadZip response to a gRPC UploadZip reply. Primarily useful in a server.
+func EncodeGRPCUploadZipResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.UploadZipResponse)
 	return resp, nil
 }
 

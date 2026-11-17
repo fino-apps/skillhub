@@ -26,6 +26,7 @@ docker compose --env-file deploy/compose/.env \
 | --- | --- |
 | `SERVER_HTTP_PORT` | `31101`，后端 HTTP 端口 |
 | `SERVER_HTTP_HOST` | 本地开发默认 `127.0.0.1`，Compose 在容器内监听 `0.0.0.0` |
+| `SERVER_DEBUG_PORT` | `31103`，Fino 本机调试端口，提供 `/readyz` 和 `/healthz` |
 | `SKILLHUB_DATA_DIR` | 系统用户配置目录下的 `SkillHub`，保存数据库和快照 |
 | `SKILLHUB_EXPORT_DIR` | 系统下载目录下的 `SkillHub`，不可用时回退到数据目录的 `exports` |
 
@@ -36,6 +37,7 @@ docker compose --env-file deploy/compose/.env \
 - **本机收录**。选择含 `SKILL.md` 的文件夹，或选择项目根目录后勾选需要收录的 Skill。同一真实目录只收录一次。
 - **GitHub 收录**。粘贴仓库或 Skill 目录链接，预览实际 commit 后收录。更新时可比较候选与当前默认版本。支持单个 Skill 和目录下的多个候选。
 - **版本和导出**。首次收录设为默认，后续保存可按需设为默认。首页导出默认版本，详情导出正在查看的版本。ZIP 用于跨机器交换。历史版本可删除，删除默认版本前先改选。
+- **ZIP 导入和下载**。上传支持最多 64 MiB 的单个 ZIP，预览后可选择要导入的条目。上传、确认导入和附件下载的接口都在 SkillHub 的 proto 中声明。
 - **整理**。按名称、用途、来源、分类和标签查找；多选可批量修改分类和标签。
 
 ## 开发与验证

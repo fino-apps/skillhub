@@ -47,11 +47,13 @@ type Endpoints struct {
 	DeleteVersionEndpoint            endpoint.Endpoint
 	GetVersionContentEndpoint        endpoint.Endpoint
 	GetVersionFileEndpoint           endpoint.Endpoint
+	DownloadZipEndpoint              endpoint.Endpoint
 	SelectLocalDirectoryEndpoint     endpoint.Endpoint
 	ExportVersionToDirectoryEndpoint endpoint.Endpoint
 	RepairVersionEndpoint            endpoint.Endpoint
 	ListFacetsEndpoint               endpoint.Endpoint
 	BatchUpdateSkillMetadataEndpoint endpoint.Endpoint
+	UploadZipEndpoint                endpoint.Endpoint
 	CommitUploadEndpoint             endpoint.Endpoint
 	CompareSkillsEndpoint            endpoint.Endpoint
 	GetInstallCommandEndpoint        endpoint.Endpoint
@@ -73,11 +75,13 @@ func NewEndpoints(service pb.SkillhubServiceServer) Endpoints {
 		DeleteVersionEndpoint:            MakeDeleteVersionEndpoint(service),
 		GetVersionContentEndpoint:        MakeGetVersionContentEndpoint(service),
 		GetVersionFileEndpoint:           MakeGetVersionFileEndpoint(service),
+		DownloadZipEndpoint:              MakeDownloadZipEndpoint(service),
 		SelectLocalDirectoryEndpoint:     MakeSelectLocalDirectoryEndpoint(service),
 		ExportVersionToDirectoryEndpoint: MakeExportVersionToDirectoryEndpoint(service),
 		RepairVersionEndpoint:            MakeRepairVersionEndpoint(service),
 		ListFacetsEndpoint:               MakeListFacetsEndpoint(service),
 		BatchUpdateSkillMetadataEndpoint: MakeBatchUpdateSkillMetadataEndpoint(service),
+		UploadZipEndpoint:                MakeUploadZipEndpoint(service),
 		CommitUploadEndpoint:             MakeCommitUploadEndpoint(service),
 		CompareSkillsEndpoint:            MakeCompareSkillsEndpoint(service),
 		GetInstallCommandEndpoint:        MakeGetInstallCommandEndpoint(service),
@@ -307,6 +311,23 @@ func MakeGetVersionFileEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	}
 }
 
+func MakeDownloadZipEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint DownloadZip")
+		}
+		req, ok := request.(*pb.DownloadZipRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected DownloadZip request type %T", request)
+		}
+		v, err := s.DownloadZip(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
 func MakeSelectLocalDirectoryEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		if s == nil {
@@ -392,6 +413,23 @@ func MakeBatchUpdateSkillMetadataEndpoint(s pb.SkillhubServiceServer) endpoint.E
 	}
 }
 
+func MakeUploadZipEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint UploadZip")
+		}
+		req, ok := request.(*pb.UploadZipRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected UploadZip request type %T", request)
+		}
+		v, err := s.UploadZip(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
 func MakeCommitUploadEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		if s == nil {
@@ -461,11 +499,13 @@ func (e *Endpoints) WrapAll(middleware endpoint.Middleware) {
 	e.DeleteVersionEndpoint = middleware(e.DeleteVersionEndpoint)
 	e.GetVersionContentEndpoint = middleware(e.GetVersionContentEndpoint)
 	e.GetVersionFileEndpoint = middleware(e.GetVersionFileEndpoint)
+	e.DownloadZipEndpoint = middleware(e.DownloadZipEndpoint)
 	e.SelectLocalDirectoryEndpoint = middleware(e.SelectLocalDirectoryEndpoint)
 	e.ExportVersionToDirectoryEndpoint = middleware(e.ExportVersionToDirectoryEndpoint)
 	e.RepairVersionEndpoint = middleware(e.RepairVersionEndpoint)
 	e.ListFacetsEndpoint = middleware(e.ListFacetsEndpoint)
 	e.BatchUpdateSkillMetadataEndpoint = middleware(e.BatchUpdateSkillMetadataEndpoint)
+	e.UploadZipEndpoint = middleware(e.UploadZipEndpoint)
 	e.CommitUploadEndpoint = middleware(e.CommitUploadEndpoint)
 	e.CompareSkillsEndpoint = middleware(e.CompareSkillsEndpoint)
 	e.GetInstallCommandEndpoint = middleware(e.GetInstallCommandEndpoint)
@@ -492,11 +532,13 @@ func (e *Endpoints) WrapAllLabeled(middleware LabeledMiddleware) {
 	e.DeleteVersionEndpoint = middleware("DeleteVersion", e.DeleteVersionEndpoint)
 	e.GetVersionContentEndpoint = middleware("GetVersionContent", e.GetVersionContentEndpoint)
 	e.GetVersionFileEndpoint = middleware("GetVersionFile", e.GetVersionFileEndpoint)
+	e.DownloadZipEndpoint = middleware("DownloadZip", e.DownloadZipEndpoint)
 	e.SelectLocalDirectoryEndpoint = middleware("SelectLocalDirectory", e.SelectLocalDirectoryEndpoint)
 	e.ExportVersionToDirectoryEndpoint = middleware("ExportVersionToDirectory", e.ExportVersionToDirectoryEndpoint)
 	e.RepairVersionEndpoint = middleware("RepairVersion", e.RepairVersionEndpoint)
 	e.ListFacetsEndpoint = middleware("ListFacets", e.ListFacetsEndpoint)
 	e.BatchUpdateSkillMetadataEndpoint = middleware("BatchUpdateSkillMetadata", e.BatchUpdateSkillMetadataEndpoint)
+	e.UploadZipEndpoint = middleware("UploadZip", e.UploadZipEndpoint)
 	e.CommitUploadEndpoint = middleware("CommitUpload", e.CommitUploadEndpoint)
 	e.CompareSkillsEndpoint = middleware("CompareSkills", e.CompareSkillsEndpoint)
 	e.GetInstallCommandEndpoint = middleware("GetInstallCommand", e.GetInstallCommandEndpoint)

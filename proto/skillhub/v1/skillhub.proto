@@ -6,6 +6,7 @@ import "fino/core/null.proto";
 import "fino/core/time.proto";
 import "fino/options.proto";
 import "google/api/annotations.proto";
+import "google/api/httpbody.proto";
 
 option go_package = "github.com/fino-io/skillhub/go/skillhub/v1;skillhub";
 
@@ -58,6 +59,13 @@ service SkillhubService {
   rpc GetVersionFile(GetVersionFileRequest) returns (GetVersionFileResponse) {
     option (google.api.http) = {get: "/skillhub/v1/skills/{skill_id}/versions/{version_id}/file"};
   }
+  rpc DownloadZip(DownloadZipRequest) returns (DownloadZipResponse) {
+    option (google.api.http) = {
+      get: "/skillhub/v1/skills/{skill_id}/versions/{version_id}/archive"
+      response_body: "archive"
+    };
+    option (fino.http) = {attachment_filename_field: "filename"};
+  }
   rpc SelectLocalDirectory(SelectLocalDirectoryRequest) returns (SelectLocalDirectoryResponse) {
     option (google.api.http) = {post: "/skillhub/v1/directories:select" body: "*"};
   }
@@ -72,6 +80,10 @@ service SkillhubService {
   }
   rpc BatchUpdateSkillMetadata(BatchUpdateSkillMetadataRequest) returns (fino.core.Null) {
     option (google.api.http) = {patch: "/skillhub/v1/skills:organize" body: "*"};
+  }
+  rpc UploadZip(UploadZipRequest) returns (UploadZipResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/uploads" body: "file"};
+    option (fino.http) = {multipart: {max_file_bytes: 67108864}};
   }
   rpc CommitUpload(CommitUploadRequest) returns (ImportSkillResponse) {
     option (google.api.http) = {post: "/skillhub/v1/uploads/{upload_id}:commit" body: "*"};
@@ -357,6 +369,21 @@ message SkillMetadataChange {
 }
 message BatchUpdateSkillMetadataRequest {
   repeated SkillMetadataChange changes = 1 [(fino.validate) = {required: true max: 100}];
+}
+message DownloadZipRequest {
+  string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
+  string version_id = 2 [(fino.validate) = {required: true uuid: true}];
+}
+message DownloadZipResponse {
+  google.api.HttpBody archive = 1;
+  string filename = 2;
+}
+message UploadZipRequest {
+  bytes file = 1;
+}
+message UploadZipResponse {
+  string upload_id = 1;
+  repeated SkillCandidate skills = 2;
 }
 message CommitUploadRequest {
   string upload_id = 1 [(fino.validate) = {required: true uuid: true}];
