@@ -1,11 +1,11 @@
 logs:
-  level: info
-  encode: json
+  level: debug
+  encode: console
   # output: file
-  initFields:
-    package: skillhub.v1
-    server: skillhub-server
-    # version: 1.0.0
+    #  initFields:
+    #    package: inlet.v1
+    #    server: inlet-server
+    #    version: 1.0.0
   file:
     path: ./logs/app.log
     maxSize: 100
