@@ -263,18 +263,6 @@ func updateMetadata(tx *gorm.DB, change domainrepo.Metadata) error {
 	return nil
 }
 
-func (r *CatalogRepo) StoreTask(ctx context.Context, id string, data []byte) error {
-	return r.provider.NewSession(ctx).Exec(
-		"INSERT INTO organization_task (id, result) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET result=excluded.result", id, data,
-	).Error
-}
-
-func (r *CatalogRepo) LoadTask(ctx context.Context, id string) ([]byte, error) {
-	var row struct{ Result []byte }
-	err := r.provider.NewSession(ctx).Table("organization_task").Where("id = ?", id).Take(&row).Error
-	return row.Result, translateMissing(err)
-}
-
 func translateMissing(err error) error {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return core.NewNotFoundError("catalog record not found")

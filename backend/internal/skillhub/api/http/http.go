@@ -461,46 +461,6 @@ func RegisterHttpHandler(router *mux.Router, endpoints endpoint.Endpoints, cfg *
 
 	{
 		route := httpmw.Route{
-			MethodName:  "CreateOrganizationTask",
-			BindingName: "CreateOrganizationTask",
-			Method:      "POST",
-			Path:        "/skillhub/v1/organization-tasks",
-		}
-		router.Methods(route.Method).Path(route.Path).Handler(
-			httpmw.WrapRoute(
-				route,
-				httptransport.NewServer(
-					endpoints.CreateOrganizationTaskEndpoint,
-					DecodeHTTPCreateOrganizationTaskRequest,
-					encodeResponse,
-					serverOptions...,
-				),
-			),
-		)
-	}
-
-	{
-		route := httpmw.Route{
-			MethodName:  "GetOrganizationTask",
-			BindingName: "GetOrganizationTask",
-			Method:      "GET",
-			Path:        "/skillhub/v1/organization-tasks/{task_id}",
-		}
-		router.Methods(route.Method).Path(route.Path).Handler(
-			httpmw.WrapRoute(
-				route,
-				httptransport.NewServer(
-					endpoints.GetOrganizationTaskEndpoint,
-					DecodeHTTPGetOrganizationTaskRequest,
-					encodeResponse,
-					serverOptions...,
-				),
-			),
-		)
-	}
-
-	{
-		route := httpmw.Route{
 			MethodName:  "CompareSkills",
 			BindingName: "CompareSkills",
 			Method:      "POST",
@@ -1220,56 +1180,6 @@ func DecodeHTTPCommitUploadRequest(_ context.Context, r *http.Request) (interfac
 	err = unmarshalPathParam(pathParams, &req.UploadId, "upload_id")
 	if err != nil && !core.IsNotFoundError(err) {
 		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the upload_id path parameter")
-	}
-
-	return &req, nil
-}
-
-// DecodeHTTPCreateOrganizationTaskRequest is a transport/http.DecodeRequestFunc that
-// decodes a JSON-encoded createorganizationtask request from the HTTP request
-// body. Primarily useful in a server.
-func DecodeHTTPCreateOrganizationTaskRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req pb.CreateOrganizationTaskRequest
-
-	buf, err := readHTTPBody(r)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(buf) > 0 {
-		if err = protojson.Unmarshal(buf, &req); err != nil {
-			return nil, nhttp.WrapError(err,
-				http.StatusBadRequest,
-				"cannot parse request body as JSON",
-			)
-		}
-	}
-
-	pathParams := mux.Vars(r)
-	_ = pathParams
-
-	queryParams := core.NewUrlQueryFrom(r.URL.Query())
-	_ = queryParams
-
-	return &req, nil
-}
-
-// DecodeHTTPGetOrganizationTaskRequest is a transport/http.DecodeRequestFunc that
-// decodes a JSON-encoded getorganizationtask request from the HTTP request
-// body. Primarily useful in a server.
-func DecodeHTTPGetOrganizationTaskRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req pb.GetOrganizationTaskRequest
-	var err error
-
-	pathParams := mux.Vars(r)
-	_ = pathParams
-
-	queryParams := core.NewUrlQueryFrom(r.URL.Query())
-	_ = queryParams
-
-	err = unmarshalPathParam(pathParams, &req.TaskId, "task_id")
-	if err != nil && !core.IsNotFoundError(err) {
-		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the task_id path parameter")
 	}
 
 	return &req, nil

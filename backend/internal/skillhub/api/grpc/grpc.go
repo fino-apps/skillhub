@@ -164,18 +164,6 @@ func MakeGRPCServer(endpoints endpoint.Endpoints) pb.SkillhubServiceServer {
 			EncodeGRPCCommitUploadResponse,
 			serverOptions...,
 		),
-		createOrganizationTask: grpctransport.NewServer(
-			endpoints.CreateOrganizationTaskEndpoint,
-			DecodeGRPCCreateOrganizationTaskRequest,
-			EncodeGRPCCreateOrganizationTaskResponse,
-			serverOptions...,
-		),
-		getOrganizationTask: grpctransport.NewServer(
-			endpoints.GetOrganizationTaskEndpoint,
-			DecodeGRPCGetOrganizationTaskRequest,
-			EncodeGRPCGetOrganizationTaskResponse,
-			serverOptions...,
-		),
 		compareSkills: grpctransport.NewServer(
 			endpoints.CompareSkillsEndpoint,
 			DecodeGRPCCompareSkillsRequest,
@@ -214,8 +202,6 @@ type grpcServer struct {
 	listFacets               grpctransport.Handler
 	batchUpdateSkillMetadata grpctransport.Handler
 	commitUpload             grpctransport.Handler
-	createOrganizationTask   grpctransport.Handler
-	getOrganizationTask      grpctransport.Handler
 	compareSkills            grpctransport.Handler
 	getInstallCommand        grpctransport.Handler
 }
@@ -374,22 +360,6 @@ func (s *grpcServer) CommitUpload(ctx context.Context, req *pb.CommitUploadReque
 	return rep.(*pb.ImportSkillResponse), nil
 }
 
-func (s *grpcServer) CreateOrganizationTask(ctx context.Context, req *pb.CreateOrganizationTaskRequest) (*pb.OrganizationTaskView, error) {
-	_, rep, err := s.createOrganizationTask.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return rep.(*pb.OrganizationTaskView), nil
-}
-
-func (s *grpcServer) GetOrganizationTask(ctx context.Context, req *pb.GetOrganizationTaskRequest) (*pb.OrganizationTaskView, error) {
-	_, rep, err := s.getOrganizationTask.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return rep.(*pb.OrganizationTaskView), nil
-}
-
 func (s *grpcServer) CompareSkills(ctx context.Context, req *pb.CompareSkillsRequest) (*pb.CompareSkillsResponse, error) {
 	_, rep, err := s.compareSkills.ServeGRPC(ctx, req)
 	if err != nil {
@@ -541,20 +511,6 @@ func DecodeGRPCCommitUploadRequest(_ context.Context, grpcReq interface{}) (inte
 	return req, nil
 }
 
-// DecodeGRPCCreateOrganizationTaskRequest is a transport/grpc.DecodeRequestFunc that converts a
-// gRPC CreateOrganizationTask request to a user-domain CreateOrganizationTask request. Primarily useful in a server.
-func DecodeGRPCCreateOrganizationTaskRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.CreateOrganizationTaskRequest)
-	return req, nil
-}
-
-// DecodeGRPCGetOrganizationTaskRequest is a transport/grpc.DecodeRequestFunc that converts a
-// gRPC GetOrganizationTask request to a user-domain GetOrganizationTask request. Primarily useful in a server.
-func DecodeGRPCGetOrganizationTaskRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.GetOrganizationTaskRequest)
-	return req, nil
-}
-
 // DecodeGRPCCompareSkillsRequest is a transport/grpc.DecodeRequestFunc that converts a
 // gRPC CompareSkills request to a user-domain CompareSkills request. Primarily useful in a server.
 func DecodeGRPCCompareSkillsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -701,20 +657,6 @@ func EncodeGRPCBatchUpdateSkillMetadataResponse(_ context.Context, response inte
 // user-domain CommitUpload response to a gRPC CommitUpload reply. Primarily useful in a server.
 func EncodeGRPCCommitUploadResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(*pb.ImportSkillResponse)
-	return resp, nil
-}
-
-// EncodeGRPCCreateOrganizationTaskResponse is a transport/grpc.EncodeResponseFunc that converts a
-// user-domain CreateOrganizationTask response to a gRPC CreateOrganizationTask reply. Primarily useful in a server.
-func EncodeGRPCCreateOrganizationTaskResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.OrganizationTaskView)
-	return resp, nil
-}
-
-// EncodeGRPCGetOrganizationTaskResponse is a transport/grpc.EncodeResponseFunc that converts a
-// user-domain GetOrganizationTask response to a gRPC GetOrganizationTask reply. Primarily useful in a server.
-func EncodeGRPCGetOrganizationTaskResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.OrganizationTaskView)
 	return resp, nil
 }
 

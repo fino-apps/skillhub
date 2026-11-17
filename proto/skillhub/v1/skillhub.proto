@@ -76,12 +76,6 @@ service SkillhubService {
   rpc CommitUpload(CommitUploadRequest) returns (ImportSkillResponse) {
     option (google.api.http) = {post: "/skillhub/v1/uploads/{upload_id}:commit" body: "*"};
   }
-  rpc CreateOrganizationTask(CreateOrganizationTaskRequest) returns (OrganizationTaskView) {
-    option (google.api.http) = {post: "/skillhub/v1/organization-tasks" body: "*"};
-  }
-  rpc GetOrganizationTask(GetOrganizationTaskRequest) returns (OrganizationTaskView) {
-    option (google.api.http) = {get: "/skillhub/v1/organization-tasks/{task_id}"};
-  }
 
   rpc CompareSkills(CompareSkillsRequest) returns (CompareSkillsResponse) {
     option (google.api.http) = {post: "/skillhub/v1/skills:compare" body: "*"};
@@ -346,10 +340,12 @@ message RepairVersionRequest {
 }
 message ListFacetsRequest {}
 message ListFacetsResponse {
+  reserved 4;
+  reserved "ai_enabled";
+
   repeated string categories = 1;
   repeated string sources = 2;
   repeated string tags = 3;
-  bool ai_enabled = 4;
 }
 message SkillMetadataChange {
   string skill_id = 1;
@@ -367,22 +363,4 @@ message CommitUploadRequest {
   repeated string skill_paths = 2 [(fino.validate) = {required: true max: 100}];
   string target_skill_id = 3 [(fino.validate) = {omitempty: true uuid: true}];
   bool make_default = 4;
-}
-message CreateOrganizationTaskRequest {
-  repeated string skill_ids = 1 [(fino.validate) = {omitempty: true max: 100}];
-  bool uncategorized = 2;
-}
-message GetOrganizationTaskRequest {
-  string task_id = 1 [(fino.validate) = {required: true uuid: true}];
-}
-message OrganizationSuggestion {
-  string name = 1;
-  SkillMetadataChange change = 2;
-  string error = 3;
-}
-message OrganizationTaskView {
-  string id = 1;
-  int32 total = 2;
-  repeated OrganizationSuggestion results = 3;
-  bool done = 4;
 }

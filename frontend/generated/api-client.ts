@@ -254,14 +254,6 @@ export function commitUpload<TResponse = unknown>(payload: ApiRequest = {}, opti
   return requestApi<TResponse>(apiRoutes.commitUpload, payload, options);
 }
 
-export function createOrganizationTask<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
-  return requestApi<TResponse>(apiRoutes.createOrganizationTask, payload, options);
-}
-
-export function getOrganizationTask<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
-  return requestApi<TResponse>(apiRoutes.getOrganizationTask, payload, options);
-}
-
 export function compareSkills<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
   return requestApi<TResponse>(apiRoutes.compareSkills, payload, options);
 }

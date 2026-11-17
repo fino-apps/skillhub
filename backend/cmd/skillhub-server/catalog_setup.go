@@ -42,9 +42,6 @@ func prepareCatalog(ctx context.Context, provider db.Provider) error {
 			"CREATE UNIQUE INDEX IF NOT EXISTS skill_source_key ON skill(source_key)",
 			"CREATE UNIQUE INDEX IF NOT EXISTS skill_version_commit ON skill_version(skill_id, commit_sha) WHERE commit_sha <> ''",
 			"CREATE UNIQUE INDEX IF NOT EXISTS skill_version_digest ON skill_version(skill_id, content_digest) WHERE commit_sha = ''",
-			"CREATE TABLE IF NOT EXISTS organization_task (id TEXT PRIMARY KEY, result BLOB NOT NULL)",
-			`UPDATE organization_task SET result = json_set(CAST(result AS TEXT), '$.done', json('true'))
-				WHERE COALESCE(json_extract(CAST(result AS TEXT), '$.done'), 0) = 0`,
 		} {
 			if err := tx.Exec(statement).Error; err != nil {
 				return err

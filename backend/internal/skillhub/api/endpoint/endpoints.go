@@ -53,8 +53,6 @@ type Endpoints struct {
 	ListFacetsEndpoint               endpoint.Endpoint
 	BatchUpdateSkillMetadataEndpoint endpoint.Endpoint
 	CommitUploadEndpoint             endpoint.Endpoint
-	CreateOrganizationTaskEndpoint   endpoint.Endpoint
-	GetOrganizationTaskEndpoint      endpoint.Endpoint
 	CompareSkillsEndpoint            endpoint.Endpoint
 	GetInstallCommandEndpoint        endpoint.Endpoint
 }
@@ -81,8 +79,6 @@ func NewEndpoints(service pb.SkillhubServiceServer) Endpoints {
 		ListFacetsEndpoint:               MakeListFacetsEndpoint(service),
 		BatchUpdateSkillMetadataEndpoint: MakeBatchUpdateSkillMetadataEndpoint(service),
 		CommitUploadEndpoint:             MakeCommitUploadEndpoint(service),
-		CreateOrganizationTaskEndpoint:   MakeCreateOrganizationTaskEndpoint(service),
-		GetOrganizationTaskEndpoint:      MakeGetOrganizationTaskEndpoint(service),
 		CompareSkillsEndpoint:            MakeCompareSkillsEndpoint(service),
 		GetInstallCommandEndpoint:        MakeGetInstallCommandEndpoint(service),
 	}
@@ -413,40 +409,6 @@ func MakeCommitUploadEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	}
 }
 
-func MakeCreateOrganizationTaskEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		if s == nil {
-			return nil, fmt.Errorf("nil service for endpoint CreateOrganizationTask")
-		}
-		req, ok := request.(*pb.CreateOrganizationTaskRequest)
-		if !ok {
-			return nil, fmt.Errorf("unexpected CreateOrganizationTask request type %T", request)
-		}
-		v, err := s.CreateOrganizationTask(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-		return v, nil
-	}
-}
-
-func MakeGetOrganizationTaskEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		if s == nil {
-			return nil, fmt.Errorf("nil service for endpoint GetOrganizationTask")
-		}
-		req, ok := request.(*pb.GetOrganizationTaskRequest)
-		if !ok {
-			return nil, fmt.Errorf("unexpected GetOrganizationTask request type %T", request)
-		}
-		v, err := s.GetOrganizationTask(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-		return v, nil
-	}
-}
-
 func MakeCompareSkillsEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		if s == nil {
@@ -505,8 +467,6 @@ func (e *Endpoints) WrapAll(middleware endpoint.Middleware) {
 	e.ListFacetsEndpoint = middleware(e.ListFacetsEndpoint)
 	e.BatchUpdateSkillMetadataEndpoint = middleware(e.BatchUpdateSkillMetadataEndpoint)
 	e.CommitUploadEndpoint = middleware(e.CommitUploadEndpoint)
-	e.CreateOrganizationTaskEndpoint = middleware(e.CreateOrganizationTaskEndpoint)
-	e.GetOrganizationTaskEndpoint = middleware(e.GetOrganizationTaskEndpoint)
 	e.CompareSkillsEndpoint = middleware(e.CompareSkillsEndpoint)
 	e.GetInstallCommandEndpoint = middleware(e.GetInstallCommandEndpoint)
 }
@@ -538,8 +498,6 @@ func (e *Endpoints) WrapAllLabeled(middleware LabeledMiddleware) {
 	e.ListFacetsEndpoint = middleware("ListFacets", e.ListFacetsEndpoint)
 	e.BatchUpdateSkillMetadataEndpoint = middleware("BatchUpdateSkillMetadata", e.BatchUpdateSkillMetadataEndpoint)
 	e.CommitUploadEndpoint = middleware("CommitUpload", e.CommitUploadEndpoint)
-	e.CreateOrganizationTaskEndpoint = middleware("CreateOrganizationTask", e.CreateOrganizationTaskEndpoint)
-	e.GetOrganizationTaskEndpoint = middleware("GetOrganizationTask", e.GetOrganizationTaskEndpoint)
 	e.CompareSkillsEndpoint = middleware("CompareSkills", e.CompareSkillsEndpoint)
 	e.GetInstallCommandEndpoint = middleware("GetInstallCommand", e.GetInstallCommandEndpoint)
 }

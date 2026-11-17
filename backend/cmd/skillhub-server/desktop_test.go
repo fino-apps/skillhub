@@ -25,7 +25,6 @@ func TestDesktopCatalogWorkflow(t *testing.T) {
 	t.Setenv("SKILLHUB_DATABASE", "")
 	t.Setenv("SKILLHUB_SNAPSHOT_DIR", "")
 	t.Setenv("SKILLHUB_EXPORT_DIR", filepath.Join(dir, "exports"))
-	t.Setenv("SKILLHUB_OLLAMA_MODEL", "")
 	_, err := loadConfig()
 	require.NoError(t, err)
 	handler, close, err := newDesktop(context.Background())

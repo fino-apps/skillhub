@@ -39,8 +39,6 @@ const (
 	SkillhubService_ListFacets_FullMethodName               = "/skillhub.v1.SkillhubService/ListFacets"
 	SkillhubService_BatchUpdateSkillMetadata_FullMethodName = "/skillhub.v1.SkillhubService/BatchUpdateSkillMetadata"
 	SkillhubService_CommitUpload_FullMethodName             = "/skillhub.v1.SkillhubService/CommitUpload"
-	SkillhubService_CreateOrganizationTask_FullMethodName   = "/skillhub.v1.SkillhubService/CreateOrganizationTask"
-	SkillhubService_GetOrganizationTask_FullMethodName      = "/skillhub.v1.SkillhubService/GetOrganizationTask"
 	SkillhubService_CompareSkills_FullMethodName            = "/skillhub.v1.SkillhubService/CompareSkills"
 	SkillhubService_GetInstallCommand_FullMethodName        = "/skillhub.v1.SkillhubService/GetInstallCommand"
 )
@@ -68,8 +66,6 @@ type SkillhubServiceClient interface {
 	ListFacets(ctx context.Context, in *ListFacetsRequest, opts ...grpc.CallOption) (*ListFacetsResponse, error)
 	BatchUpdateSkillMetadata(ctx context.Context, in *BatchUpdateSkillMetadataRequest, opts ...grpc.CallOption) (*core.Null, error)
 	CommitUpload(ctx context.Context, in *CommitUploadRequest, opts ...grpc.CallOption) (*ImportSkillResponse, error)
-	CreateOrganizationTask(ctx context.Context, in *CreateOrganizationTaskRequest, opts ...grpc.CallOption) (*OrganizationTaskView, error)
-	GetOrganizationTask(ctx context.Context, in *GetOrganizationTaskRequest, opts ...grpc.CallOption) (*OrganizationTaskView, error)
 	CompareSkills(ctx context.Context, in *CompareSkillsRequest, opts ...grpc.CallOption) (*CompareSkillsResponse, error)
 	GetInstallCommand(ctx context.Context, in *GetInstallCommandRequest, opts ...grpc.CallOption) (*GetInstallCommandResponse, error)
 }
@@ -253,24 +249,6 @@ func (c *skillhubServiceClient) CommitUpload(ctx context.Context, in *CommitUplo
 	return out, nil
 }
 
-func (c *skillhubServiceClient) CreateOrganizationTask(ctx context.Context, in *CreateOrganizationTaskRequest, opts ...grpc.CallOption) (*OrganizationTaskView, error) {
-	out := new(OrganizationTaskView)
-	err := c.cc.Invoke(ctx, SkillhubService_CreateOrganizationTask_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *skillhubServiceClient) GetOrganizationTask(ctx context.Context, in *GetOrganizationTaskRequest, opts ...grpc.CallOption) (*OrganizationTaskView, error) {
-	out := new(OrganizationTaskView)
-	err := c.cc.Invoke(ctx, SkillhubService_GetOrganizationTask_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *skillhubServiceClient) CompareSkills(ctx context.Context, in *CompareSkillsRequest, opts ...grpc.CallOption) (*CompareSkillsResponse, error) {
 	out := new(CompareSkillsResponse)
 	err := c.cc.Invoke(ctx, SkillhubService_CompareSkills_FullMethodName, in, out, opts...)
@@ -312,8 +290,6 @@ type SkillhubServiceServer interface {
 	ListFacets(context.Context, *ListFacetsRequest) (*ListFacetsResponse, error)
 	BatchUpdateSkillMetadata(context.Context, *BatchUpdateSkillMetadataRequest) (*core.Null, error)
 	CommitUpload(context.Context, *CommitUploadRequest) (*ImportSkillResponse, error)
-	CreateOrganizationTask(context.Context, *CreateOrganizationTaskRequest) (*OrganizationTaskView, error)
-	GetOrganizationTask(context.Context, *GetOrganizationTaskRequest) (*OrganizationTaskView, error)
 	CompareSkills(context.Context, *CompareSkillsRequest) (*CompareSkillsResponse, error)
 	GetInstallCommand(context.Context, *GetInstallCommandRequest) (*GetInstallCommandResponse, error)
 	mustEmbedUnimplementedSkillhubServiceServer()
@@ -379,12 +355,6 @@ func (UnimplementedSkillhubServiceServer) BatchUpdateSkillMetadata(context.Conte
 }
 func (UnimplementedSkillhubServiceServer) CommitUpload(context.Context, *CommitUploadRequest) (*ImportSkillResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CommitUpload not implemented")
-}
-func (UnimplementedSkillhubServiceServer) CreateOrganizationTask(context.Context, *CreateOrganizationTaskRequest) (*OrganizationTaskView, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateOrganizationTask not implemented")
-}
-func (UnimplementedSkillhubServiceServer) GetOrganizationTask(context.Context, *GetOrganizationTaskRequest) (*OrganizationTaskView, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetOrganizationTask not implemented")
 }
 func (UnimplementedSkillhubServiceServer) CompareSkills(context.Context, *CompareSkillsRequest) (*CompareSkillsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CompareSkills not implemented")
@@ -747,42 +717,6 @@ func _SkillhubService_CommitUpload_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SkillhubService_CreateOrganizationTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateOrganizationTaskRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SkillhubServiceServer).CreateOrganizationTask(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SkillhubService_CreateOrganizationTask_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SkillhubServiceServer).CreateOrganizationTask(ctx, req.(*CreateOrganizationTaskRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SkillhubService_GetOrganizationTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetOrganizationTaskRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SkillhubServiceServer).GetOrganizationTask(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SkillhubService_GetOrganizationTask_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SkillhubServiceServer).GetOrganizationTask(ctx, req.(*GetOrganizationTaskRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _SkillhubService_CompareSkills_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CompareSkillsRequest)
 	if err := dec(in); err != nil {
@@ -901,14 +835,6 @@ var SkillhubService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CommitUpload",
 			Handler:    _SkillhubService_CommitUpload_Handler,
-		},
-		{
-			MethodName: "CreateOrganizationTask",
-			Handler:    _SkillhubService_CreateOrganizationTask_Handler,
-		},
-		{
-			MethodName: "GetOrganizationTask",
-			Handler:    _SkillhubService_GetOrganizationTask_Handler,
 		},
 		{
 			MethodName: "CompareSkills",

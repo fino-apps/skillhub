@@ -290,8 +290,6 @@
 .version-history > li > button { justify-self: start; }
 .version-history button[aria-pressed="true"] { font-weight: 700; text-decoration: underline; }
 .version-notes-text { overflow-wrap: anywhere; color: var(--muted); }
-.organization-results { display: grid; gap: 12px; max-height: 50vh; overflow: auto; }
-.organization-results > section { padding: 12px 3px; border-bottom: 1px solid var(--line); }
 
 @media (max-width: 760px) {
   .library-table :is(.library-source, .library-classification, th:nth-child(3), th:nth-child(4)) { display: none; }

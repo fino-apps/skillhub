@@ -40,6 +40,4 @@ type CatalogRepo interface {
 	UpdateSnapshot(context.Context, *model.SkillVersion, string, string) error
 	DeleteVersion(context.Context, *model.SkillVersion) error
 	DeleteSkill(context.Context, model.SkillID) error
-	StoreTask(context.Context, string, []byte) error
-	LoadTask(context.Context, string) ([]byte, error)
 }

@@ -18,7 +18,6 @@ type ServiceDeps struct {
 	Snapshots   *service.SnapshotStore
 	ExportDir   string
 	UploadDir   string
-	AIModel     string
 }
 
 type skillhubServer struct {
@@ -29,9 +28,7 @@ type skillhubServer struct {
 	snapshots   *service.SnapshotStore
 	exportDir   string
 	uploadDir   string
-	aiModel     string
 	files       *sync.RWMutex
-	aiQueue     chan struct{}
 	uploads     *sync.Mutex
 }
 
@@ -43,9 +40,7 @@ func NewService(deps ServiceDeps) *skillhubServer {
 		snapshots:   deps.Snapshots,
 		exportDir:   deps.ExportDir,
 		uploadDir:   deps.UploadDir,
-		aiModel:     deps.AIModel,
 		files:       &sync.RWMutex{},
-		aiQueue:     make(chan struct{}, 1),
 		uploads:     &sync.Mutex{},
 	}
 }
@@ -168,7 +163,7 @@ func (s skillhubServer) ListFacets(ctx context.Context, in *pb.ListFacetsRequest
 	if err != nil {
 		return nil, catalogError(err)
 	}
-	return &pb.ListFacetsResponse{Categories: categories, Sources: sources, Tags: tags, AiEnabled: s.aiModel != ""}, nil
+	return &pb.ListFacetsResponse{Categories: categories, Sources: sources, Tags: tags}, nil
 }
 
 // BatchUpdateSkillMetadata implements Interface. fino:req-fields 1=Changes
@@ -179,14 +174,4 @@ func (s skillhubServer) BatchUpdateSkillMetadata(ctx context.Context, in *pb.Bat
 // CommitUpload implements Interface. fino:req-fields 1=UploadId,2=SkillPaths,3=TargetSkillId,4=MakeDefault
 func (s skillhubServer) CommitUpload(ctx context.Context, in *pb.CommitUploadRequest) (*pb.ImportSkillResponse, error) {
 	return s.commitUpload(ctx, in)
-}
-
-// CreateOrganizationTask implements Interface. fino:req-fields 1=SkillIds,2=Uncategorized
-func (s skillhubServer) CreateOrganizationTask(ctx context.Context, in *pb.CreateOrganizationTaskRequest) (*pb.OrganizationTaskView, error) {
-	return s.createOrganizationTask(ctx, in)
-}
-
-// GetOrganizationTask implements Interface. fino:req-fields 1=TaskId
-func (s skillhubServer) GetOrganizationTask(ctx context.Context, in *pb.GetOrganizationTaskRequest) (*pb.OrganizationTaskView, error) {
-	return s.getOrganizationTask(ctx, in)
 }

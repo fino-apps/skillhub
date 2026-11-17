@@ -116,10 +116,6 @@ func validateRequest(request interface{}) error {
 		return validateBatchUpdateSkillMetadataRequest(request)
 	case *pb.CommitUploadRequest:
 		return validateCommitUploadRequest(request)
-	case *pb.CreateOrganizationTaskRequest:
-		return validateCreateOrganizationTaskRequest(request)
-	case *pb.GetOrganizationTaskRequest:
-		return validateGetOrganizationTaskRequest(request)
 	case *pb.CompareSkillsRequest:
 		return validateCompareSkillsRequest(request)
 	case *pb.GetInstallCommandRequest:
@@ -392,22 +388,6 @@ func validateCommitUploadRequest(req *pb.CommitUploadRequest) error {
 
 	if err := requestValidator.Var(req.GetTargetSkillId(), "omitempty,uuid"); err != nil {
 		return newRequestValidationError("target_skill_id", err)
-	}
-
-	return nil
-}
-
-func validateCreateOrganizationTaskRequest(req *pb.CreateOrganizationTaskRequest) error {
-	if err := requestValidator.Var(req.GetSkillIds(), "omitempty,max=100"); err != nil {
-		return newRequestValidationError("skill_ids", err)
-	}
-
-	return nil
-}
-
-func validateGetOrganizationTaskRequest(req *pb.GetOrganizationTaskRequest) error {
-	if err := requestValidator.Var(req.GetTaskId(), "required,uuid"); err != nil {
-		return newRequestValidationError("task_id", err)
 	}
 
 	return nil

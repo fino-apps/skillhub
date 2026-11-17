@@ -77,39 +77,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/skillhub.v1.GetInstallCommandResponse'
-  /skillhub/v1/organization-tasks:
-    post:
-      operationId: CreateOrganizationTask
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/skillhub.v1.CreateOrganizationTaskRequest'
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/skillhub.v1.OrganizationTaskView'
-  /skillhub/v1/organization-tasks/{task_id}:
-    get:
-      operationId: GetOrganizationTask
-      parameters:
-        - name: task_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/skillhub.v1.OrganizationTaskView'
   /skillhub/v1/projects:scan:
     post:
       operationId: ScanProject
@@ -532,17 +499,6 @@ components:
           type: string
         rightDigest:
           type: string
-    skillhub.v1.CreateOrganizationTaskRequest:
-      title: skillhub.v1.CreateOrganizationTaskRequest
-      type: object
-      properties:
-        skillIds:
-          type: array
-          items:
-            type: string
-          maxItems: 100
-        uncategorized:
-          type: boolean
     skillhub.v1.CreateVersionRequest:
       title: skillhub.v1.CreateVersionRequest
       type: object
@@ -656,15 +612,6 @@ components:
       properties:
         command:
           type: string
-    skillhub.v1.GetOrganizationTaskRequest:
-      title: skillhub.v1.GetOrganizationTaskRequest
-      type: object
-      properties:
-        taskId:
-          type: string
-          format: uuid
-      required:
-        - taskId
     skillhub.v1.GetSkillRequest:
       title: skillhub.v1.GetSkillRequest
       type: object
@@ -797,8 +744,6 @@ components:
       title: skillhub.v1.ListFacetsResponse
       type: object
       properties:
-        aiEnabled:
-          type: boolean
         categories:
           type: array
           items:
@@ -877,31 +822,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/skillhub.v1.VersionView'
-    skillhub.v1.OrganizationSuggestion:
-      title: skillhub.v1.OrganizationSuggestion
-      type: object
-      properties:
-        change:
-          $ref: '#/components/schemas/skillhub.v1.SkillMetadataChange'
-        error:
-          type: string
-        name:
-          type: string
-    skillhub.v1.OrganizationTaskView:
-      title: skillhub.v1.OrganizationTaskView
-      type: object
-      properties:
-        done:
-          type: boolean
-        id:
-          type: string
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/skillhub.v1.OrganizationSuggestion'
-        total:
-          type: integer
-          format: int32
     skillhub.v1.PreviewImportRequest:
       title: skillhub.v1.PreviewImportRequest
       type: object

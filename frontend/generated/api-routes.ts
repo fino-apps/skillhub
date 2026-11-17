@@ -300,33 +300,6 @@ export const apiRoutes = {
       makeDefault: false,
     },
   },
-  createOrganizationTask: {
-    service: "SkillhubService",
-    rpc: "CreateOrganizationTask",
-    binding: "CreateOrganizationTask",
-    method: "POST",
-    path: "/skillhub/v1/organization-tasks",
-    pathParams: [],
-    queryParams: [],
-    body: "*",
-    defaultPayload: {
-      skillIds: [],
-      uncategorized: false,
-    },
-  },
-  getOrganizationTask: {
-    service: "SkillhubService",
-    rpc: "GetOrganizationTask",
-    binding: "GetOrganizationTask",
-    method: "GET",
-    path: "/skillhub/v1/organization-tasks/{task_id}",
-    pathParams: ["task_id"],
-    queryParams: [],
-    body: "",
-    defaultPayload: {
-      taskId: "",
-    },
-  },
   compareSkills: {
     service: "SkillhubService",
     rpc: "CompareSkills",

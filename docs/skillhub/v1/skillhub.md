@@ -506,7 +506,6 @@ GET /skillhub/v1/facets
 | `categories` | `Array<string>` |  | 否 |  |  |
 | `sources` | `Array<string>` |  | 否 |  |  |
 | `tags` | `Array<string>` |  | 否 |  |  |
-| `aiEnabled` | `boolean` |  | 否 |  |  |
 
 
 ## Batch Update Skill Metadata
@@ -565,63 +564,6 @@ POST /skillhub/v1/uploads/{upload_id}:commit
 | `addedCount` | `integer` | `Int32` | 否 |  |  |
 | `existingCount` | `integer` | `Int32` | 否 |  |  |
 | `failures` | `Array<skillhub.v1.ImportFailure>` |  | 否 |  |  |
-
-
-## Create Organization Task
-
-### 请求路径
-
-```http
-POST /skillhub/v1/organization-tasks
-```
-
-### 请求参数
-
-#### Body 请求对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `skillIds` | `Array<string>` |  | 否 |  | 最大长度为 100 |
-| `uncategorized` | `boolean` |  | 否 |  |  |
-
-### 返回值
-
-#### 返回对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `id` | `string` |  | 否 |  |  |
-| `total` | `integer` | `Int32` | 否 |  |  |
-| `results` | `Array<skillhub.v1.OrganizationSuggestion>` |  | 否 |  |  |
-| `done` | `boolean` |  | 否 |  |  |
-
-
-## Get Organization Task
-
-### 请求路径
-
-```http
-GET /skillhub/v1/organization-tasks/{task_id}
-```
-
-### 请求参数
-
-#### Path 参数
-
-| 参数名 | 参数类型 | 格式类型 | 说明 |
-|---|---|---|---|
-| `task_id` | `string` |  | UUID |
-
-### 返回值
-
-#### 返回对象
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `id` | `string` |  | 否 |  |  |
-| `total` | `integer` | `Int32` | 否 |  |  |
-| `results` | `Array<skillhub.v1.OrganizationSuggestion>` |  | 否 |  |  |
-| `done` | `boolean` |  | 否 |  |  |
 
 
 ## Compare Skills
@@ -754,14 +696,6 @@ POST /skillhub/v1/install-commands:generate
 | `addTags` | `Array<string>` |  | 否 |  |  |
 | `removeTags` | `Array<string>` |  | 否 |  |  |
 | `revision` | `string` |  | 否 |  |  |
-
-### `skillhub.v1.OrganizationSuggestion`
-
-| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
-|---|---|---|---|---|---|
-| `name` | `string` |  | 否 |  |  |
-| `change` | `skillhub.v1.SkillMetadataChange` |  | 否 |  |  |
-| `error` | `string` |  | 否 |  |  |
 
 ### `skillhub.v1.SkillLocation`
 

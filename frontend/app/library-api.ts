@@ -19,7 +19,7 @@ export type Skill = {
   defaultVersion?: SkillVersion;
 };
 
-export type Facets = { categories?: string[]; sources?: string[]; tags?: string[]; aiEnabled?: boolean };
+export type Facets = { categories?: string[]; sources?: string[]; tags?: string[] };
 export type LibraryPage = { skills?: Skill[]; nextPageToken?: string };
 export type Candidate = { path?: string; name: string; description?: string };
 export type ImportResult = { addedCount?: number; existingCount?: number; failures?: { path?: string; message: string }[] };

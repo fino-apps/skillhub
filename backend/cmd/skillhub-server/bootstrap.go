@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/fino-io/finokit/config"
@@ -115,7 +114,6 @@ func newDesktop(ctx context.Context) (handler http.Handler, close func() error, 
 	}
 	svc := app.NewService(app.ServiceDeps{
 		Catalog: catalog, Snapshots: snapshots, ExportDir: exportDir, UploadDir: uploadDir,
-		AIModel: strings.TrimSpace(os.Getenv("SKILLHUB_OLLAMA_MODEL")),
 		SkillhubSvc: service.NewSkillhubService(service.ServiceDeps{
 			SkillRepo: infrarepo.NewSkillRepo(infrarepo.SkillRepoDeps{
 				SkillDao: dao.NewSkillDaoImpl(provider), PageTokenCodec: pages,

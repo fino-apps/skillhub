@@ -11,10 +11,9 @@ import "./skillhub.css";
 
 const ComparePanel = lazy(() => import("./compare-panel"));
 const VersionPanel = lazy(() => import("./version-panel"));
-const OrganizePanel = lazy(() => import("./organize-panel"));
 
 type Panel =
-  | { kind: "folder" | "github" | "zip" | "batch" | "ai" }
+  | { kind: "folder" | "github" | "zip" | "batch" }
   | { kind: "new-version"; skill: Skill; path: string }
   | { kind: "compare"; skills: Skill[] };
 
@@ -197,26 +196,19 @@ export default function HomePage() {
     await operation.run("compare", async () => setPanel({ kind: "compare", skills: await fetchAllSkills() }));
   }
 
-  const uncategorized = params.get("category") === "~";
   const selectable = skills.slice(0, 100);
   const allSelected = selectable.length > 0 && selectable.every(({ id }) => selected.includes(id));
   useEffect(() => {
     if (selectAll.current) selectAll.current.indeterminate = selected.length > 0 && !allSelected;
   }, [selected.length, allSelected, current]);
   const library = scope ? `/?${scope}` : "/";
-  const aiSkills = selected.length
-    ? skills.filter(({ id }) => selected.includes(id))
-    : params.has("q") || params.has("source") || params.has("tag") ? skills.slice(0, 100) : [];
   const editComplete = () => { setPanel(null); reload(); };
 
   return <main className="skillhub-shell library-shell">
-    <LibraryToolbar params={params} facets={facets} onChange={updateFilters} status={<>
+    <LibraryToolbar params={params} facets={facets} onChange={updateFilters} status={
       <span role="status">{!current && loading
         ? "正在查找技能…" : current && `${token ? "已加载" : "共"} ${skills.length} 项`}</span>
-      {uncategorized && skills.length > 0 &&
-        <button type="button" className="secondary" style={{ visibility: selected.length ? "hidden" : undefined }}
-          onClick={() => setPanel({ kind: "ai" })}>AI 整理</button>}
-    </>}>
+    }>
       <div className="library-actions library-import-actions">
         <button type="button" onClick={() => setPanel({ kind: "folder" })}>导入文件夹</button>
         <button type="button" className="secondary" onClick={() => setPanel({ kind: "github" })}>导入 GitHub</button>
@@ -231,7 +223,6 @@ export default function HomePage() {
       {selected.length > 0 && <div className="library-actions library-selection" role="group" aria-label="批量操作">
         <span role="status">已选 {selected.length} 项</span>
         <button type="button" className="secondary" onClick={() => setPanel({ kind: "batch" })}>批量编辑</button>
-        <button type="button" className="secondary" onClick={() => setPanel({ kind: "ai" })}>AI 整理</button>
         <button type="button" className="skillhub-text-button" onClick={() => {
           setSelected([]);
           selectAll.current?.focus({ preventScroll: true });
@@ -294,12 +285,6 @@ export default function HomePage() {
     </Dialog>}
     {panel?.kind === "batch" && <Dialog title="批量编辑" compact onClose={() => setPanel(null)}>
       <BatchMetadata ids={selected} categories={facets.categories ?? []} onSaved={editComplete} />
-    </Dialog>}
-    {panel?.kind === "ai" && <Dialog title="AI 整理" onClose={() => setPanel(null)}>
-      {facets.aiEnabled
-        ? <Suspense fallback={<p>加载中…</p>}><OrganizePanel skills={aiSkills}
-          uncategorized={uncategorized} categories={facets.categories ?? []} onSaved={editComplete} /></Suspense>
-        : <p>启动本机 Ollama，并在启动 skillhub 时设置 <code>SKILLHUB_OLLAMA_MODEL</code>。</p>}
     </Dialog>}
     {panel?.kind === "compare" && <Dialog title="比对 Skill" onClose={() => setPanel(null)}>
       <Suspense fallback={<p>加载中…</p>}><ComparePanel skills={panel.skills} /></Suspense>
