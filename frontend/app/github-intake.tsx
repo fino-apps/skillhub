@@ -81,7 +81,7 @@ export default function GitHubIntake({ onComplete }: { onComplete: (result: Impo
           </div>
         </details>
       </fieldset>
-      <button className="secondary" type="submit" disabled={busy}>{busy ? "处理中…" : "预览"}</button>
+      <button className="secondary" type="submit" disabled={busy}>{busy && !preview ? "扫描中…" : "扫描技能"}</button>
     </form>
     <Failure error={error} />
     <ImportFeedback result={feedback} />
@@ -89,7 +89,9 @@ export default function GitHubIntake({ onComplete }: { onComplete: (result: Impo
       <p>Commit <code>{preview.result.resolvedCommitSha}</code></p>
       {(preview.result.skills?.length ?? 0) > 0
         ? <><CandidatePicker items={preview.result.skills ?? []} selected={selected} onChange={setSelected} disabled={busy} />
-          <button type="button" disabled={busy || !selected.length} onClick={() => void save()}>收录所选（{selected.length}）</button></>
+          <button type="button" disabled={busy || !selected.length} onClick={() => void save()}>
+            {busy ? "收录中…" : `收录所选（${selected.length}）`}
+          </button></>
         : <p role="status">没有找到 Skill</p>}
     </div>}
   </>;

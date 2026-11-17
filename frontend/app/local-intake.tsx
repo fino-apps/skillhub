@@ -1,22 +1,37 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { commitUpload, importSkill, listSkills, scanProject } from "@/generated/api-client";
 import { localCandidate, message, pickDirectory, stageZip, type Candidate, type ImportResult, type LibraryPage, type Skill } from "./library-api";
 import { Failure } from "./skill-ui";
 
-export function CandidatePicker({ items, selected, onChange, disabled }: {
-  items: Candidate[]; selected: string[]; onChange: (selection: string[]) => void; disabled?: boolean;
+const importLimit = 100;
+
+export function CandidatePicker({ items, selected, onChange, disabled, single }: {
+  items: Candidate[]; selected: string[]; onChange: (selection: string[]) => void; disabled?: boolean; single?: boolean;
 }) {
-  return <ul className="github-candidates">
-    {items.map((item) => {
-      const path = item.path ?? "";
-      const checked = selected.includes(path);
-      return <li key={path}><label className="github-checkbox">
-        <input type="checkbox" checked={checked} disabled={disabled || (!checked && selected.length >= 100)}
-          onChange={() => onChange(checked ? selected.filter((value) => value !== path) : [...selected, path])} />
-        <span><strong>{item.name}</strong><span className="candidate-description">{item.description}</span></span>
-      </label></li>;
-    })}
-  </ul>;
+  const group = useId();
+  return <fieldset className="candidate-picker">
+    <legend className="sr-only">选择要收录的技能</legend>
+    {!single && <div className="library-actions candidate-selection">
+      <span role="status">已选 {selected.length} / {items.length} 项{items.length > importLimit && "（每次最多 100 项）"}</span>
+      <button type="button" className="skillhub-text-button" disabled={disabled || selected.length === Math.min(items.length, importLimit)}
+        onClick={() => onChange(items.slice(0, importLimit).map(({ path }) => path ?? ""))}>
+        {items.length > importLimit ? "选择前 100 项" : "全选"}
+      </button>
+      <button type="button" className="skillhub-text-button" disabled={disabled || !selected.length} onClick={() => onChange([])}>清空</button>
+    </div>}
+    <ul className="github-candidates">
+      {items.map((item) => {
+        const path = item.path ?? "";
+        const checked = selected.includes(path);
+        return <li key={path}><label className="github-checkbox">
+          <input type={single ? "radio" : "checkbox"} name={group} checked={checked}
+            disabled={disabled || (!checked && selected.length >= importLimit)}
+            onChange={() => onChange(single ? [path] : checked ? selected.filter((value) => value !== path) : [...selected, path])} />
+          <span><strong>{item.name}</strong><span className="candidate-description">{item.description}</span></span>
+        </label></li>;
+      })}
+    </ul>
+  </fieldset>;
 }
 
 export function ImportFeedback({ result }: { result: ImportResult | null }) {
@@ -77,7 +92,7 @@ export default function LocalIntake({ onComplete, onCancel, onVersion }: {
       setError("此目录没有找到 Skill");
       return;
     }
-    const selection = found.slice(0, 100).map((item) => item.path);
+    const selection = found.slice(0, importLimit).map((item) => item.path);
     setSelected(selection);
     if (found.length === 1) {
       const listed = await listSkills<LibraryPage>({ keyword: found[0].name, pageSize: 100 });
@@ -160,7 +175,7 @@ export function ZipIntake({ skillId, onComplete }: { skillId?: string; onComplet
       const candidates = reply.skills ?? [];
       setUploadId(reply.uploadId);
       setItems(candidates);
-      setSelected((skillId ? candidates.slice(0, 1) : candidates).map((item) => item.path ?? ""));
+      setSelected(candidates.slice(0, skillId ? 1 : importLimit).map((item) => item.path ?? ""));
     } catch (err) {
       setError(message(err));
     } finally {
@@ -185,8 +200,7 @@ export function ZipIntake({ skillId, onComplete }: { skillId?: string; onComplet
 
   return <div className="skill-fields">
     <label>ZIP 文件<input type="file" accept=".zip,application/zip" disabled={busy} onChange={(event) => void read(event.target.files?.[0])} /></label>
-    {items.length > 0 && <CandidatePicker items={items} selected={selected} disabled={busy}
-      onChange={(values) => setSelected(skillId ? values.slice(-1) : values)} />}
+    {items.length > 0 && <CandidatePicker items={items} selected={selected} disabled={busy} single={!!skillId} onChange={setSelected} />}
     <Failure error={error} />
     <ImportFeedback result={result} />
     {busy && <p role="status">处理中…</p>}

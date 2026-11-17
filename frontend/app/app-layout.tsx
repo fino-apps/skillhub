@@ -3,7 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { ThemeToggle } from "@/app/theme-toggle";
 
 const projectTitle = "skillhub | fino";
-const projectName = "SkillHub";
+const projectName = "skillhub";
 const monitorHref = "/monitor/d/service-overview/service-overview?from=now-1h&to=now&var-job=All&refresh=30s";
 const logsHref = "/monitor/d/service-logs/service-logs?from=now-15m&to=now&var-service=All&var-level=All";
 const tracePane = {
