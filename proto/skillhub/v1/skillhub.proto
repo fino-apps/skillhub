@@ -50,15 +50,19 @@ service SkillhubService {
   rpc SetDefaultVersion(SetDefaultVersionRequest) returns (fino.core.Null) {
     option (google.api.http) = {put: "/skillhub/v1/skills/{skill_id}/versions/{version_id}/default"};
   }
+
   rpc DeleteVersion(DeleteVersionRequest) returns (fino.core.Null) {
     option (google.api.http) = {delete: "/skillhub/v1/skills/{skill_id}/versions/{version_id}"};
   }
+
   rpc GetVersionContent(GetVersionContentRequest) returns (GetVersionContentResponse) {
     option (google.api.http) = {get: "/skillhub/v1/skills/{skill_id}/versions/{version_id}/content"};
   }
+
   rpc GetVersionFile(GetVersionFileRequest) returns (GetVersionFileResponse) {
     option (google.api.http) = {get: "/skillhub/v1/skills/{skill_id}/versions/{version_id}/file"};
   }
+
   rpc DownloadZip(DownloadZipRequest) returns (DownloadZipResponse) {
     option (google.api.http) = {
       get: "/skillhub/v1/skills/{skill_id}/versions/{version_id}/archive"
@@ -66,25 +70,32 @@ service SkillhubService {
     };
     option (fino.http) = {attachment_filename_field: "filename"};
   }
+
   rpc SelectLocalDirectory(SelectLocalDirectoryRequest) returns (SelectLocalDirectoryResponse) {
     option (google.api.http) = {post: "/skillhub/v1/directories:select" body: "*"};
   }
+
   rpc ExportVersionToDirectory(ExportVersionToDirectoryRequest) returns (ExportVersionToDirectoryResponse) {
     option (google.api.http) = {post: "/skillhub/v1/skills/{skill_id}/versions/{version_id}:export" body: "*"};
   }
+
   rpc RepairVersion(RepairVersionRequest) returns (fino.core.Null) {
     option (google.api.http) = {post: "/skillhub/v1/skills/{skill_id}/versions/{version_id}:repair"};
   }
+
   rpc ListFacets(ListFacetsRequest) returns (ListFacetsResponse) {
     option (google.api.http) = {get: "/skillhub/v1/facets"};
   }
+
   rpc BatchUpdateSkillMetadata(BatchUpdateSkillMetadataRequest) returns (fino.core.Null) {
     option (google.api.http) = {patch: "/skillhub/v1/skills:organize" body: "*"};
   }
+
   rpc UploadZip(UploadZipRequest) returns (UploadZipResponse) {
     option (google.api.http) = {post: "/skillhub/v1/uploads" body: "file"};
     option (fino.http) = {multipart: {max_file_bytes: 67108864}};
   }
+
   rpc CommitUpload(CommitUploadRequest) returns (ImportSkillResponse) {
     option (google.api.http) = {post: "/skillhub/v1/uploads/{upload_id}:commit" body: "*"};
   }
@@ -104,6 +115,7 @@ message ListSkillsRequest {
   repeated string tags = 4 [(fino.validate) = {omitempty: true max: 30}];
   bool uncategorized = 5;
   string category = 3 [(fino.validate) = {omitempty: true max: 128}];
+
   int32 page_size = 90 [(fino.validate) = {omitempty: true min: 1 max: 100}];
   string page_token = 91 [(fino.validate) = {omitempty: true max: 512}];
 }
@@ -166,6 +178,7 @@ message DeleteSkillRequest {
 
 message ListVersionsRequest {
   string skill_id = 1 [(fino.validate) = {required: true max: 36 uuid: true}];
+
   int32 page_size = 90 [(fino.validate) = {omitempty: true min: 1 max: 100}];
   string page_token = 91 [(fino.validate) = {omitempty: true max: 512}];
 }
@@ -182,6 +195,7 @@ message VersionView {
   string upstream_commit = 10;
   string upstream_repository = 11;
   string upstream_path = 12;
+
   fino.core.Timestamp create_time = 98;
 }
 
@@ -226,7 +240,9 @@ message GitHubSource {
   string ref = 3;
 }
 
-message ScanProjectRequest { string project_path = 1 [(fino.validate) = {required: true max: 2048}]; }
+message ScanProjectRequest {
+  string project_path = 1 [(fino.validate) = {required: true max: 2048}];
+}
 message SkillCandidate {
   string path = 1;
   string name = 2;
@@ -310,55 +326,64 @@ message SetDefaultVersionRequest {
   string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
   string version_id = 2 [(fino.validate) = {required: true uuid: true}];
 }
+
 message DeleteVersionRequest {
   string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
   string version_id = 2 [(fino.validate) = {required: true uuid: true}];
 }
+
 message GetVersionContentRequest {
   string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
   string version_id = 2 [(fino.validate) = {required: true uuid: true}];
 }
+
 message GetVersionContentResponse {
   string description = 1;
   repeated string files = 2;
 }
+
 message GetVersionFileRequest {
   string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
   string version_id = 2 [(fino.validate) = {required: true uuid: true}];
   string path = 3 [(fino.validate) = {required: true max: 2048}];
 }
+
 message GetVersionFileResponse {
   string text = 1;
   int32 size = 2;
   bool binary = 3;
   bool too_large = 4;
 }
+
 message SelectLocalDirectoryRequest {}
 message SelectLocalDirectoryResponse {
   string path = 1;
 }
+
 message ExportVersionToDirectoryRequest {
   string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
   string version_id = 2 [(fino.validate) = {required: true uuid: true}];
   string directory = 3 [(fino.validate) = {omitempty: true max: 2048}];
   bool choose_directory = 4;
 }
+
 message ExportVersionToDirectoryResponse {
   string path = 1;
 }
+
 message RepairVersionRequest {
   string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
   string version_id = 2 [(fino.validate) = {required: true uuid: true}];
 }
-message ListFacetsRequest {}
-message ListFacetsResponse {
-  reserved 4;
-  reserved "ai_enabled";
 
+message ListFacetsRequest {}
+
+message ListFacetsResponse {
   repeated string categories = 1;
   repeated string sources = 2;
   repeated string tags = 3;
 }
+
 message SkillMetadataChange {
   string skill_id = 1;
   optional string purpose = 2;
@@ -367,24 +392,30 @@ message SkillMetadataChange {
   repeated string remove_tags = 5;
   string revision = 6;
 }
+
 message BatchUpdateSkillMetadataRequest {
   repeated SkillMetadataChange changes = 1 [(fino.validate) = {required: true max: 100}];
 }
+
 message DownloadZipRequest {
   string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
   string version_id = 2 [(fino.validate) = {required: true uuid: true}];
 }
+
 message DownloadZipResponse {
   google.api.HttpBody archive = 1;
   string filename = 2;
 }
+
 message UploadZipRequest {
   bytes file = 1;
 }
+
 message UploadZipResponse {
   string upload_id = 1;
   repeated SkillCandidate skills = 2;
 }
+
 message CommitUploadRequest {
   string upload_id = 1 [(fino.validate) = {required: true uuid: true}];
   repeated string skill_paths = 2 [(fino.validate) = {required: true max: 100}];
