@@ -15,8 +15,13 @@ import (
 	"path/filepath"
 	"testing"
 
+	gokitmetrics "github.com/fino-io/gokit/metrics"
+	"github.com/fino-io/skillhub/backend/internal/skillhub/api/endpoint"
+	endpointmw "github.com/fino-io/skillhub/backend/internal/skillhub/api/endpoint/middleware"
+	finohttp "github.com/fino-io/skillhub/backend/internal/skillhub/api/http"
 	pb "github.com/fino-io/skillhub/go/skillhub/v1"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/trace/noop"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -28,9 +33,22 @@ func TestCatalogWorkflow(t *testing.T) {
 	t.Setenv("SKILLHUB_EXPORT_DIR", filepath.Join(dir, "exports"))
 	_, err := loadConfig()
 	require.NoError(t, err)
-	handler, close, err := newAPIHandler(context.Background())
+	server, close, err := openCatalog(context.Background())
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, close()) })
+	tracer := noop.NewTracerProvider().Tracer("skillhub-test")
+	handler := finohttp.NewHandler(endpointmw.WrapEndpoints(endpoint.NewEndpoints(server), endpointmw.DefaultOptions(tracer)),
+		tracer, gokitmetrics.Disabled().HTTPMiddleware)
+	for _, hostOrigin := range []struct{ host, origin string }{
+		{"example.test", ""},
+		{"127.0.0.1", "http://example.test"},
+	} {
+		r := httptest.NewRequest(http.MethodPost, "http://"+hostOrigin.host+"/skillhub/v1/uploads", http.NoBody)
+		r.Header.Set("Origin", hostOrigin.origin)
+		reply := httptest.NewRecorder()
+		handler.ServeHTTP(reply, r)
+		require.Equal(t, http.StatusForbidden, reply.Code)
+	}
 
 	performRequest := func(method, path string, body io.Reader, contentType string, status int) *httptest.ResponseRecorder {
 		t.Helper()

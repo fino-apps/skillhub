@@ -26,9 +26,10 @@ docker compose --env-file deploy/compose/.env \
 | --- | --- |
 | `SERVER_HTTP_PORT` | `31101`，后端 HTTP 端口 |
 | `SERVER_HTTP_HOST` | 本地开发默认 `127.0.0.1`，Compose 在容器内监听 `0.0.0.0` |
+| `SERVER_GRPC_PORT` | `31102`，Fino 本机 gRPC 端口 |
 | `SERVER_DEBUG_PORT` | `31103`，Fino 本机调试端口，提供 `/readyz` 和 `/healthz` |
 | `SKILLHUB_DATA_DIR` | 系统用户配置目录下的 `SkillHub`，保存数据库和快照 |
-| `SKILLHUB_EXPORT_DIR` | 系统下载目录下的 `SkillHub`，不可用时回退到数据目录的 `exports` |
+| `SKILLHUB_EXPORT_DIR` | 默认使用数据目录下的 `exports` |
 
 备份时先停止后端，再复制 Docker 卷或本地数据目录。若显式设置 `SKILLHUB_DATABASE` 或 `SKILLHUB_SNAPSHOT_DIR`，备份时一并复制这些位置。旧 GitHub 条目若只有 commit 记录，可在页面补齐对应版本副本。
 

@@ -52,6 +52,30 @@ func bindingMiddleware(route Route) []Middleware {
 		return previewImportMiddleware(route)
 	case "ImportSkill":
 		return importSkillMiddleware(route)
+	case "SetDefaultVersion":
+		return setDefaultVersionMiddleware(route)
+	case "DeleteVersion":
+		return deleteVersionMiddleware(route)
+	case "GetVersionContent":
+		return getVersionContentMiddleware(route)
+	case "GetVersionFile":
+		return getVersionFileMiddleware(route)
+	case "DownloadZip":
+		return downloadZipMiddleware(route)
+	case "SelectLocalDirectory":
+		return selectLocalDirectoryMiddleware(route)
+	case "ExportVersionToDirectory":
+		return exportVersionToDirectoryMiddleware(route)
+	case "RepairVersion":
+		return repairVersionMiddleware(route)
+	case "ListFacets":
+		return listFacetsMiddleware(route)
+	case "BatchUpdateSkillMetadata":
+		return batchUpdateSkillMetadataMiddleware(route)
+	case "UploadZip":
+		return uploadZipMiddleware(route)
+	case "CommitUpload":
+		return commitUploadMiddleware(route)
 	case "CompareSkills":
 		return compareSkillsMiddleware(route)
 	case "GetInstallCommand":
@@ -94,6 +118,54 @@ func previewImportMiddleware(Route) []Middleware {
 }
 
 func importSkillMiddleware(Route) []Middleware {
+	return nil
+}
+
+func setDefaultVersionMiddleware(Route) []Middleware {
+	return nil
+}
+
+func deleteVersionMiddleware(Route) []Middleware {
+	return nil
+}
+
+func getVersionContentMiddleware(Route) []Middleware {
+	return nil
+}
+
+func getVersionFileMiddleware(Route) []Middleware {
+	return nil
+}
+
+func downloadZipMiddleware(Route) []Middleware {
+	return nil
+}
+
+func selectLocalDirectoryMiddleware(Route) []Middleware {
+	return nil
+}
+
+func exportVersionToDirectoryMiddleware(Route) []Middleware {
+	return nil
+}
+
+func repairVersionMiddleware(Route) []Middleware {
+	return nil
+}
+
+func listFacetsMiddleware(Route) []Middleware {
+	return nil
+}
+
+func batchUpdateSkillMetadataMiddleware(Route) []Middleware {
+	return nil
+}
+
+func uploadZipMiddleware(Route) []Middleware {
+	return nil
+}
+
+func commitUploadMiddleware(Route) []Middleware {
 	return nil
 }
 

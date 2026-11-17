@@ -1,4 +1,4 @@
-package http
+package middleware
 
 import (
 	"encoding/json"
@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-// WithLocalRequests permits browser requests from the local SkillHub origin.
-func WithLocalRequests(next http.Handler) http.Handler {
+// localRequestsOnly permits browser requests from the local SkillHub origin.
+func localRequestsOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		host, _, err := net.SplitHostPort(r.Host)
 		if err != nil {
