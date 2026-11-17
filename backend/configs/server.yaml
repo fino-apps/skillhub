@@ -1,8 +1,0 @@
-server:
-  httpAddr: "127.0.0.1:30101"
-  grpcAddr: "127.0.0.1:30102"
-  debugAddr: "127.0.0.1:30103"
-skillhubServer:
-  httpAddr: "127.0.0.1:${SERVER_HTTP_PORT}"
-  grpcAddr: "127.0.0.1:${SERVER_GRPC_PORT}"
-  debugAddr: "127.0.0.1:${SERVER_DEBUG_PORT}"
