@@ -274,6 +274,13 @@ func LocalDirectory(path string) (string, error) {
 	if err != nil {
 		return "", invalid(err)
 	}
+	info, err := os.Stat(resolved)
+	if err != nil {
+		return "", invalid(err)
+	}
+	if !info.IsDir() {
+		return "", invalid(errors.New("路径必须是目录"))
+	}
 	return resolved, nil
 }
 
