@@ -20,7 +20,7 @@ type Skill struct {
 	RepositoryUrl    string              `gorm:"type:text;not null;comment:GitHub 来源地址"`
 	RepositoryPath   string              `gorm:"type:text;not null;comment:仓库内 Skill 路径"`
 	LocalPath        string              `gorm:"type:text;not null;default:'';comment:本机原始 Skill 目录；GitHub 来源留空"`
-	SourceKey        string              `gorm:"type:text;not null;default:'';comment:收录来源标识"`
+	SourceKey        string              `gorm:"type:text;not null;default:'';uniqueIndex:skillhub_source,where:source_key <> '';comment:收录来源标识"`
 	ImportKind       string              `gorm:"type:text;not null;default:'';comment:folder、github 或 zip"`
 	Purpose          string              `gorm:"type:text;not null;default:'';comment:用户整理的一行用途"`
 	UpstreamName     string              `gorm:"type:text;not null;default:'';comment:展示的上游名称"`

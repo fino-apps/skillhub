@@ -12,8 +12,8 @@ import (
 )
 
 type SkillVersion struct {
-	ID                 domainmodel.SkillVersionID `gorm:"type:char(36);primaryKey;comment:主键"`
-	SkillId            string                     `gorm:"type:text;not null;comment:Skill ID"`
+	ID                 domainmodel.SkillVersionID `gorm:"type:char(36);primaryKey;index:skillhub_version_owner,priority:2;comment:主键"`
+	SkillId            string                     `gorm:"type:text;not null;index:skillhub_version_owner,priority:1;comment:Skill ID"`
 	Name               string                     `gorm:"type:text;not null;comment:该版本的 Skill 名称"`
 	Notes              string                     `gorm:"type:text;not null;comment:版本说明"`
 	SourceRef          string                     `gorm:"type:text;not null;comment:用户选择的 Git 引用"`

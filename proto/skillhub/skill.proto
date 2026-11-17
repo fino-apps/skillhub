@@ -21,7 +21,7 @@ message Skill {
 
   string local_path = 10 [(fino.db) = {len: 2048 default: "''" comment: "本机原始 Skill 目录；GitHub 来源留空"}];
 
-  string source_key = 11 [(fino.db) = {len: 64 default: "''" comment: "收录来源标识"}];
+  string source_key = 11 [(fino.db) = {len: 64 default: "''" unique_index: "skillhub_source,where:source_key <> ''" comment: "收录来源标识"}];
   string import_kind = 12 [(fino.db) = {len: 16 default: "''" comment: "folder、github 或 zip"}];
   string purpose = 13 [(fino.db) = {len: 240 default: "''" comment: "用户整理的一行用途"}];
   string upstream_name = 14 [(fino.db) = {len: 120 default: "''" comment: "展示的上游名称"}];
@@ -48,8 +48,8 @@ message SkillTag {
 message SkillVersion {
   option (fino.model) = {generate: true services: "SkillhubService"};
 
-  string id = 1 [(fino.db) = {len: 36 comment: "主键"}];
-  string skill_id = 2 [(fino.db) = {len: 36 comment: "Skill ID"}];
+  string id = 1 [(fino.db) = {len: 36 index: "skillhub_version_owner,priority:2" comment: "主键"}];
+  string skill_id = 2 [(fino.db) = {len: 36 index: "skillhub_version_owner,priority:1" comment: "Skill ID"}];
   string name = 3 [(fino.db) = {len: 64 comment: "该版本的 Skill 名称"}];
   string notes = 4 [(fino.db) = {len: 4096 comment: "版本说明"}];
   string source_ref = 7 [(fino.db) = {len: 200 comment: "用户选择的 Git 引用"}];

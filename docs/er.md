@@ -21,8 +21,8 @@ erDiagram
         skill_id string "Skill ID"
     }
     "skillhub.SkillVersion"["SkillVersion"] {
-        id string PK "主键"
-        skill_id string "Skill ID"
+        id string PK "IDX · 主键"
+        skill_id string "IDX · Skill ID"
     }
     "skillhub.SkillTag" }o..o| "skillhub.Skill" : "skill_id"
     "skillhub.SkillVersion" }o..o| "skillhub.Skill" : "skill_id"
@@ -53,7 +53,7 @@ erDiagram
 | `repository_url` | `string` | 长度 2048 | GitHub 来源地址 |
 | `repository_path` | `string` | 长度 1024 | 仓库内 Skill 路径 |
 | `local_path` | `string` | 长度 2048；默认值 `''` | 本机原始 Skill 目录；GitHub 来源留空 |
-| `source_key` | `string` | 长度 64；默认值 `''` | 收录来源标识 |
+| `source_key` | `string` | 长度 64；唯一索引 `skillhub_source,where:source_key <> ''`；默认值 `''` | 收录来源标识 |
 | `import_kind` | `string` | 长度 16；默认值 `''` | folder、github 或 zip |
 | `purpose` | `string` | 长度 240；默认值 `''` | 用户整理的一行用途 |
 | `upstream_name` | `string` | 长度 120；默认值 `''` | 展示的上游名称 |
@@ -80,8 +80,8 @@ erDiagram
 
 | 字段 | 模型类型 | DB 标注 | 说明 |
 |---|---|---|---|
-| `id` | `string` | PK（默认约定）；长度 36 | 主键 |
-| `skill_id` | `string` | 长度 36 | Skill ID |
+| `id` | `string` | PK（默认约定）；长度 36；索引 `skillhub_version_owner,priority:2` | 主键 |
+| `skill_id` | `string` | 长度 36；索引 `skillhub_version_owner,priority:1` | Skill ID |
 | `name` | `string` | 长度 64 | 该版本的 Skill 名称 |
 | `notes` | `string` | 长度 4096 | 版本说明 |
 | `source_ref` | `string` | 长度 200 | 用户选择的 Git 引用 |

@@ -21,8 +21,16 @@ type Library struct {
 	cursor   *pagination.CursorCodec
 }
 
-func NewLibrary(provider db.Provider, cursor *pagination.CursorCodec) *Library {
-	return &Library{provider: provider, cursor: cursor}
+type LibraryDeps struct {
+	DB             db.Provider
+	PageTokenCodec *pagination.CursorCodec
+}
+
+func NewLibrary(deps LibraryDeps) *Library {
+	return &Library{
+		provider: deps.DB,
+		cursor:   deps.PageTokenCodec,
+	}
 }
 
 func (r *Library) session(ctx context.Context) *gorm.DB {

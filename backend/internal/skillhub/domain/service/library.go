@@ -28,8 +28,20 @@ type Library struct {
 	commits                     sync.Mutex
 }
 
-func NewLibrary(store repo.Library, snapshots, uploads, exports string) *Library {
-	return &Library{store: store, snapshots: snapshots, uploads: uploads, exports: exports}
+type LibraryDeps struct {
+	Store       repo.Library
+	SnapshotDir string
+	UploadDir   string
+	ExportDir   string
+}
+
+func NewLibrary(deps LibraryDeps) *Library {
+	return &Library{
+		store:     deps.Store,
+		snapshots: deps.SnapshotDir,
+		uploads:   deps.UploadDir,
+		exports:   deps.ExportDir,
+	}
 }
 
 type SkillDetails struct {

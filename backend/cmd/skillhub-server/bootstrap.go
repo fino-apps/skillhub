@@ -66,7 +66,7 @@ func serve(ctx context.Context, cfg nserver.Config) error {
 		}
 	}()
 
-	server, err := buildServer(ctx, infra, paths)
+	server, err := buildServer(infra, paths)
 	if err != nil {
 		return err
 	}
@@ -74,19 +74,24 @@ func serve(ctx context.Context, cfg nserver.Config) error {
 	return api.RunContext(ctx, cfg, server, tracer, instrumentation)
 }
 
-func buildServer(ctx context.Context, deps infra, paths libraryPaths) (pb.SkillhubServiceServer, error) {
+func buildServer(deps infra, paths libraryPaths) (pb.SkillhubServiceServer, error) {
 	if err := migrateSchema(deps.DB); err != nil {
 		return nil, err
 	}
-	db := deps.DB.NewSession(ctx)
-	for _, statement := range []string{
-		"CREATE UNIQUE INDEX IF NOT EXISTS skillhub_source ON skill(source_key) WHERE source_key <> ''",
-		"CREATE INDEX IF NOT EXISTS skillhub_version_owner ON skill_version(skill_id, id)",
-	} {
-		if err := db.Exec(statement).Error; err != nil {
-			return nil, err
-		}
-	}
-	library := service.NewLibrary(infrarepo.NewLibrary(deps.DB, deps.Pagination), paths.snapshots, paths.uploads, paths.exports)
-	return app.NewService(app.ServiceDeps{Library: library}), nil
+
+	libraryRepo := infrarepo.NewLibrary(infrarepo.LibraryDeps{
+		DB:             deps.DB,
+		PageTokenCodec: deps.Pagination,
+	})
+
+	libraryService := service.NewLibrary(service.LibraryDeps{
+		Store:       libraryRepo,
+		SnapshotDir: paths.snapshots,
+		UploadDir:   paths.uploads,
+		ExportDir:   paths.exports,
+	})
+
+	return app.NewService(app.ServiceDeps{
+		Library: libraryService,
+	}), nil
 }
