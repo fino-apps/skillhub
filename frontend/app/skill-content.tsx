@@ -65,8 +65,8 @@ function markdownBody(text: string, skillName: string) {
   return title && normalize(title[1]) === normalize(skillName) ? body.slice(title[0].length) : body;
 }
 
-export default function SkillContent({ skillId, skillName, versionId, available }: {
-  skillId: string; skillName: string; versionId: string; available: boolean;
+export default function SkillContent({ skillId, skillName, versionId, available, purpose }: {
+  skillId: string; skillName: string; versionId: string; available: boolean; purpose: string;
 }) {
   const [contents, setContents] = useState<Contents>({});
   const [path, setPath] = useState("SKILL.md");
@@ -133,26 +133,29 @@ export default function SkillContent({ skillId, skillName, versionId, available 
   if (!available) return <p className="skillhub-empty">此版本的快照待补齐。</p>;
   const files = contents.files ?? [];
   const tree = fileTree(files);
+  const markdown = path.toLowerCase().endsWith(".md");
   return <section className="skill-content" ref={reader} tabIndex={-1} aria-label="文件预览">
     <div className="skill-content-tools">
       {files.length > 1 && <details className="skill-disclosure">
         <summary>浏览文件 <span className="skillhub-hint">{files.length}</span></summary>
         <FileTree tree={tree} selected={path} onSelect={open} />
       </details>}
-      {contents.description && <details className="skill-disclosure"><summary>原始描述</summary><p>{contents.description}</p></details>}
+      {contents.description && contents.description.trim() !== purpose.trim() &&
+        <details className="skill-disclosure"><summary>原始描述</summary><p>{contents.description}</p></details>}
     </div>
     {path !== "SKILL.md" && <div className="library-actions skill-file-heading">
-      <button type="button" className="skillhub-text-button" onClick={back}>返回</button>
+      <button type="button" className="skillhub-text-button" onClick={back}>‹ 返回</button>
       <h2 ref={previewHeading} tabIndex={-1}><code>{path}</code></h2>
     </div>}
     <Failure error={error} />
     {!preview && !error && <p role="status">读取中…</p>}
     {preview?.binary && <p>二进制文件 · {preview.size ?? 0} 字节</p>}
     {preview?.tooLarge && <p>文件过大，可保存版本到本机查看。</p>}
-    {preview && !preview.binary && !preview.tooLarge && (path.toLowerCase().endsWith(".md")
+    {preview && !preview.binary && !preview.tooLarge && (markdown
       ? <article className="skill-markdown">
         <ReactMarkdown skipHtml disallowedElements={["img"]} remarkPlugins={[remarkGfm]} components={{
           h1({ children }) { return <h2>{children}</h2>; },
+          table({ children }) { return <div className="skill-markdown-table"><table>{children}</table></div>; },
           a({ href, children }) {
             if (!href) return <span>{children}</span>;
             if (href.startsWith("#")) return <a href={href}>{children}</a>;
@@ -162,6 +165,6 @@ export default function SkillContent({ skillId, skillName, versionId, available 
           },
         }}>{path === "SKILL.md" ? markdownBody(preview.text ?? "", skillName) : preview.text ?? ""}</ReactMarkdown>
       </article>
-      : <pre className="copy-command"><code>{preview.text}</code></pre>)}
+      : <pre className="skill-file-code"><code>{preview.text}</code></pre>)}
   </section>;
 }

@@ -35,6 +35,7 @@ function Detail({ skillId }: { skillId: string }) {
   const [refresh, setRefresh] = useState(0);
   const [error, setError] = useState("");
   const [panel, setPanel] = useState<Panel | null>(null);
+  const [purposeExpanded, setPurposeExpanded] = useState(false);
   const operation = useSkillOperation();
 
   useEffect(() => {
@@ -77,6 +78,8 @@ function Detail({ skillId }: { skillId: string }) {
   const busy = !!operation.busy;
   const updateSource = skill?.repositoryUrl ? "github" : "folder";
   const canCompare = versions.filter((version) => version.available).length >= 2;
+  const purpose = skill?.purpose || skill?.description || "";
+  const hasLongPurpose = purpose.length > 220;
 
   function repair(version: SkillVersion) {
     void operation.run(version.id, async () => {
@@ -112,7 +115,7 @@ function Detail({ skillId }: { skillId: string }) {
     });
   }
 
-  return <main className="skillhub-shell">
+  return <main className="skillhub-shell skill-detail-shell">
     <Link className="skill-back" to={back}>‹ 技能库</Link>
     <Failure error={error} />
     {error && <button type="button" className="secondary" onClick={reload}>重试</button>}
@@ -121,10 +124,8 @@ function Detail({ skillId }: { skillId: string }) {
       <div className="skillhub-heading skill-detail-heading">
         <div className="skill-identity">
           <h1>{skill.name}</h1>
-          {(skill.purpose || skill.description) && <p className="library-purpose">{skill.purpose || skill.description}</p>}
         </div>
         <div className="library-actions">
-          {view && <span className="skillhub-hint">正在查看 <code title={versionDigest(view)}>{shortVersion(view, versions)}</code></span>}
           {view && (view.available
             ? <button type="button" disabled={busy} onClick={() => void operation.save(skillId, view.id)}>{busy ? "处理中…" : "保存到本机"}</button>
             : <button type="button" disabled={busy} onClick={() => repair(view)}>补齐版本</button>)}
@@ -140,8 +141,9 @@ function Detail({ skillId }: { skillId: string }) {
         </div>
       </div>
       <div className="skill-detail-meta">
+        {view && <span>当前版本 <code title={versionDigest(view)}>{shortVersion(view, versions)}</code></span>}
         <details className="skill-disclosure">
-          <summary>{sourceLabel(skill)}</summary>
+          <summary>来源 {sourceLabel(skill)}</summary>
           <dl>
             <dt>导入方式</dt><dd>{sourceNames[skill.importKind ?? ""] || "未知"}</dd>
             {skill.upstreamUrl && <><dt>上游出处</dt><dd><a href={skill.upstreamUrl} target="_blank" rel="noreferrer">{skill.upstreamUrl}</a></dd></>}
@@ -154,13 +156,18 @@ function Detail({ skillId }: { skillId: string }) {
         {skill.category && <span>{skill.category}</span>}
         {skill.tags?.map((tag) => <span key={tag}>{tag}</span>)}
       </div>
+      {purpose && <div className="skill-detail-purpose">
+        <p id="skill-purpose" className={hasLongPurpose && !purposeExpanded ? "skill-purpose-preview" : undefined}>{purpose}</p>
+        {hasLongPurpose && <button type="button" className="skillhub-text-button" aria-expanded={purposeExpanded} aria-controls="skill-purpose"
+          onClick={() => setPurposeExpanded(!purposeExpanded)}>{purposeExpanded ? "收起用途" : "展开用途"}</button>}
+      </div>}
       {panel?.kind !== "export" && <OperationFeedback {...operation} floating />}
       <nav className="skill-tabs" aria-label="Skill 详情">
         <button type="button" aria-pressed={!versionsTab} onClick={() => routeValue("tab", "")}>内容</button>
         <button type="button" aria-pressed={versionsTab} onClick={() => routeValue("tab", "versions")}>版本</button>
       </nav>
       {!versionsTab && (view
-        ? <SkillContent key={view.id} skillId={skillId} skillName={skill.name} versionId={view.id} available={!!view.available} />
+        ? <SkillContent key={view.id} skillId={skillId} skillName={skill.name} versionId={view.id} available={!!view.available} purpose={purpose} />
         : <p className="skillhub-empty">暂无版本</p>)}
       {versionsTab && <section className="skill-versions">
         <div className="library-actions">

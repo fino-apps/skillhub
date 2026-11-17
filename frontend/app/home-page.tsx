@@ -73,12 +73,14 @@ function LibraryToolbar({ params, facets, onChange, status, children }: {
           </div>
         </Popover>}
       </div>
-      <div className="library-filter-status">
-        {status}
-        {params.size > 0 && <button type="button" className="skillhub-text-button"
-          onClick={() => onChange(new URLSearchParams())}>清除筛选</button>}
+      <div className="library-filter-end">
+        <div className="library-filter-status">
+          {status}
+          {params.size > 0 && <button type="button" className="skillhub-text-button"
+            onClick={() => onChange(new URLSearchParams())}>清除筛选</button>}
+        </div>
+        {children}
       </div>
-      {children}
     </div>
     {!!tags.length && <div className="library-tags" aria-label="已选标签" role="group">
       {tags.map((tag) => <button key={tag} type="button" className="secondary" aria-label={`移除标签 ${tag}`}
