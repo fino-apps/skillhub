@@ -46,31 +46,33 @@ function LibraryToolbar({ params, facets, onChange, status, children }: {
         <span aria-hidden="true">⌕</span><span className="sr-only">搜索 Skill</span>
         <input type="search" name="q" autoComplete="off" placeholder="搜索名称、用途或标签…" value={params.get("q") ?? ""} onChange={(event) => set("q", event.target.value)} />
       </label>
-      <label><span className="sr-only">来源</span>
-        <select value={source} onChange={(event) => set("source", event.target.value)}>
-          <option value="">全部来源</option>
-          {source && !facets.sources?.includes(source) && <option value={source}>{sourceNames[source] || source}</option>}
-          {facets.sources?.map((value) => <option key={value} value={value}>{sourceNames[value] || value}</option>)}
-        </select>
-      </label>
-      <label><span className="sr-only">分类</span>
-        <select value={category} onChange={(event) => set("category", event.target.value)}>
-          <option value="">全部分类</option><option value="~">未分类</option>
-          {category && category !== "~" && !facets.categories?.includes(category) && <option>{category}</option>}
-          {facets.categories?.map((category) => <option key={category}>{category}</option>)}
-        </select>
-      </label>
-      {!!facets.tags?.length && <Popover className={`skill-filter${tags.length ? " has-filters" : ""}`} summary="标签">
-        <div className="filter-panel skill-fields">
-          <fieldset className="skill-fields filter-tags">
-            <legend>标签</legend>
-            {facets.tags.map((tag) => <label key={tag} className="github-checkbox">
-              <input type="checkbox" checked={tags.includes(tag)} onChange={(event) =>
-                setTags(event.target.checked ? [...tags, tag] : tags.filter((value) => value !== tag))} />{tag}
-            </label>)}
-          </fieldset>
-        </div>
-      </Popover>}
+      <div className="library-facets">
+        <label><span className="sr-only">来源</span>
+          <select value={source} onChange={(event) => set("source", event.target.value)}>
+            <option value="">全部来源</option>
+            {source && !facets.sources?.includes(source) && <option value={source}>{sourceNames[source] || source}</option>}
+            {facets.sources?.map((value) => <option key={value} value={value}>{sourceNames[value] || value}</option>)}
+          </select>
+        </label>
+        <label><span className="sr-only">分类</span>
+          <select value={category} onChange={(event) => set("category", event.target.value)}>
+            <option value="">全部分类</option><option value="~">未分类</option>
+            {category && category !== "~" && !facets.categories?.includes(category) && <option>{category}</option>}
+            {facets.categories?.map((category) => <option key={category}>{category}</option>)}
+          </select>
+        </label>
+        {!!facets.tags?.length && <Popover className={`skill-filter${tags.length ? " has-filters" : ""}`} summary="标签">
+          <div className="filter-panel skill-fields">
+            <fieldset className="skill-fields filter-tags">
+              <legend>标签</legend>
+              {facets.tags.map((tag) => <label key={tag} className="github-checkbox">
+                <input type="checkbox" checked={tags.includes(tag)} onChange={(event) =>
+                  setTags(event.target.checked ? [...tags, tag] : tags.filter((value) => value !== tag))} />{tag}
+              </label>)}
+            </fieldset>
+          </div>
+        </Popover>}
+      </div>
       <div className="library-filter-status">
         {status}
         {params.size > 0 && <button type="button" className="skillhub-text-button"
@@ -208,7 +210,7 @@ export default function HomePage() {
   return <main className="skillhub-shell library-shell">
     <LibraryToolbar params={params} facets={facets} onChange={updateFilters} status={<>
       <span role="status">{!current && loading
-        ? "正在查找技能…" : current && `${token ? "已加载" : "共"} ${skills.length} 项技能`}</span>
+        ? "正在查找技能…" : current && `${token ? "已加载" : "共"} ${skills.length} 项`}</span>
       {!selected.length && uncategorized && skills.length > 0 &&
         <button type="button" className="secondary" onClick={() => setPanel({ kind: "ai" })}>AI 整理</button>}
     </>}>
