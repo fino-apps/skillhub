@@ -19,7 +19,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func TestDesktopCatalogWorkflow(t *testing.T) {
+func TestCatalogWorkflow(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv("SKILLHUB_DATA_DIR", filepath.Join(dir, "data"))
 	t.Setenv("SKILLHUB_DATABASE", "")
@@ -27,7 +27,7 @@ func TestDesktopCatalogWorkflow(t *testing.T) {
 	t.Setenv("SKILLHUB_EXPORT_DIR", filepath.Join(dir, "exports"))
 	_, err := loadConfig()
 	require.NoError(t, err)
-	handler, close, err := newDesktop(context.Background())
+	handler, close, err := newAPIHandler(context.Background())
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, close()) })
 

@@ -46,10 +46,14 @@ func loadConfig() (nserver.Config, error) {
 	if err := config.InitDefault(config.WithWatcherDisabled(), config.WithSource(memory.NewSource(memory.WithJSON(defaults)))); err != nil {
 		return nserver.Config{}, err
 	}
-	return nserver.Config{HttpAddr: net.JoinHostPort("127.0.0.1", port)}, nil
+	host := os.Getenv("SERVER_HTTP_HOST")
+	if host == "" {
+		host = "127.0.0.1"
+	}
+	return nserver.Config{HttpAddr: net.JoinHostPort(host, port)}, nil
 }
 
-func newDesktop(ctx context.Context) (handler http.Handler, close func() error, err error) {
+func newAPIHandler(ctx context.Context) (handler http.Handler, close func() error, err error) {
 	data, err := dataDirectory()
 	if err != nil {
 		return nil, nil, err
@@ -98,11 +102,15 @@ func newDesktop(ctx context.Context) (handler http.Handler, close func() error, 
 	if err != nil {
 		return nil, nil, err
 	}
-	var paginationKey [32]byte
-	if _, err := rand.Read(paginationKey[:]); err != nil {
-		return nil, nil, err
+	encodedKey := os.Getenv("PAGINATION_ENCODED_KEY")
+	if encodedKey == "" {
+		var paginationKey [32]byte
+		if _, err := rand.Read(paginationKey[:]); err != nil {
+			return nil, nil, err
+		}
+		encodedKey = base64.StdEncoding.EncodeToString(paginationKey[:])
 	}
-	pages, err := pagination.NewCursorCodecFromBase64(base64.StdEncoding.EncodeToString(paginationKey[:]))
+	pages, err := pagination.NewCursorCodecFromBase64(encodedKey)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -126,7 +134,7 @@ func newDesktop(ctx context.Context) (handler http.Handler, close func() error, 
 	tracer := noop.NewTracerProvider().Tracer("skillhub")
 	api := finohttp.NewHandler(endpointmw.WrapEndpoints(endpoint.NewEndpoints(svc), endpointmw.DefaultOptions(tracer)),
 		tracer, gokitmetrics.Disabled().HTTPMiddleware)
-	return desktopHandler(api, svc, frontendFiles), provider.Close, nil
+	return apiHandler(api, svc), provider.Close, nil
 }
 
 func serve(ctx context.Context, cfg nserver.Config) error {
@@ -135,7 +143,7 @@ func serve(ctx context.Context, cfg nserver.Config) error {
 		return err
 	}
 	defer listener.Close()
-	handler, close, err := newDesktop(ctx)
+	handler, close, err := newAPIHandler(ctx)
 	if err != nil {
 		return err
 	}

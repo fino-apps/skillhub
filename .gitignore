@@ -62,6 +62,3 @@ npm-debug.log*
 
 # Local optional skills
 /skills/.optional/
-
-# Embedded frontend files prepared by the desktop build
-/backend/cmd/skillhub-server/web/

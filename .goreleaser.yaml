@@ -21,11 +21,13 @@ builds:
       - linux
     goarch:
       - amd64
+    env:
+      - CGO_ENABLED=1
     flags:
       - -trimpath
       - -buildvcs=false
     ldflags:
-      - -s -w -X main.gitHash={{ .ShortCommit }} -X main.gitBranch={{ .Branch }} -X main.buildTime={{ .Date }}
+      - -s -w -linkmode external -extldflags -static -X main.gitHash={{ .ShortCommit }} -X main.gitBranch={{ .Branch }} -X main.buildTime={{ .Date }}
 
 archives:
   - id: backend
@@ -46,7 +48,7 @@ archives:
     name_template: "{{ .ProjectName }}_deployment"
     files:
       - deploy/**/*
-      - backend/configs/**/*
+      - backend/configs/*.yaml
 
 checksum:
   name_template: checksums.txt
@@ -55,7 +57,7 @@ dockers_v2:
   - id: skillhub-server
     ids:
       - skillhub-server
-    dockerfile: backend/build/skillhub-server/Dockerfile
+    dockerfile: backend/build/skillhub-server/Dockerfile.release
     images:
       - skillhub/skillhub-server
     tags:

@@ -2,25 +2,34 @@
 
 SkillHub 是单机 Skill 技能库。直接导入或导出完整文件夹，也可以按 GitHub commit 收录第三方 Skill。已保存版本可离线查看、比对和导出。
 
-## 单机运行
+## 前后端分开部署
 
-构建需要 Go 1.25.13 或更新版本、Node.js 20.19 或更新版本，以及用于 SQLite 的本机 C 编译器。首次构建先安装前端依赖。
+从项目根目录用 `.goreleaser.yaml` 构建两份 Linux AMD64 镜像。需要 Go 1.25.13 或更新版本、符合 `frontend/package.json` 要求的 Node.js、GoReleaser 2.15+、Zig 和 Docker。SQLite 需要 CGO，下面用 Zig 编译并静态链接到后端程序。GoReleaser 会安装前端依赖并构建网页，将镜像加载到本机 Docker。
 
-```bash
-npm --prefix frontend ci
-bash backend/scripts/build-desktop.sh
-.fino/release/skillhub
+```sh
+CC='zig cc -target x86_64-linux-musl' \
+  goreleaser release --config .goreleaser.yaml --snapshot --clean
 ```
 
-打开 `http://127.0.0.1:31101`。发布包内置前端和 API。GitHub 收录使用本机 Git 与 HTTPS 凭据。macOS 使用系统目录选择，Linux 在有图形桌面和 `zenity` 时使用目录选择器，其他环境可以输入绝对路径。
+首次部署时从 `.env.example` 创建 `.env`，并准备 Fino 的共享 Docker 网络。已有网络可以直接复用。
+
+```sh
+test -f deploy/compose/.env || cp deploy/compose/.env.example deploy/compose/.env
+docker network inspect infra >/dev/null 2>&1 || docker network create infra
+docker compose --env-file deploy/compose/.env \
+  -f deploy/compose/compose.yaml -f deploy/compose/compose.skillhub.yaml up -d --wait
+```
+
+打开 `http://127.0.0.1:8082`。Caddy 提供页面，并通过 Docker 网络转发 `/skillhub/v1` 请求。SQLite、快照和导出文件保存在 `skillhub_data` 卷。容器部署时，导入路径必须能被后端容器访问，也可以从浏览器导入或下载 ZIP。
 
 | 环境变量 | 默认值与用途 |
 | --- | --- |
-| `SERVER_HTTP_PORT` | `31101`，回环 HTTP 端口 |
+| `SERVER_HTTP_PORT` | `31101`，后端 HTTP 端口 |
+| `SERVER_HTTP_HOST` | 本地开发默认 `127.0.0.1`，Compose 在容器内监听 `0.0.0.0` |
 | `SKILLHUB_DATA_DIR` | 系统用户配置目录下的 `SkillHub`，保存数据库和快照 |
 | `SKILLHUB_EXPORT_DIR` | 系统下载目录下的 `SkillHub`，不可用时回退到数据目录的 `exports` |
 
-备份时先停止服务，再复制整个数据目录。若显式设置 `SKILLHUB_DATABASE` 或 `SKILLHUB_SNAPSHOT_DIR`，备份时一并复制这些位置；这两个变量也可用来打开原数据库和快照目录。旧 GitHub 条目若只有 commit 记录，可在页面补齐对应版本副本。
+备份时先停止后端，再复制 Docker 卷或本地数据目录。若显式设置 `SKILLHUB_DATABASE` 或 `SKILLHUB_SNAPSHOT_DIR`，备份时一并复制这些位置。旧 GitHub 条目若只有 commit 记录，可在页面补齐对应版本副本。
 
 ## 日常使用
 
@@ -41,6 +50,6 @@ go -C backend test ./...
 npm --prefix frontend run build
 ```
 
-开发时分别运行 `go -C backend run ./cmd/skillhub-server` 与 `npm --prefix frontend run dev`，Vite 将业务 API 代理到本机后端。
+开发时先执行 `npm --prefix frontend ci`，再分别运行 `go -C backend run ./cmd/skillhub-server` 与 `npm --prefix frontend run dev`。Vite 将业务 API 代理到本机后端，本机目录选择和 Git 使用当前用户的环境。
 
 [技能库架构方案](docs/SKILLHUB_ARCHITECTURE.md) · [前端页面设计](docs/SKILLHUB_FRONTEND_DESIGN.md)
