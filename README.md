@@ -28,10 +28,9 @@ docker compose --env-file deploy/compose/.env \
 | `SERVER_HTTP_HOST` | 本地开发默认 `127.0.0.1`，Compose 在容器内监听 `0.0.0.0` |
 | `SERVER_GRPC_PORT` | `31102`，Fino 本机 gRPC 端口 |
 | `SERVER_DEBUG_PORT` | `31103`，Fino 本机调试端口，提供 `/readyz` 和 `/healthz` |
-| `SKILLHUB_DATA_DIR` | 系统用户配置目录下的 `SkillHub`，保存数据库和快照 |
-| `SKILLHUB_EXPORT_DIR` | 默认使用数据目录下的 `exports` |
+| `SKILLHUB_EXPORT_DIR` | 默认使用后端工作目录下的 `skillhub-data/exports` |
 
-备份时先停止后端，再复制 Docker 卷或本地数据目录。若显式设置 `SKILLHUB_DATABASE` 或 `SKILLHUB_SNAPSHOT_DIR`，备份时一并复制这些位置。版本快照以 ZIP 保存在快照目录。缺少快照的 GitHub 版本可按原 commit 重新拉取。
+本地数据默认保存在 `backend/skillhub-data`。备份时先停止后端，再复制 Docker 卷或本地数据目录。自定义 `db.dsn` 或 `SKILLHUB_SNAPSHOT_DIR` 后，备份时一并复制对应位置。版本快照以 ZIP 保存在快照目录。缺少快照的 GitHub 版本可按原 commit 重新拉取。
 
 ## 日常使用
 
@@ -55,7 +54,7 @@ npm --prefix frontend run build
 
 前端继续使用仓库已有的 API 客户端。调整 HTTP 契约时，增加 `frontend` 生成目标并重新构建前端。
 
-开发时先执行 `npm --prefix frontend ci`，再分别运行 `go -C backend run ./cmd/skillhub-server` 与 `npm --prefix frontend run dev`。Vite 将业务 API 代理到本机后端，本机目录选择和 Git 使用当前用户的环境。
+本地开发先从 `backend/.env.example` 创建 `backend/.env`。已有本地数据位于其他目录时，可在停服后迁入 `backend/skillhub-data`，也可通过 `db.dsn` 和 `SKILLHUB_SNAPSHOT_DIR` 继续使用原位置。执行 `npm --prefix frontend ci`，再分别运行 `go -C backend run ./cmd/skillhub-server` 与 `npm --prefix frontend run dev`。Vite 将业务 API 代理到本机后端，本机目录选择和 Git 使用当前用户的环境。
 
 ## 后端分层
 

@@ -1,10 +1,7 @@
 package main
 
 import (
-	"cmp"
 	"context"
-	"net"
-	"os"
 
 	"github.com/fino-io/finokit/config"
 	"github.com/fino-io/finokit/logs"
@@ -28,10 +25,6 @@ func loadConfig() (nserver.Config, error) {
 	if err := config.ScanFrom(&cfg, "skillhubServer", "server"); err != nil {
 		return nserver.Config{}, err
 	}
-
-	cfg.HttpAddr = net.JoinHostPort(cmp.Or(os.Getenv("SERVER_HTTP_HOST"), "127.0.0.1"), cmp.Or(os.Getenv("SERVER_HTTP_PORT"), "31101"))
-	cfg.GrpcAddr = net.JoinHostPort("127.0.0.1", cmp.Or(os.Getenv("SERVER_GRPC_PORT"), "31102"))
-	cfg.DebugAddr = net.JoinHostPort("127.0.0.1", cmp.Or(os.Getenv("SERVER_DEBUG_PORT"), "31103"))
 
 	if err := logs.NewConfig(); err != nil {
 		return nserver.Config{}, err
@@ -59,7 +52,7 @@ func serve(ctx context.Context, cfg nserver.Config) error {
 		instrumentation = gokitmetrics.Disabled()
 	}
 
-	paths, err := configureLibrary()
+	paths, err := prepareLibraryPaths()
 	if err != nil {
 		return err
 	}

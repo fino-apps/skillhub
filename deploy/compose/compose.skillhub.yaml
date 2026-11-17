@@ -3,9 +3,8 @@ services:
     ports: !reset []
     environment:
       SERVER_HTTP_HOST: 0.0.0.0
-      SKILLHUB_DATA_DIR: /app/data
     volumes:
-      - skillhub_data:/app/data
+      - skillhub_data:/app/skillhub-data
 
   frontend:
     ports: !override
