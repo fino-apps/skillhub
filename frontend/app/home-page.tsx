@@ -12,7 +12,8 @@ import "./skillhub.css";
 const VersionPanel = lazy(() => import("./version-panel"));
 
 type Panel =
-  | { kind: "github" | "batch" }
+  | { kind: "github" }
+  | { kind: "batch"; skills: Skill[] }
   | { kind: "file"; zip?: boolean }
   | { kind: "new-version"; skill: Skill; path: string };
 
@@ -243,7 +244,7 @@ export default function HomePage() {
       <OperationFeedback {...operation} floating />
       {selected.length > 0 && <div className="library-actions library-selection" role="group" aria-label="批量操作">
         <span role="status">已选 {selected.length} 项</span>
-        <button type="button" className="secondary" onClick={() => setPanel({ kind: "batch" })}>批量编辑</button>
+        <button type="button" className="secondary" onClick={() => setPanel({ kind: "batch", skills: skills.filter(({ id }) => selected.includes(id)) })}>批量编辑</button>
         <button type="button" className="secondary" disabled={!!operation.busy} onClick={removeSelected}>批量删除</button>
         <button type="button" className="skillhub-text-button" onClick={() => {
           setSelected([]);
@@ -326,7 +327,10 @@ export default function HomePage() {
       <Suspense fallback={<p>加载中…</p>}><VersionPanel skill={panel.skill} from="folder" path={panel.path} onSaved={editComplete} /></Suspense>
     </Dialog>}
     {panel?.kind === "batch" && <Dialog title="批量编辑" compact onClose={() => setPanel(null)}>
-      <BatchMetadata ids={selected} categories={facets.categories ?? []} onSaved={editComplete} />
+      <BatchMetadata skills={panel.skills} categories={facets.categories ?? []} onSaved={() => {
+        editComplete();
+        operation.setNotice(`已更新 ${panel.skills.length} 项 Skill。`);
+      }} />
     </Dialog>}
   </main>;
 }

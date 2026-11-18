@@ -92,7 +92,7 @@
   .compare-files { max-height: 150px; }
   .version-intake .compare-files { max-height: 120px; }
 }
-.compare-source select { height: 36px; padding: 0 10px; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.compare-source select, .batch-metadata select { height: 36px; padding: 0 10px; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
 .copy-command { max-height: 260px; padding: 14px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; font-size: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-muted); }
 
 
@@ -327,6 +327,9 @@ html[data-theme="dark"] .skill-short-purpose { font-weight: 400; }
 .skill-fields small { color: var(--muted); }
 .skill-disclosure > summary { cursor: pointer; }
 .skill-disclosure > .skill-fields { margin-top: 12px; }
+.batch-metadata-scope { border-bottom: 1px solid var(--line); padding-bottom: 10px; font-size: 13px; }
+.batch-metadata-scope ul { max-height: 140px; overflow: auto; overflow-wrap: anywhere; margin-block: 8px 0; padding-inline-start: 20px; }
+.batch-metadata .intake-error { margin: 0; overflow-wrap: anywhere; }
 
 .skill-detail-shell { margin-top: 24px; }
 .skill-back { display: inline-block; margin-bottom: 10px; font-size: 13px; color: var(--muted); text-decoration: none; }
