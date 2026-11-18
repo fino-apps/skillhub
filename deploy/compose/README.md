@@ -2,14 +2,45 @@
 
 本目录分别提供业务 `compose.yaml` 和共享平台 `compose.infra.yaml`。先启动共享平台，再启动业务；两者独立更新和停止。
 
-本文命令默认在项目根目录执行。Helm 部署及构建发布说明见 [Helm README](../helm/README.md)。
+本文命令默认在项目根目录执行。Helm 部署说明见 [Helm README](../helm/README.md)。
+
+## 构建与发布
+
+在项目根目录使用 `.goreleaser.yaml`。准备 GoReleaser 2.15+、项目 `go.mod` 要求的 Go，以及带 Buildx 的 Docker。Node.js 版本见 `frontend/package.json`，构建 hook 会安装前端依赖并生成静态资源。
+
+先检查 `builds` 和 `dockers_v2` 的目标架构及镜像仓库。以下命令按 `linux/amd64` 构建。SQLite 后端启用了 CGO，需要安装 Zig 并通过 `CC` 指定 Linux musl 交叉编译器。构建其他架构时，二进制、镜像平台和编译器目标需一起调整。
+
+### 本地构建
+
+```sh
+goreleaser check --config .goreleaser.yaml
+CC='zig cc -target x86_64-linux-musl' \
+  goreleaser release --config .goreleaser.yaml --snapshot --clean
+```
+
+Snapshot 会将应用镜像加载到本机 Docker。保留上述参数，`--skip=publish` 会跳过 `dockers_v2` 镜像构建。二进制归档、部署归档和 `checksums.txt` 位于 `.fino/release/`，`--clean` 会清理该目录上次生成的产物。
+
+构建完成后，将 `deploy/compose/.env` 中的 `IMAGE_REPOSITORY` 和应用镜像名及标签与构建产物对齐。按本地构建产物确认带平台后缀的标签，例如 `latest-amd64`，再核对 Compose 实际使用的镜像。
+
+```sh
+docker compose --env-file deploy/compose/.env -f deploy/compose/compose.yaml config --images
+```
+
+### 正式发布
+
+在干净工作区切到带版本 Git tag 的提交，并登录 `dockers_v2.images` 指定的镜像仓库。正式构建按配置推送应用镜像。部署时可在 `.env` 中使用本次发布的版本标签，便于回滚。
+
+```sh
+CC='zig cc -target x86_64-linux-musl' \
+  goreleaser release --config .goreleaser.yaml --clean
+```
 
 ## 配置与启动
 
 生成器仅提供 `.env.example`；首次使用时自行复制为 `.env` 并调整配置。后续生成不会创建或修改 `.env`。
 
 ```sh
-cp deploy/compose/.env.example deploy/compose/.env
+test -f deploy/compose/.env || cp deploy/compose/.env.example deploy/compose/.env
 ```
 
 `.env.example` 首次生成时预填随机分页密钥，复制为 `.env` 即可使用。重建保留已有示例；已有 `.env` 应保留原 `PAGINATION_ENCODED_KEY`，避免已发出的分页 token 失效。
@@ -95,7 +126,7 @@ docker compose \
 
 ## 离线包
 
-生成离线包前，先完成 [构建与发布](../helm/README.md#构建与发布)。下列操作均从项目根目录执行。
+生成离线包前，先完成[本地构建](#本地构建)或拉取对应版本的应用镜像，并按 `.env` 拉取共享平台镜像。
 
 ```sh
 PACKAGE_NAME="package-$(date +%Y%m%d-%H%M%S)"

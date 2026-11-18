@@ -59,7 +59,7 @@ dockers_v2:
       - skillhub-server
     dockerfile: backend/build/skillhub-server/Dockerfile.release
     images:
-      - skillhub/skillhub-server
+      - 100.118.125.84/skillhub/skillhub-server
     tags:
       - "{{ .Tag }}"
       - "{{ if .IsSnapshot }}latest{{ else }}latest-amd64{{ end }}"
@@ -77,7 +77,7 @@ dockers_v2:
       - frontend/Caddyfile
       - .fino/frontend
     images:
-      - skillhub/skillhub-frontend
+      - 100.118.125.84/skillhub/skillhub-frontend
     tags:
       - "{{ .Tag }}"
       - "{{ if .IsSnapshot }}latest{{ else }}latest-amd64{{ end }}"
