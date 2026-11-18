@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { importSkill, previewImport } from "@/generated/api-client";
-import { message, tagsFrom, type Candidate, type ImportResult } from "./library-api";
-import { CandidatePicker, ImportFeedback } from "./local-intake";
+import { message, type Candidate, type ImportResult } from "./library-api";
+import { CandidatePicker, ImportFeedback, ImportMetadataFields, readImportMetadata } from "./local-intake";
 import { Failure } from "./skill-ui";
 
 function githubLocation(link: string, overrideRef: string, overridePath: string) {
@@ -51,20 +51,15 @@ export default function GitHubIntake({ categories, onComplete }: { categories: s
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!preview || !selected.length || busy) return;
-    const values = new FormData(event.currentTarget);
-    const category = String(values.get("category") ?? "").trim();
-    const tags = tagsFrom(String(values.get("tags") ?? ""));
-    if (tags.length > 100 || tags.some((tag) => [...tag].length > 128)) {
-      setError("最多填写 100 个标签，每个标签最多 128 个字符");
-      return;
-    }
+    const form = event.currentTarget;
     setBusy(true);
     setError("");
     try {
+      const metadata = readImportMetadata(form);
       const result = await importSkill<ImportResult>({
         repositoryUrl: preview.source.repositoryUrl, sourceRef: preview.source.ref,
         commitSha: preview.result.resolvedCommitSha, skillPaths: selected,
-        category, tags,
+        ...metadata,
       });
       if (result.failures?.length) {
         setFeedback(result);
@@ -99,13 +94,7 @@ export default function GitHubIntake({ categories, onComplete }: { categories: s
       {(preview.result.skills?.length ?? 0) > 0
         ? <form className="github-form" onSubmit={save}>
           <CandidatePicker items={preview.result.skills ?? []} selected={selected} onChange={setSelected} disabled={busy} />
-          <fieldset className="skill-fields" disabled={busy} aria-describedby="github-import-metadata">
-            <legend className="sr-only">批量分类和标签</legend>
-            <span className="skillhub-hint" id="github-import-metadata">应用到本批新收录的 Skill</span>
-            <label>分类<input name="category" maxLength={128} list="github-import-categories" /></label>
-            <datalist id="github-import-categories">{categories.map((name) => <option key={name} value={name} />)}</datalist>
-            <label>标签<input name="tags" placeholder="用逗号分隔" /></label>
-          </fieldset>
+          <ImportMetadataFields categories={categories} disabled={busy} />
           <button type="submit" disabled={busy || !selected.length}>
             {busy ? "收录中…" : `收录所选（${selected.length}）`}
           </button>

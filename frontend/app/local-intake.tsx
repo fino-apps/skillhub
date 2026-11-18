@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { commitUpload, importSkill, listSkills, scanProject } from "@/generated/api-client";
-import { backendDirectoryLabel, canPickDirectory, localCandidate, message, pickDirectory, stageZip, type Candidate, type ImportResult, type LibraryPage, type Skill } from "./library-api";
+import { backendDirectoryLabel, canPickDirectory, localCandidate, message, pickDirectory, stageZip, tagsFrom, type Candidate, type ImportResult, type LibraryPage, type Skill } from "./library-api";
 import { Failure } from "./skill-ui";
 
 const importLimit = 100;
@@ -44,7 +44,31 @@ export function ImportFeedback({ result }: { result: ImportResult | null }) {
   </div>;
 }
 
-export default function LocalIntake({ onComplete, onCancel, onVersion }: {
+export function ImportMetadataFields({ categories, disabled }: { categories: string[]; disabled: boolean }) {
+  const hintId = useId();
+  const categoriesId = useId();
+
+  return <fieldset className="skill-fields" disabled={disabled} aria-describedby={hintId}>
+    <legend className="sr-only">批量分类和标签</legend>
+    <span className="skillhub-hint" id={hintId}>应用到本批新收录的 Skill</span>
+    <label>分类<input name="category" maxLength={128} list={categoriesId} /></label>
+    <datalist id={categoriesId}>{categories.map((name) => <option key={name} value={name} />)}</datalist>
+    <label>标签<input name="tags" placeholder="用逗号分隔" /></label>
+  </fieldset>;
+}
+
+export function readImportMetadata(form: HTMLFormElement) {
+  const values = new FormData(form);
+  const category = String(values.get("category") ?? "").trim();
+  const tags = tagsFrom(String(values.get("tags") ?? ""));
+  if (tags.length > 100 || tags.some((tag) => [...tag].length > 128)) {
+    throw new Error("最多填写 100 个标签，每个标签最多 128 个字符");
+  }
+  return { category, tags };
+}
+
+export default function LocalIntake({ categories, onComplete, onCancel, onVersion }: {
+  categories: string[];
   onComplete: (result: ImportResult) => void; onCancel: () => void; onVersion: (skill: Skill, path: string) => void;
 }) {
   const [directory, setDirectory] = useState("");
@@ -92,26 +116,11 @@ export default function LocalIntake({ onComplete, onCancel, onVersion }: {
       setError("此目录没有找到 Skill");
       return;
     }
-    const selection = found.slice(0, importLimit).map((item) => item.path);
-    setSelected(selection);
+    setSelected(found.slice(0, importLimit).map((item) => item.path));
     if (found.length === 1) {
       const listed = await listSkills<LibraryPage>({ keyword: found[0].name, pageSize: 100 });
-      const matches = (listed.skills ?? []).filter((item) => item.name === found[0].name);
-      if (matches.length) {
-        setMatching(matches);
-      } else {
-        await commit(selection);
-      }
+      setMatching((listed.skills ?? []).filter((item) => item.name === found[0].name));
     }
-  }
-
-  async function commit(paths: string[]) {
-    const reply = await importSkill<ImportResult>({ skillPaths: paths });
-    if (reply.failures?.length) {
-      setResult(reply);
-      setSelected(reply.failures.map(({ path }) => path ?? ""));
-    }
-    onComplete(reply);
   }
 
   async function run(action: () => Promise<void>) {
@@ -131,8 +140,23 @@ export default function LocalIntake({ onComplete, onCancel, onVersion }: {
     void run(() => inspect(directory.trim()));
   }
 
+  function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selected.length || busy) return;
+    const form = event.currentTarget;
+    void run(async () => {
+      const metadata = readImportMetadata(form);
+      const reply = await importSkill<ImportResult>({ skillPaths: selected, ...metadata });
+      if (reply.failures?.length) {
+        setResult(reply);
+        setSelected(reply.failures.map(({ path }) => path ?? ""));
+      }
+      onComplete(reply);
+    });
+  }
+
   return <>
-    {busy && <p role="status">正在读取文件夹…</p>}
+    {busy && !items.length && <p role="status">正在读取文件夹…</p>}
     <Failure error={error} />
     <ImportFeedback result={result} />
     {!busy && !items.length && <form className="github-form" onSubmit={submit}>
@@ -147,12 +171,14 @@ export default function LocalIntake({ onComplete, onCancel, onVersion }: {
       <p>已有同名 Skill</p>
       {matching.map((skill) => <button key={skill.id} type="button" className="secondary" disabled={busy}
         onClick={() => onVersion(skill, selected[0])}>保存到 {skill.name} · {skill.upstreamUrl || skill.localPath || "当前库"}</button>)}
-      <button type="button" disabled={busy} onClick={() => void run(() => commit(selected))}>作为独立条目收录</button>
     </div>}
-    {!matching.length && items.length > 0 && <div className="skill-fields">
-      <CandidatePicker items={items} selected={selected} onChange={setSelected} disabled={busy} />
-      <button type="button" disabled={!selected.length || busy} onClick={() => void run(() => commit(selected))}>收录所选（{selected.length}）</button>
-    </div>}
+    {items.length > 0 && <form className="github-form" onSubmit={save}>
+      {!matching.length && <CandidatePicker items={items} selected={selected} onChange={setSelected} disabled={busy} />}
+      <ImportMetadataFields categories={categories} disabled={busy} />
+      <button type="submit" disabled={!selected.length || busy}>
+        {busy ? "处理中…" : matching.length ? "作为独立条目收录" : `收录所选（${selected.length}）`}
+      </button>
+    </form>}
   </>;
 }
 

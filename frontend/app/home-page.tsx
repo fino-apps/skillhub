@@ -305,7 +305,7 @@ export default function HomePage() {
     </button>}
 
     {panel?.kind === "folder" && <Dialog title="导入文件夹" compact onClose={() => setPanel(null)}>
-      <LocalIntake onComplete={imported} onCancel={() => setPanel(null)}
+      <LocalIntake categories={facets.categories ?? []} onComplete={imported} onCancel={() => setPanel(null)}
         onVersion={(skill, path) => setPanel({ kind: "new-version", skill, path })} />
     </Dialog>}
     {panel?.kind === "github" && <Dialog title="导入 GitHub" compact onClose={() => setPanel(null)}>
