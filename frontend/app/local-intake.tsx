@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { commitUpload, importSkill, listSkills, scanProject } from "@/generated/api-client";
-import { localCandidate, message, pickDirectory, stageZip, type Candidate, type ImportResult, type LibraryPage, type Skill } from "./library-api";
+import { backendDirectoryLabel, canPickDirectory, localCandidate, message, pickDirectory, stageZip, type Candidate, type ImportResult, type LibraryPage, type Skill } from "./library-api";
 import { Failure } from "./skill-ui";
 
 const importLimit = 100;
@@ -52,12 +52,12 @@ export default function LocalIntake({ onComplete, onCancel, onVersion }: {
   const [selected, setSelected] = useState<string[]>([]);
   const [matching, setMatching] = useState<Skill[]>([]);
   const [result, setResult] = useState<ImportResult | null>(null);
-  const [busy, setBusy] = useState(true);
+  const [busy, setBusy] = useState(canPickDirectory);
   const [error, setError] = useState("");
   const invoked = useRef(false);
 
   useEffect(() => {
-    if (invoked.current) return;
+    if (!canPickDirectory || invoked.current) return;
     invoked.current = true;
     void choose();
   }, []);
@@ -136,10 +136,11 @@ export default function LocalIntake({ onComplete, onCancel, onVersion }: {
     <Failure error={error} />
     <ImportFeedback result={result} />
     {!busy && !items.length && <form className="github-form" onSubmit={submit}>
-      <label>本机目录<input value={directory} onChange={(event) => setDirectory(event.target.value)} required /></label>
+      <label>{backendDirectoryLabel}<input value={directory} onChange={(event) => setDirectory(event.target.value)} required /></label>
+      {!canPickDirectory && <p className="skillhub-hint">导入当前电脑上的文件夹时，请先压缩后使用「导入 ZIP」。</p>}
       <div className="library-actions">
         <button type="submit">扫描目录</button>
-        <button type="button" className="secondary" onClick={() => void choose()}>选择文件夹</button>
+        {canPickDirectory && <button type="button" className="secondary" onClick={() => void choose()}>选择文件夹</button>}
       </div>
     </form>}
     {matching.length > 0 && <div className="skill-fields">

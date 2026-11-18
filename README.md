@@ -11,7 +11,7 @@ CC='zig cc -target x86_64-linux-musl' \
   goreleaser release --config .goreleaser.yaml --snapshot --clean
 ```
 
-首次部署时从 `.env.example` 创建 `.env`，并准备 Fino 的共享 Docker 网络。已有网络可以直接复用。
+首次部署时从 `.env.example` 创建 `.env`，并准备 Fino 的共享 Docker 网络。后端会在 `skillhub_data` 卷中自动创建 `logs/app.log`。
 
 ```sh
 test -f deploy/compose/.env || cp deploy/compose/.env.example deploy/compose/.env
@@ -20,7 +20,7 @@ docker compose --env-file deploy/compose/.env \
   -f deploy/compose/compose.yaml up -d --wait
 ```
 
-打开 `http://127.0.0.1:8082`。Caddy 提供页面，并通过 Docker 网络转发 `/skillhub/v1` 请求。SQLite、快照和导出文件保存在 `skillhub_data` 卷。容器部署时，导入路径必须能被后端容器访问，也可以从浏览器导入或下载 ZIP。
+打开 `http://127.0.0.1:8082`。Caddy 提供页面，并通过 Docker 网络转发 `/skillhub/v1` 请求。SQLite、快照和导出文件保存在 `skillhub_data` 卷。容器部署时，导入路径必须能被后端容器访问，也可以从浏览器导入或下载 ZIP。群晖共享目录可按需挂载到后端容器，导入时填写容器内的绝对路径。前端生产构建默认关闭桌面目录选择器。如果后端运行在有桌面环境的机器上，可在构建前端时设置 `VITE_DESKTOP_DIRECTORY_PICKER=true` 启用。
 
 | 环境变量 | 默认值与用途 |
 | --- | --- |

@@ -45,7 +45,7 @@ services:
     networks:
       - infra
     ports:
-      - "127.0.0.1:${SKILLHUB_FRONTEND_PORT}:80"
+      - "${SKILLHUB_FRONTEND_BIND:-127.0.0.1}:${SKILLHUB_FRONTEND_PORT}:80"
     volumes:
       - ./bootstrap/caddy:/bootstrap:ro
       - caddy_data:/data

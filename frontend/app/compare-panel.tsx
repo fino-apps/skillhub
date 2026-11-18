@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import ReactDiffViewer from "react-diff-viewer-continued";
 import { compareSkills, listVersions, scanProject } from "@/generated/api-client";
 import { shortVersion, versionLabel, type SkillVersion } from "./skill-version";
-import { localCandidate, pickDirectory } from "./library-api";
+import { backendDirectoryLabel, canPickDirectory, localCandidate, pickDirectory } from "./library-api";
 
 type Skill = { id: string; name: string };
 type Source = { skillId: string; versionId: string; path: string };
@@ -27,17 +27,17 @@ function LocalSource({ path, onChange }: { path: string; onChange: (path: string
       setBase(projectPath);
       if (!skills.length) setFeedback("这个目录下没有找到 Skill。");
     } catch {
-      setFeedback("无法扫描，请检查本机目录路径。");
+      setFeedback("无法扫描，请检查目录路径。");
     } finally {
       setScanning(false);
     }
   }
 
   return <div className="compare-local">
-    <label>本机项目或 Skill 目录<input value={path} onChange={(event) => { onChange(event.target.value); setFound([]); setFeedback(""); }} placeholder="/path/to/project" required disabled={scanning} /></label>
-    <button type="button" className="secondary" disabled={scanning} onClick={() => {
+    <label>{backendDirectoryLabel}<input value={path} onChange={(event) => { onChange(event.target.value); setFound([]); setFeedback(""); }} placeholder="/path/to/project" required disabled={scanning} /></label>
+    {canPickDirectory && <button type="button" className="secondary" disabled={scanning} onClick={() => {
       void pickDirectory().then((dir) => { if (dir) { onChange(dir); setFound([]); } }, () => setFeedback("无法打开目录选择器，请输入路径。"));
-    }}>选择文件夹</button>
+    }}>选择文件夹</button>}
     <button type="button" className="secondary" disabled={scanning || !path.trim()} onClick={() => void scan()}>{scanning ? "扫描中…" : "扫描项目"}</button>
     {found.length > 0 && <label>选择 Skill<select defaultValue="" onChange={(event) => {
       const relative = event.target.value;

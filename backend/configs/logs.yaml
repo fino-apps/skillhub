@@ -11,5 +11,5 @@ logs:
     maxSize: 100
     maxBackups: 10
     maxAge: 28
-    encode: json
-    # Compress: false
+    encode: console
+    # compress: false

@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { exportVersionToDirectory } from "@/generated/api-client";
-import { message } from "./library-api";
+import { backendDirectoryLabel, canPickDirectory, message } from "./library-api";
 
 export function Dialog({ title, children, onClose, compact }: {
   title: string; children: ReactNode; onClose: () => void; compact?: boolean;
@@ -145,8 +145,8 @@ export function ExportLocation({ onSave, busy }: { onSave: (directory?: string) 
     const values = new FormData(event.currentTarget);
     onSave(String(values.get("directory")).trim());
   }}>
-    <button type="button" className="secondary" disabled={busy} onClick={() => onSave()}>选择文件夹</button>
-    <label>或输入本机目录<input name="directory" disabled={busy} required /></label>
+    {canPickDirectory && <button type="button" className="secondary" disabled={busy} onClick={() => onSave()}>选择文件夹</button>}
+    <label>{backendDirectoryLabel}<input name="directory" disabled={busy} required /></label>
     <button type="submit" disabled={busy}>{busy ? "保存中…" : "保存到指定目录"}</button>
   </form>;
 }

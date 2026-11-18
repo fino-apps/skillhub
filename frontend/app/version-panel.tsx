@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { compareSkills, createVersion, previewImport } from "@/generated/api-client";
 import { CompareResults, type Change } from "./compare-panel";
-import { message, pickDirectory, type Skill } from "./library-api";
+import { backendDirectoryLabel, canPickDirectory, message, pickDirectory, type Skill } from "./library-api";
 import { Failure } from "./skill-ui";
 import type { SkillVersion } from "./skill-version";
 
@@ -79,11 +79,11 @@ export default function VersionPanel({ skill, from, path: initialPath, onSaved }
         {from === "github"
           ? <label>分支、标签或 commit<input value={ref} maxLength={200} placeholder="仓库默认分支"
             onChange={(event) => { setRef(event.target.value); setPreview(null); }} /></label>
-          : <><label>Skill 文件夹<input value={path} onChange={(event) => { setPath(event.target.value); setPreview(null); }} required /></label>
-            <button type="button" className="secondary" onClick={() => void run("choose", async () => {
+          : <><label>{backendDirectoryLabel}<input value={path} onChange={(event) => { setPath(event.target.value); setPreview(null); }} required /></label>
+            {canPickDirectory && <button type="button" className="secondary" onClick={() => void run("choose", async () => {
               const selected = await pickDirectory();
               if (selected) { setPath(selected); setPreview(null); }
-            })}>选择文件夹</button></>}
+            })}>选择文件夹</button>}</>}
       </fieldset>
       <button className="secondary" type="submit" disabled={!!busy}>{busy === "preview" ? "读取中…" : "预览差异"}</button>
     </form>

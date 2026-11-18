@@ -58,18 +58,29 @@ SkillHub 使用本地 SQLite，可以只启动业务。首次部署时用 `docke
 
 ### 访问与数据
 
-通过 Tailscale 直接访问时，在群晖的 `deploy/compose/.env` 中设置浏览器使用的完整地址，例如 `SKILLHUB_URL=http://100.118.125.84:30082`，再按前面的业务 Compose 命令启动。使用 HTTPS 反向代理时，将变量设为 HTTPS 地址，并保留浏览器请求的 Host。
+通过 Tailscale 直接访问时，在群晖的 `deploy/compose/.env` 中统一配置访问入口，再按前面的业务 Compose 命令启动。
 
-前端默认绑定宿主机的 `127.0.0.1:8082`，后端通过 Docker 网络访问。部署到群晖或其他远程主机时，可通过宿主机上的反向代理提供访问入口。启用共享观测平台后，可通过 http://127.0.0.1:8082/monitor/ 打开 Grafana。
+```dotenv
+SKILLHUB_FRONTEND_BIND=100.118.125.84
+SKILLHUB_FRONTEND_PORT=30011
+SKILLHUB_URL=http://100.118.125.84:30011
+```
+
+`SKILLHUB_FRONTEND_BIND` 和 `SKILLHUB_FRONTEND_PORT` 决定宿主机监听的地址和端口。`SKILLHUB_URL` 填浏览器实际打开的地址，供后端校验 API 请求。使用群晖 HTTPS 反向代理时，可以保留回环绑定，将 `SKILLHUB_URL` 设为 HTTPS 地址，并让代理保留浏览器的 Host。
+
+本机访问时可使用默认入口 `http://127.0.0.1:8082`，并留空 `SKILLHUB_URL`。启用共享观测平台后，Grafana 入口是同一地址下的 `/monitor/`。
 
 SQLite、快照、上传暂存和导出文件保存在 `skillhub_data` 卷，应用重建时会复用该卷。备份 SQLite 和文件时，先停后端，再备份整卷。
 
 ## 查看状态、日志与停止
 
-使用 `ps` 查看容器状态，使用 `logs -f` 跟踪日志。
+后端启动后会在 `skillhub_data` 卷中自动创建 `logs/app.log`，容器重建时会保留日志。
+
+使用 `ps` 查看容器状态，使用 `tail` 跟踪后端日志。前端和容器启动脚本的输出仍可通过 `docker compose logs` 查看。
 
 ```sh
 docker compose --env-file deploy/compose/.env -f deploy/compose/compose.yaml ps
+docker compose --env-file deploy/compose/.env -f deploy/compose/compose.yaml exec skillhub-server tail -f /app/skillhub-data/logs/app.log
 docker compose --env-file deploy/compose/.env -f deploy/compose/compose.yaml logs -f
 ```
 
@@ -100,9 +111,9 @@ for compose in compose.infra.yaml compose.yaml; do
     config --images
 done | sort -u > "${PACKAGE_DIR}/images/images.txt"
 
-xargs docker image save \
-  -o "${PACKAGE_DIR}/images/images.tar" \
-  < "${PACKAGE_DIR}/images/images.txt"
+#xargs docker image save \
+#  -o "${PACKAGE_DIR}/images/images.tar" \
+#  < "${PACKAGE_DIR}/images/images.txt"
 
 cp -R deploy/compose "${PACKAGE_DIR}/deploy/"
 cp -R backend/configs "${PACKAGE_DIR}/backend/"

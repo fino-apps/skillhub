@@ -35,6 +35,16 @@ export function message(error: unknown) {
   return error instanceof Error ? error.message : "操作失败，请重试";
 }
 
+const desktopPicker = import.meta.env.VITE_DESKTOP_DIRECTORY_PICKER;
+const loopbackHosts = ["localhost", "127.0.0.1", "[::1]"];
+
+export const canPickDirectory = desktopPicker === undefined
+  ? import.meta.env.DEV && loopbackHosts.includes(window.location.hostname)
+    && loopbackHosts.includes(new URL(config.apiBase || "/", window.location.href).hostname)
+  : desktopPicker === "true";
+
+export const backendDirectoryLabel = canPickDirectory ? "本机目录" : "后端目录（容器内绝对路径）";
+
 export async function pickDirectory() {
   const result = await selectLocalDirectory<{ path?: string }>();
   return result.path ?? "";
