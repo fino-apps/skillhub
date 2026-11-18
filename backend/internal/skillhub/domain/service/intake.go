@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/model"
 	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/repo"
@@ -120,6 +121,12 @@ func (s *Library) StageArchive(file []byte) (*Upload, error) {
 		return nil, ErrInvalid
 	}
 
+	s.commits.Lock()
+	defer s.commits.Unlock()
+	if err := s.cleanUploads(time.Now()); err != nil {
+		return nil, err
+	}
+
 	id := uuid.NewString()
 	dir := filepath.Join(s.uploads, id)
 	if err := os.Mkdir(dir, 0700); err != nil {
@@ -146,6 +153,33 @@ func (s *Library) StageArchive(file []byte) (*Upload, error) {
 	return &Upload{ID: id, Items: items}, nil
 }
 
+// Upload previews remain available for 24 hours, including failed import retries.
+func (s *Library) cleanUploads(now time.Time) error {
+	entries, err := os.ReadDir(s.uploads)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		if _, err := uuid.Parse(entry.Name()); err != nil {
+			continue
+		}
+		info, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		if now.Sub(info.ModTime()) < 24*time.Hour {
+			continue
+		}
+		if err := os.RemoveAll(filepath.Join(s.uploads, entry.Name())); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s *Library) ImportArchive(ctx context.Context, upload, target string, paths []string, makeDefault bool) (*ImportResult, error) {
 	id, err := uuid.Parse(upload)
 	if err != nil {
@@ -156,6 +190,9 @@ func (s *Library) ImportArchive(ctx context.Context, upload, target string, path
 	}
 	s.commits.Lock()
 	defer s.commits.Unlock()
+	if err := s.cleanUploads(time.Now()); err != nil {
+		return nil, err
+	}
 	root := filepath.Join(s.uploads, id.String())
 	if _, err := os.Stat(root); errors.Is(err, os.ErrNotExist) {
 		return nil, repo.ErrNotFound

@@ -94,9 +94,6 @@ func Scan(dir string) ([]Candidate, error) {
 			return nil
 		}
 		items = append(items, Candidate{filepath.ToSlash(rel), manifest})
-		if len(items) > 100 {
-			return errors.New("一次最多处理 100 个 Skill")
-		}
 		return nil
 	})
 	return items, err
