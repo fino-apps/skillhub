@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { commitUpload, importSkill, listSkills, scanProject } from "@/generated/api-client";
 import { backendDirectoryLabel, canPickDirectory, localCandidate, message, pickDirectory, stageZip, tagsFrom, type Candidate, type ImportResult, type LibraryPage, type Skill } from "./library-api";
 import { Failure } from "./skill-ui";
@@ -67,41 +67,25 @@ export function readImportMetadata(form: HTMLFormElement) {
   return { category, tags };
 }
 
-export default function LocalIntake({ categories, onComplete, onCancel, onVersion }: {
+export default function LocalIntake({ categories, onComplete, onVersion }: {
   categories: string[];
-  onComplete: (result: ImportResult) => void; onCancel: () => void; onVersion: (skill: Skill, path: string) => void;
+  onComplete: (result: ImportResult) => void; onVersion: (skill: Skill, path: string) => void;
 }) {
   const [directory, setDirectory] = useState("");
   const [items, setItems] = useState<Candidate[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [matching, setMatching] = useState<Skill[]>([]);
   const [result, setResult] = useState<ImportResult | null>(null);
-  const [busy, setBusy] = useState(canPickDirectory);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const invoked = useRef(false);
-
-  useEffect(() => {
-    if (!canPickDirectory || invoked.current) return;
-    invoked.current = true;
-    void choose();
-  }, []);
 
   async function choose() {
-    setBusy(true);
-    setError("");
-    try {
+    await run(async () => {
       const path = await pickDirectory();
-      if (!path) {
-        onCancel();
-        return;
-      }
+      if (!path) return;
       setDirectory(path);
       await inspect(path);
-    } catch (err) {
-      setError(message(err));
-    } finally {
-      setBusy(false);
-    }
+    });
   }
 
   async function inspect(path: string) {
@@ -155,34 +139,37 @@ export default function LocalIntake({ categories, onComplete, onCancel, onVersio
     });
   }
 
-  return <>
+  return <div className="skill-fields local-intake">
     {busy && !items.length && <p role="status">正在读取文件夹…</p>}
     <Failure error={error} />
     <ImportFeedback result={result} />
     {!busy && !items.length && <form className="github-form" onSubmit={submit}>
       <label>{backendDirectoryLabel}<input value={directory} onChange={(event) => setDirectory(event.target.value)} required /></label>
-      {!canPickDirectory && <p className="skillhub-hint">导入当前电脑上的文件夹时，请先压缩后使用「导入 ZIP」。</p>}
-      <div className="library-actions">
-        <button type="submit">扫描目录</button>
-        {canPickDirectory && <button type="button" className="secondary" onClick={() => void choose()}>选择文件夹</button>}
-      </div>
+      <button type="submit">扫描目录</button>
+      {canPickDirectory && <button type="button" className="secondary" onClick={() => void choose()}>选择文件夹</button>}
     </form>}
+    {items.length === 1 && <p className="local-intake-candidate">
+      <strong>{items[0].name}</strong>
+      {items[0].description && <span className="candidate-description">{items[0].description}</span>}
+    </p>}
     {matching.length > 0 && <div className="skill-fields">
-      <p>已有同名 Skill</p>
+      <p className="skillhub-hint">可保存为同名 Skill 的新版本，或在下方作为独立条目收录。</p>
       {matching.map((skill) => <button key={skill.id} type="button" className="secondary" disabled={busy}
         onClick={() => onVersion(skill, selected[0])}>保存到 {skill.name} · {skill.upstreamUrl || skill.localPath || "当前库"}</button>)}
     </div>}
     {items.length > 0 && <form className="github-form" onSubmit={save}>
-      {!matching.length && <CandidatePicker items={items} selected={selected} onChange={setSelected} disabled={busy} />}
+      {items.length > 1 && <CandidatePicker items={items} selected={selected} onChange={setSelected} disabled={busy} />}
       <ImportMetadataFields categories={categories} disabled={busy} />
       <button type="submit" disabled={!selected.length || busy}>
-        {busy ? "处理中…" : matching.length ? "作为独立条目收录" : `收录所选（${selected.length}）`}
+        {busy ? "处理中…" : matching.length ? "作为独立条目收录" : items.length === 1 ? "确认收录" : `收录所选（${selected.length}）`}
       </button>
     </form>}
-  </>;
+  </div>;
 }
 
-export function ZipIntake({ skillId, onComplete }: { skillId?: string; onComplete: (result: ImportResult, pending?: boolean) => void }) {
+export function ZipIntake({ skillId, onComplete, children }: {
+  skillId?: string; onComplete: (result: ImportResult, pending?: boolean) => void; children?: ReactNode;
+}) {
   const [uploadId, setUploadId] = useState("");
   const [items, setItems] = useState<Candidate[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
@@ -240,5 +227,6 @@ export function ZipIntake({ skillId, onComplete }: { skillId?: string; onComplet
     <ImportFeedback result={result} />
     {busy && <p role="status">处理中…</p>}
     {uploadId && <button type="button" disabled={busy || !selected.length} onClick={() => void commit()}>确认收录</button>}
+    {!busy && !uploadId && children}
   </div>;
 }

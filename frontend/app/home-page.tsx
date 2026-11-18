@@ -5,14 +5,14 @@ import GitHubIntake from "./github-intake";
 import LocalIntake, { ZipIntake } from "./local-intake";
 import { BatchMetadata } from "./skill-metadata";
 import { libraryNavigation, message, sourceNames, sourceURL, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
-import { Dialog, Failure, Menu, OperationFeedback, Popover, useSkillOperation } from "./skill-ui";
+import { Dialog, Failure, OperationFeedback, Popover, useSkillOperation } from "./skill-ui";
 
 import "./skillhub.css";
 
 const VersionPanel = lazy(() => import("./version-panel"));
 
 type Panel =
-  | { kind: "folder" | "github" | "zip" | "batch" }
+  | { kind: "file" | "github" | "batch" }
   | { kind: "new-version"; skill: Skill; path: string };
 
 function LibraryToolbar({ params, facets, onChange, status, children }: {
@@ -216,11 +216,8 @@ export default function HomePage() {
         ? "正在查找技能…" : current && `${token ? "已加载" : "共"} ${skills.length} 项`}</span>
     }>
       <div className="library-actions library-import-actions">
-        <button type="button" onClick={() => setPanel({ kind: "folder" })}>导入文件夹</button>
+        <button type="button" onClick={() => setPanel({ kind: "file" })}>导入文件</button>
         <button type="button" className="secondary" onClick={() => setPanel({ kind: "github" })}>导入 GitHub</button>
-        <Menu label="技能库更多操作">
-          <button type="button" onClick={() => setPanel({ kind: "zip" })}>导入 ZIP</button>
-        </Menu>
       </div>
     </LibraryToolbar>
     <div className="library-overlays">
@@ -238,7 +235,6 @@ export default function HomePage() {
     {error && !error.pageToken && <div className="library-actions"><Failure error={error.message} /><button type="button" className="secondary" onClick={() => void load("")}>重试</button></div>}
     {!loading && !error && skills.length === 0 && <div className="skillhub-empty">
       <p>{scope ? "没有匹配的 Skill" : "还没有 Skill"}</p>
-      {!scope && <button type="button" className="secondary" onClick={() => setPanel({ kind: "folder" })}>导入文件夹</button>}
     </div>}
     {skills.length > 0 && <table className="skillhub-table library-table" aria-busy={loading}>
       <thead><tr>
@@ -297,14 +293,18 @@ export default function HomePage() {
       {loading ? "加载中…" : error?.pageToken ? "重试加载更多" : "加载更多"}
     </button>}
 
-    {panel?.kind === "folder" && <Dialog title="导入文件夹" compact onClose={() => setPanel(null)}>
-      <LocalIntake categories={facets.categories ?? []} onComplete={imported} onCancel={() => setPanel(null)}
-        onVersion={(skill, path) => setPanel({ kind: "new-version", skill, path })} />
+    {panel?.kind === "file" && <Dialog title="导入文件" compact onClose={() => setPanel(null)}>
+      <ZipIntake onComplete={imported}>
+        <details className="skill-disclosure">
+          <summary>从文件夹导入</summary>
+          <LocalIntake categories={facets.categories ?? []} onComplete={imported}
+            onVersion={(skill, path) => setPanel({ kind: "new-version", skill, path })} />
+        </details>
+      </ZipIntake>
     </Dialog>}
     {panel?.kind === "github" && <Dialog title="导入 GitHub" compact onClose={() => setPanel(null)}>
       <GitHubIntake categories={facets.categories ?? []} onComplete={imported} />
     </Dialog>}
-    {panel?.kind === "zip" && <Dialog title="导入 ZIP" compact onClose={() => setPanel(null)}><ZipIntake onComplete={imported} /></Dialog>}
     {panel?.kind === "new-version" && <Dialog title="保存新版本" onClose={() => setPanel(null)}>
       <Suspense fallback={<p>加载中…</p>}><VersionPanel skill={panel.skill} from="folder" path={panel.path} onSaved={editComplete} /></Suspense>
     </Dialog>}

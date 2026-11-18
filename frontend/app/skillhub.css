@@ -47,6 +47,10 @@
 .candidate-selection button { min-height: 32px; }
 .github-candidates small, .candidate-description { color: var(--muted); font-weight: 400; }
 .candidate-description { display: block; }
+.skill-disclosure > .local-intake { margin-top: 12px; }
+.local-intake p { margin: 0; overflow-wrap: anywhere; }
+.local-intake .skill-fields > button { max-width: 100%; overflow-wrap: anywhere; }
+.local-intake-candidate { font-size: 14px; }
 .version-notes { margin: 14px 0; }
 .compare-local { display: grid; gap: 8px; margin-top: 10px; }
 .compare-local button { justify-self: start; }
