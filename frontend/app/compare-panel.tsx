@@ -1,10 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import ReactDiffViewer from "react-diff-viewer-continued";
-import { compareSkills, listVersions, scanProject } from "@/generated/api-client";
+import { compareSkills, scanProject } from "@/generated/api-client";
 import { shortVersion, versionLabel, type SkillVersion } from "./skill-version";
-import { backendDirectoryLabel, canPickDirectory, localCandidate, pickDirectory } from "./library-api";
-
-type Skill = { id: string; name: string };
+import { backendDirectoryLabel, canPickDirectory, fetchAllSkills, fetchAllVersions, localCandidate, pickDirectory, type Skill } from "./library-api";
 type Source = { skillId: string; versionId: string; path: string };
 export type Change = { path: string; kind: string; binary?: boolean; leftText?: string; rightText?: string; detail?: string };
 
@@ -50,37 +48,38 @@ function LocalSource({ path, onChange }: { path: string; onChange: (path: string
   </div>;
 }
 
-function SourcePicker({ label, skills, value, onChange, disabled, fixed }: { label: string; skills: Skill[]; value: Source; onChange: (source: Source) => void; disabled: boolean; fixed: boolean }) {
+function VersionSelect({ skill, versions, value, onChange }: {
+  skill: Skill; versions: SkillVersion[]; value: string; onChange: (value: string) => void;
+}) {
+  return <label>版本<select value={value} onChange={(event) => onChange(event.target.value)}>
+    <option value="" disabled={!skill.defaultVersion?.available}>
+      {skill.defaultVersion?.available ? "默认版本" : "默认版本不可用"}
+    </option>
+    {versions.filter((version) => version.available && version.id !== skill.defaultVersion?.id).map((version) =>
+      <option key={version.id} value={version.id}>{versionLabel(version)} · {shortVersion(version, versions)}</option>,
+    )}
+  </select></label>;
+}
+
+function OtherSkillVersion({ skill, value, onChange }: {
+  skill: Skill; value: string; onChange: (value: string) => void;
+}) {
   const [versions, setVersions] = useState<SkillVersion[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!value.skillId) { setVersions([]); return; }
     const controller = new AbortController();
-    setVersions([]);
-    setError("");
-    async function load() {
-      const items: SkillVersion[] = [];
-      let pageToken = "";
-      do {
-        const result = await listVersions<{ versions?: SkillVersion[]; nextPageToken?: string }>({ skillId: value.skillId, pageSize: 100, ...(pageToken ? { pageToken } : {}) }, { signal: controller.signal });
-        items.push(...(result.versions ?? []));
-        pageToken = result.nextPageToken ?? "";
-      } while (pageToken && !controller.signal.aborted);
-      if (!controller.signal.aborted) setVersions(items);
-    }
-    void load().catch(() => { if (!controller.signal.aborted) setError("版本加载失败"); });
+    void fetchAllVersions(skill.id, controller.signal).then(
+      (items) => { if (!controller.signal.aborted) setVersions(items); },
+      () => { if (!controller.signal.aborted) setError("版本加载失败，请重新选择 Skill。"); },
+    );
     return () => controller.abort();
-  }, [value.skillId]);
+  }, [skill.id]);
 
-  return <fieldset className="compare-source" disabled={disabled}><legend>{label}</legend>
-    {!fixed && <label>来源<select value={value.skillId} onChange={(event) => onChange({ skillId: event.target.value, versionId: "", path: value.path })}>
-      <option value="">本地目录</option>
-      {skills.map((skill) => <option key={skill.id} value={skill.id}>{skill.name}</option>)}
-    </select></label>}
-    {value.skillId ? <label>版本<select value={value.versionId} onChange={(event) => onChange({ ...value, versionId: event.target.value })}><option value="">默认版本</option>{versions.filter((version) => version.available).map((version) => <option key={version.id} value={version.id}>{versionLabel(version)} · {shortVersion(version, versions)}</option>)}</select></label> : <LocalSource path={value.path} onChange={(path) => onChange({ ...value, path })} />}
-    {error && <span role="alert" className="intake-error">{error}</span>}
-  </fieldset>;
+  return <>
+    <VersionSelect skill={skill} versions={versions} value={value} onChange={onChange} />
+    {error && <p role="alert" className="intake-error">{error}</p>}
+  </>;
 }
 
 function location(source: Source) {
@@ -89,18 +88,46 @@ function location(source: Source) {
   return { localPath: source.path.trim() };
 }
 
-export default function ComparePanel({ skills, skillId = "", candidate = "" }: { skills: Skill[]; skillId?: string; candidate?: string }) {
-  const [left, setLeft] = useState<Source>({ skillId, versionId: "", path: "" });
-  const [right, setRight] = useState<Source>({ skillId, versionId: candidate, path: "" });
+export default function ComparePanel({ skill, versions, candidate }: { skill: Skill; versions: SkillVersion[]; candidate?: string }) {
+  const defaultId = skill.defaultVersion?.id;
+  const [left, setLeft] = useState(() => skill.defaultVersion?.available ? "" : versions.find((version) => version.available)?.id ?? "");
+  const [right, setRight] = useState<Source>({ skillId: skill.id, versionId: candidate && candidate !== defaultId ? candidate : left, path: "" });
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [loadingSkills, setLoadingSkills] = useState(true);
+  const [skillsError, setSkillsError] = useState("");
   const [changes, setChanges] = useState<Change[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetchAllSkills(controller.signal).then(
+      (items) => { if (!controller.signal.aborted) setSkills(items.filter((item) => item.id !== skill.id)); },
+      () => { if (!controller.signal.aborted) setSkillsError("其他 Skill 加载失败，请重新打开比对。"); },
+    ).finally(() => { if (!controller.signal.aborted) setLoadingSkills(false); });
+    return () => controller.abort();
+  }, [skill.id]);
+
+  const target = right.skillId === skill.id ? skill : skills.find((item) => item.id === right.skillId);
+  const sameVersion = target === skill && left === right.versionId;
+  const canSubmit = right.skillId
+    ? !!(right.versionId || target?.defaultVersion?.available) && !sameVersion
+    : !!right.path.trim();
+
+  function changeTarget(value: Source) {
+    setRight(value);
+    setChanges(null);
+    setError("");
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setBusy(true); setError(""); setChanges(null);
+    if (busy || !canSubmit) return;
+    setBusy(true);
+    setError("");
+    setChanges(null);
     try {
-      const result = await compareSkills<{ files?: Change[] }>({ left: location(left), right: location(right) });
+      const result = await compareSkills<{ files?: Change[] }>({ left: location({ skillId: skill.id, versionId: left, path: "" }), right: location(right) });
       setChanges(result.files ?? []);
     } catch (reason) {
       setError(reason instanceof Error && reason.message !== "bad request" ? reason.message : "无法比对，请检查目录及文件大小。");
@@ -109,8 +136,38 @@ export default function ComparePanel({ skills, skillId = "", candidate = "" }: {
 
   return <div className="compare-panel">
     <form onSubmit={submit}>
-      <div className="compare-sources"><SourcePicker label="基准版本" fixed={!!skillId} skills={skills} value={left} disabled={busy} onChange={(value) => { setLeft(value); setChanges(null); }} /><SourcePicker label="对比版本" fixed={!!skillId} skills={skills} value={right} disabled={busy} onChange={(value) => { setRight(value); setChanges(null); }} /></div>
-      <button type="submit" disabled={busy || (!!skillId && left.versionId === right.versionId)}>{busy ? "比对中…" : "开始比对"}</button>
+      <div className="compare-sources">
+        <fieldset className="compare-source" disabled={busy}>
+          <legend>基准 · {skill.name}</legend>
+          <VersionSelect skill={skill} versions={versions} value={left} onChange={(value) => {
+            setLeft(value);
+            setChanges(null);
+            setError("");
+          }} />
+        </fieldset>
+        <fieldset className="compare-source" disabled={busy}>
+          <legend>对比对象</legend>
+          <label>来源<select value={right.skillId} onChange={(event) => {
+            const id = event.target.value;
+            changeTarget({ ...right, skillId: id, versionId: id === skill.id && !skill.defaultVersion?.available ? left : "" });
+          }}>
+            <option value={skill.id}>当前 Skill 的版本</option>
+            <option value="">本地目录</option>
+            {skills.length > 0 && <optgroup label="其他 Skill">
+              {skills.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            </optgroup>}
+          </select></label>
+          {loadingSkills && <p className="skillhub-hint" role="status">正在加载其他 Skill…</p>}
+          {skillsError && <p className="intake-error" role="alert">{skillsError}</p>}
+          {target === skill && <VersionSelect skill={skill} versions={versions} value={right.versionId}
+            onChange={(versionId) => changeTarget({ ...right, versionId })} />}
+          {target && target !== skill && <OtherSkillVersion key={target.id} skill={target} value={right.versionId}
+            onChange={(versionId) => changeTarget({ ...right, versionId })} />}
+          {!right.skillId && <LocalSource path={right.path} onChange={(path) => changeTarget({ ...right, path })} />}
+          {sameVersion && <p className="skillhub-hint">请选择不同的版本或切换来源。</p>}
+        </fieldset>
+      </div>
+      <button type="submit" disabled={busy || !canSubmit}>{busy ? "比对中…" : "开始比对"}</button>
     </form>
     {error && <p className="intake-error" role="alert">{error}</p>}
     {changes && <CompareResults files={changes} />}

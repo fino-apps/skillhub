@@ -1,11 +1,10 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { batchDeleteSkills, listFacets, listSkills, repairVersion } from "@/generated/api-client";
-import ComparePanel from "./compare-panel";
 import GitHubIntake from "./github-intake";
 import LocalIntake, { ZipIntake } from "./local-intake";
 import { BatchMetadata } from "./skill-metadata";
-import { fetchAllSkills, libraryNavigation, message, sourceNames, sourceURL, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
+import { libraryNavigation, message, sourceNames, sourceURL, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
 import { Dialog, Failure, Menu, OperationFeedback, Popover, useSkillOperation } from "./skill-ui";
 
 import "./skillhub.css";
@@ -14,8 +13,7 @@ const VersionPanel = lazy(() => import("./version-panel"));
 
 type Panel =
   | { kind: "folder" | "github" | "zip" | "batch" }
-  | { kind: "new-version"; skill: Skill; path: string }
-  | { kind: "compare"; skills: Skill[] };
+  | { kind: "new-version"; skill: Skill; path: string };
 
 function LibraryToolbar({ params, facets, onChange, status, children }: {
   params: URLSearchParams; facets: Facets; onChange: (next: URLSearchParams) => void; status: ReactNode; children: ReactNode;
@@ -194,10 +192,6 @@ export default function HomePage() {
     operation.setNotice(`新增 ${result.addedCount ?? 0} 项，已有 ${result.existingCount ?? 0} 项。`);
   }
 
-  async function compare() {
-    await operation.run("compare", async () => setPanel({ kind: "compare", skills: await fetchAllSkills() }));
-  }
-
   function removeSelected() {
     if (!window.confirm(`删除选中的 ${selected.length} 项 Skill 及其已保存版本？`)) return;
     void operation.run("batch-delete", async () => {
@@ -226,7 +220,6 @@ export default function HomePage() {
         <button type="button" className="secondary" onClick={() => setPanel({ kind: "github" })}>导入 GitHub</button>
         <Menu label="技能库更多操作">
           <button type="button" onClick={() => setPanel({ kind: "zip" })}>导入 ZIP</button>
-          <button type="button" disabled={!!operation.busy} onClick={() => void compare()}>比对 Skill</button>
         </Menu>
       </div>
     </LibraryToolbar>
@@ -317,9 +310,6 @@ export default function HomePage() {
     </Dialog>}
     {panel?.kind === "batch" && <Dialog title="批量编辑" compact onClose={() => setPanel(null)}>
       <BatchMetadata ids={selected} categories={facets.categories ?? []} onSaved={editComplete} />
-    </Dialog>}
-    {panel?.kind === "compare" && <Dialog title="比对 Skill" onClose={() => setPanel(null)}>
-      <ComparePanel skills={panel.skills} />
     </Dialog>}
   </main>;
 }

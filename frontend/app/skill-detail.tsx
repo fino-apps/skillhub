@@ -76,7 +76,7 @@ function Detail({ skillId }: { skillId: string }) {
   const versionsTab = params.get("tab") === "versions";
   const busy = !!operation.busy;
   const updateSource = skill?.repositoryUrl ? "github" : "folder";
-  const canCompare = versions.filter((version) => version.available).length >= 2;
+  const canCompare = versions.some((version) => version.available);
   const description = skill?.description || "";
 
   function repair(version: SkillVersion) {
@@ -129,6 +129,7 @@ function Detail({ skillId }: { skillId: string }) {
           {view && (view.available
             ? <button type="button" disabled={busy} onClick={() => void operation.save(skillId, view.id)}>{busy ? "处理中…" : "保存到本机"}</button>
             : <button type="button" disabled={busy} onClick={() => repair(view)}>补齐版本</button>)}
+          {canCompare && <button type="button" className="secondary" disabled={busy} onClick={() => setPanel({ kind: "compare" })}>比对</button>}
           <Menu label="Skill 更多操作">
             <button type="button" onClick={() => setPanel({ kind: "metadata" })}>编辑整理信息</button>
             {view?.available && <>
@@ -171,7 +172,6 @@ function Detail({ skillId }: { skillId: string }) {
           <button type="button" className="secondary" onClick={() => setPanel({ kind: "update", source: updateSource })}>
             {updateSource === "github" ? "检查更新" : "保存新版本"}
           </button>
-          {canCompare && <button type="button" className="secondary" onClick={() => setPanel({ kind: "compare" })}>比对版本</button>}
           <Menu label="版本更多操作">
             {updateSource === "github" && <button type="button" onClick={() => setPanel({ kind: "update", source: "folder" })}>从文件夹保存版本</button>}
             <button type="button" onClick={() => setPanel({ kind: "zip" })}>从 ZIP 保存版本</button>
@@ -214,8 +214,8 @@ function Detail({ skillId }: { skillId: string }) {
           saved();
         }} /></Suspense>
       </Dialog>}
-      {panel?.kind === "compare" && <Dialog title="比对版本" onClose={() => setPanel(null)}>
-        <ComparePanel skills={[skill]} skillId={skillId} candidate={view?.id !== skill.defaultVersion?.id ? view?.id : ""} />
+      {panel?.kind === "compare" && <Dialog title="比对 Skill" onClose={() => setPanel(null)}>
+        <ComparePanel skill={skill} versions={versions} candidate={view?.available ? view.id : undefined} />
       </Dialog>}
     </>}
   </main>;
