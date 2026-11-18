@@ -73,8 +73,10 @@ export default function VersionPanel({ skill, from, path: initialPath, onSaved }
     });
   }
 
-  return <>
-    <form className="github-form" onSubmit={inspect}>
+  const source = from === "folder" ? path : preview?.commit || ref || "仓库默认分支";
+
+  return <div className="skill-fields version-intake">
+    {!preview && <form className="github-form" onSubmit={inspect}>
       <fieldset className="skill-fields" disabled={!!busy}>
         {from === "github"
           ? <label>分支、标签或 commit<input value={ref} maxLength={200} placeholder="仓库默认分支"
@@ -85,11 +87,17 @@ export default function VersionPanel({ skill, from, path: initialPath, onSaved }
               if (selected) { setPath(selected); setPreview(null); }
             })}>选择文件夹</button>}</>}
       </fieldset>
-      <button className="secondary" type="submit" disabled={!!busy}>{busy === "preview" ? "读取中…" : "预览差异"}</button>
-    </form>
+      <button type="submit" disabled={!!busy}>{busy === "preview" ? "读取中…" : "预览差异"}</button>
+    </form>}
     <Failure error={error} />
-    {preview && <div className="github-preview">
-      {preview.commit && <p>Commit <code>{preview.commit}</code></p>}
+    {preview && <>
+      <div className="file-import-source">
+        <span title={source}>{from === "folder" ? source : <code>{source}</code>}</span>
+        <button type="button" className="skillhub-text-button" disabled={!!busy} onClick={() => {
+          setPreview(null);
+          setError("");
+        }}>{from === "folder" ? "更换目录" : "更换版本来源"}</button>
+      </div>
       {preview.changes && <CompareResults files={preview.changes} />}
       {preview.commit && preview.commit === skill.defaultVersion?.commitSha && <p>此 commit 已收录。</p>}
       <fieldset className="skill-fields" disabled={!!busy}>
@@ -97,7 +105,7 @@ export default function VersionPanel({ skill, from, path: initialPath, onSaved }
         <label className="github-checkbox"><input type="checkbox" checked={makeDefault}
           onChange={(event) => setDefault(event.target.checked)} />同时设为默认</label>
       </fieldset>
-      <button type="button" disabled={!!busy} onClick={save}>{busy === "save" ? "保存中…" : "保存版本"}</button>
-    </div>}
-  </>;
+      <button type="button" className="file-import-pick" disabled={!!busy} onClick={save}>{busy === "save" ? "保存中…" : "保存版本"}</button>
+    </>}
+  </div>;
 }

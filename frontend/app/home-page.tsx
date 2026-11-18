@@ -294,7 +294,7 @@ export default function HomePage() {
       {loading ? "加载中…" : error?.pageToken ? "重试加载更多" : "加载更多"}
     </button>}
 
-    {panel?.kind === "file" && <Dialog title="导入文件" className="file-import-dialog" onClose={() => setPanel(null)}>
+    {panel?.kind === "file" && <Dialog title="导入文件" compact onClose={() => setPanel(null)}>
       {panel.zip ? <ZipIntake onComplete={imported} onBack={() => setPanel({ kind: "file" })} />
         : <LocalIntake categories={facets.categories ?? []} onComplete={imported}
         onVersion={(skill, path) => setPanel({ kind: "new-version", skill, path })}>
@@ -304,7 +304,7 @@ export default function HomePage() {
     {panel?.kind === "github" && <Dialog title="导入 GitHub" compact onClose={() => setPanel(null)}>
       <GitHubIntake categories={facets.categories ?? []} onComplete={imported} />
     </Dialog>}
-    {panel?.kind === "new-version" && <Dialog title="保存新版本" onClose={() => setPanel(null)}>
+    {panel?.kind === "new-version" && <Dialog title="保存新版本" className="skill-workflow-dialog" onClose={() => setPanel(null)}>
       <Suspense fallback={<p>加载中…</p>}><VersionPanel skill={panel.skill} from="folder" path={panel.path} onSaved={editComplete} /></Suspense>
     </Dialog>}
     {panel?.kind === "batch" && <Dialog title="批量编辑" compact onClose={() => setPanel(null)}>

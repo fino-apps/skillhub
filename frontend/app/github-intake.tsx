@@ -85,7 +85,7 @@ export default function GitHubIntake({ categories, onComplete }: { categories: s
           </div>
         </details>
       </fieldset>
-      <button className="secondary" type="submit" disabled={busy}>{busy && !preview ? "扫描中…" : "扫描技能"}</button>
+      <button className={preview ? "secondary" : undefined} type="submit" disabled={busy}>{busy && !preview ? "扫描中…" : "扫描技能"}</button>
     </form>
     <Failure error={error} />
     <ImportFeedback result={feedback} />
@@ -96,7 +96,7 @@ export default function GitHubIntake({ categories, onComplete }: { categories: s
           <CandidatePicker items={preview.result.skills ?? []} selected={selected} onChange={setSelected} disabled={busy} />
           <ImportMetadataFields categories={categories} disabled={busy} />
           <button type="submit" disabled={busy || !selected.length}>
-            {busy ? "收录中…" : `收录所选（${selected.length}）`}
+            {busy ? "收录中…" : `收录 ${selected.length} 项`}
           </button>
         </form>
         : <p role="status">没有找到 Skill</p>}

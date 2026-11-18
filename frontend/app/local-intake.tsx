@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { commitUpload, importSkill, listSkills, scanProject } from "@/generated/api-client";
 import { backendDirectoryLabel, canPickDirectory, localCandidate, message, pickDirectory, stageZip, tagsFrom, type Candidate, type ImportResult, type LibraryPage, type Skill } from "./library-api";
 import { Failure } from "./skill-ui";
@@ -48,20 +48,38 @@ export function ImportMetadataFields({ categories, disabled }: { categories: str
   const hintId = useId();
   const categoriesId = useId();
 
-  return <fieldset className="skill-fields" disabled={disabled} aria-describedby={hintId}>
-    <legend className="sr-only">批量分类和标签</legend>
-    <span className="skillhub-hint" id={hintId}>应用到本批新收录的 Skill</span>
-    <label>分类<input name="category" maxLength={128} list={categoriesId} /></label>
-    <datalist id={categoriesId}>{categories.map((name) => <option key={name} value={name} />)}</datalist>
-    <label>标签<input name="tags" placeholder="用逗号分隔" /></label>
-  </fieldset>;
+  const [summary, setSummary] = useState("");
+
+  return <details className="skill-disclosure file-import-metadata" onChange={(event) => {
+    const form = event.currentTarget.closest("form");
+    if (!form) return;
+    const { category, tags } = importMetadataValues(form);
+    setSummary([category, tags.length ? `${tags.length} 个标签` : ""].filter(Boolean).join(" · "));
+  }}>
+    <summary>分类和标签{summary ? <span title={summary}>{summary}</span> : "（选填）"}</summary>
+    <fieldset className="skill-fields" disabled={disabled} aria-describedby={hintId}>
+      <legend className="sr-only">批量分类和标签</legend>
+      <span className="skillhub-hint" id={hintId}>应用到本批新收录的 Skill</span>
+      <label>分类<input name="category" maxLength={128} list={categoriesId} /></label>
+      <datalist id={categoriesId}>{categories.map((name) => <option key={name} value={name} />)}</datalist>
+      <label>标签<input name="tags" placeholder="用逗号分隔" /></label>
+    </fieldset>
+  </details>;
+}
+
+function importMetadataValues(form: HTMLFormElement) {
+  const values = new FormData(form);
+  return {
+    category: String(values.get("category") ?? "").trim(),
+    tags: tagsFrom(String(values.get("tags") ?? "")),
+  };
 }
 
 export function readImportMetadata(form: HTMLFormElement) {
-  const values = new FormData(form);
-  const category = String(values.get("category") ?? "").trim();
-  const tags = tagsFrom(String(values.get("tags") ?? ""));
+  const { category, tags } = importMetadataValues(form);
   if (tags.length > 100 || tags.some((tag) => [...tag].length > 128)) {
+    const details = form.querySelector<HTMLDetailsElement>(".file-import-metadata");
+    if (details) details.open = true;
     throw new Error("最多填写 100 个标签，每个标签最多 128 个字符");
   }
   return { category, tags };
@@ -80,9 +98,7 @@ export default function LocalIntake({ categories, onComplete, onVersion, childre
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [manual, setManual] = useState(false);
-  const [metadataSummary, setMetadataSummary] = useState("");
   const pathId = useId();
-  const metadataFields = useRef<HTMLDetailsElement>(null);
 
   async function choose() {
     await run(async () => {
@@ -98,7 +114,6 @@ export default function LocalIntake({ categories, onComplete, onVersion, childre
     setSelected([]);
     setMatching([]);
     setResult(null);
-    setMetadataSummary("");
   }
 
   async function inspect(path: string) {
@@ -139,13 +154,7 @@ export default function LocalIntake({ categories, onComplete, onVersion, childre
     if (!selected.length || busy) return;
     const form = event.currentTarget;
     void run(async () => {
-      let metadata;
-      try {
-        metadata = readImportMetadata(form);
-      } catch (err) {
-        if (metadataFields.current) metadataFields.current.open = true;
-        throw err;
-      }
+      const metadata = readImportMetadata(form);
       const reply = await importSkill<ImportResult>({ skillPaths: selected, ...metadata });
       if (reply.failures?.length) {
         setResult(reply);
@@ -188,22 +197,15 @@ export default function LocalIntake({ categories, onComplete, onVersion, childre
     </p>}
     {matching.length > 0 && <div className="skill-fields">
       <p className="skillhub-hint">可保存为同名 Skill 的新版本，或在下方作为独立条目收录。</p>
-      {matching.map((skill) => <button key={skill.id} type="button" className="secondary" disabled={busy}
-        onClick={() => onVersion(skill, selected[0])}>保存到 {skill.name} · {skill.upstreamUrl || skill.localPath || "当前库"}</button>)}
+      {matching.map((skill) => <div className="skill-fields" key={skill.id}>
+        <button type="button" className="secondary" disabled={busy}
+          onClick={() => onVersion(skill, selected[0])}>为 {skill.name} 保存新版本</button>
+        <small>已有条目来源 {skill.upstreamUrl || skill.localPath || "当前库"}</small>
+      </div>)}
     </div>}
     {items.length > 0 && <form className="github-form" onSubmit={save}>
       {items.length > 1 && <CandidatePicker items={items} selected={selected} onChange={setSelected} disabled={busy} />}
-      <details className="skill-disclosure file-import-metadata" ref={metadataFields} onChange={(event) => {
-        const form = event.currentTarget.closest("form");
-        if (!form) return;
-        const values = new FormData(form);
-        const category = String(values.get("category") ?? "").trim();
-        const count = tagsFrom(String(values.get("tags") ?? "")).length;
-        setMetadataSummary([category, count ? `${count} 个标签` : ""].filter(Boolean).join(" · "));
-      }}>
-        <summary>分类和标签{metadataSummary ? <span title={metadataSummary}>{metadataSummary}</span> : "（选填）"}</summary>
-        <ImportMetadataFields categories={categories} disabled={busy} />
-      </details>
+      <ImportMetadataFields categories={categories} disabled={busy} />
       <button type="submit" disabled={!selected.length || busy}>
         {busy ? "处理中…" : matching.length ? "作为独立条目收录" : items.length === 1 ? "确认收录" : `收录 ${selected.length} 项`}
       </button>

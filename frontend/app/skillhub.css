@@ -47,8 +47,13 @@
 .candidate-selection button { min-height: 32px; }
 .github-candidates small, .candidate-description { color: var(--muted); font-weight: 400; }
 .candidate-description { display: block; }
-.file-import-dialog { width: min(440px, calc(100% - 32px)); }
-.file-import-dialog .dialog-header, .file-import-dialog .dialog-body { padding: 14px 16px; }
+.skill-workflow-dialog { width: min(460px, calc(100% - 32px)); }
+.skill-workflow-dialog:has(.compare-results) { width: min(840px, calc(100% - 32px)); }
+.skill-workflow-dialog .dialog-header, .skill-workflow-dialog .dialog-body { padding: 14px 16px; }
+.version-intake .compare-results { margin-top: 0; padding-top: 0; border-top: 0; }
+.version-intake .compare-content { max-height: min(400px, 42dvh); }
+.version-intake .compare-files { max-height: min(400px, 42dvh); }
+.version-intake p { margin: 0; }
 .file-import-pick { padding-inline: 14px; }
 .file-import-options, .file-import-source { display: flex; align-items: center; gap: 14px; }
 .file-import-options { flex-wrap: wrap; }
@@ -57,7 +62,9 @@
 .file-import-source > button { flex: none; }
 .file-import-metadata { min-width: 0; border-top: 1px solid var(--line); padding-top: 10px; }
 .file-import-metadata summary { font-size: 13px; }
+.file-import-metadata[open] > fieldset { margin-top: 12px; }
 .file-import-metadata summary > span { display: inline-block; max-width: 55%; margin-inline-start: 8px; vertical-align: bottom; color: var(--muted); }
+.local-intake small { overflow-wrap: anywhere; }
 .local-intake p { margin: 0; overflow-wrap: anywhere; }
 .local-intake .skill-fields > button { max-width: 100%; overflow-wrap: anywhere; }
 .local-intake-candidate { font-size: 14px; }
@@ -83,6 +90,7 @@
   .dialog-body { padding: 16px; }
   .compare-sources, .compare-results, .github-form > div { grid-template-columns: 1fr; }
   .compare-files { max-height: 150px; }
+  .version-intake .compare-files { max-height: 120px; }
 }
 .compare-source select { height: 36px; padding: 0 10px; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
 .copy-command { max-height: 260px; padding: 14px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; font-size: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-muted); }
