@@ -98,7 +98,7 @@ export default function VersionPanel({ skill, from, path: initialPath, onSaved }
           setError("");
         }}>{from === "folder" ? "更换目录" : "更换版本来源"}</button>
       </div>
-      {preview.changes && <CompareResults files={preview.changes} />}
+      {preview.changes && <CompareResults files={preview.changes} widePreview />}
       {preview.commit && preview.commit === skill.defaultVersion?.commitSha && <p>此 commit 已收录。</p>}
       <fieldset className="skill-fields" disabled={!!busy}>
         <label>版本备注<input value={notes} maxLength={4096} onChange={(event) => setNotes(event.target.value)} /></label>

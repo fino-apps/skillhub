@@ -174,9 +174,10 @@ export default function ComparePanel({ skill, versions, candidate }: { skill: Sk
   </div>;
 }
 
-export function CompareResults({ files }: { files: Change[] }) {
+export function CompareResults({ files, widePreview = false }: { files: Change[]; widePreview?: boolean }) {
   const [selectedPath, setSelectedPath] = useState(files[0]?.path ?? "");
   const [dark, setDark] = useState(document.documentElement.dataset.theme === "dark");
+  const [showFullFile, setShowFullFile] = useState(false);
 
   useEffect(() => {
     const observer = new MutationObserver(() => setDark(document.documentElement.dataset.theme === "dark"));
@@ -186,12 +187,26 @@ export function CompareResults({ files }: { files: Change[] }) {
 
   if (!files.length) return <p className="skillhub-empty">两个 Skill 内容一致。</p>;
   const selected = files.find((file) => file.path === selectedPath) ?? files[0];
-  return <div className="compare-results">
-    <div className="compare-files">{files.map((file) => <button type="button" key={file.path} className={selected.path === file.path ? "is-selected" : ""} onClick={() => setSelectedPath(file.path)}><span>{file.kind.endsWith("ADDED") ? "+" : file.kind.endsWith("DELETED") ? "−" : "~"}</span>{file.path}</button>)}</div>
-    <div className="compare-content">
+  const hasTextDiff = !selected.binary && (selected.leftText !== undefined || selected.rightText !== undefined || !selected.detail);
+  return <div className={widePreview ? "compare-results compare-results-wide" : "compare-results"}>
+    {widePreview ? <div className="compare-preview-toolbar">
+      {files.length === 1
+        ? <code title={selected.path}>{selected.path}</code>
+        : <select aria-label="差异文件" value={selected.path} onChange={(event) => setSelectedPath(event.target.value)}>
+          {files.map((file) => <option key={file.path} value={file.path}>{file.path}</option>)}
+        </select>}
+      {hasTextDiff && <button type="button" className="skillhub-text-button" aria-pressed={showFullFile}
+        onClick={() => setShowFullFile((value) => !value)}>显示完整文件</button>}
+    </div> : <div className="compare-files">
+      {files.map((file) => <button type="button" key={file.path} className={selected.path === file.path ? "is-selected" : ""}
+        onClick={() => setSelectedPath(file.path)}><span>{file.kind.endsWith("ADDED") ? "+" : file.kind.endsWith("DELETED") ? "−" : "~"}</span>{file.path}</button>)}
+    </div>}
+    <div className="compare-content" key={selected.path} tabIndex={widePreview ? 0 : undefined}
+      role={widePreview ? "region" : undefined} aria-label={widePreview ? `${selected.path} 的差异` : undefined}>
       {selected.detail && <p>{selected.detail}</p>}
-      {selected.binary ? <p>二进制文件已变化。</p> : (selected.leftText !== undefined || selected.rightText !== undefined || !selected.detail)
-        && <ReactDiffViewer oldValue={selected.leftText ?? ""} newValue={selected.rightText ?? ""} splitView={false} useDarkTheme={dark} />}
+      {selected.binary && <p>二进制文件已变化。</p>}
+      {hasTextDiff && <ReactDiffViewer oldValue={selected.leftText ?? ""} newValue={selected.rightText ?? ""}
+        splitView={false} showDiffOnly={!showFullFile} useDarkTheme={dark} />}
     </div>
   </div>;
 }
