@@ -298,6 +298,14 @@ func validateImportSkillRequest(req *pb.ImportSkillRequest) error {
 		return newRequestValidationError("skill_paths", err)
 	}
 
+	if err := requestValidator.Var(req.GetCategory(), "omitempty,max=128"); err != nil {
+		return newRequestValidationError("category", err)
+	}
+
+	if err := requestValidator.Var(req.GetTags(), "omitempty,max=100"); err != nil {
+		return newRequestValidationError("tags", err)
+	}
+
 	return nil
 }
 

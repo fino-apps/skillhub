@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { importSkill, previewImport } from "@/generated/api-client";
-import { message, type Candidate, type ImportResult } from "./library-api";
+import { message, tagsFrom, type Candidate, type ImportResult } from "./library-api";
 import { CandidatePicker, ImportFeedback } from "./local-intake";
 import { Failure } from "./skill-ui";
 
@@ -22,7 +22,7 @@ type Preview = {
   skills?: Candidate[];
 };
 
-export default function GitHubIntake({ onComplete }: { onComplete: (result: ImportResult) => void }) {
+export default function GitHubIntake({ categories, onComplete }: { categories: string[]; onComplete: (result: ImportResult) => void }) {
   const [preview, setPreview] = useState<{ source: ReturnType<typeof githubLocation>; result: Preview } | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -48,14 +48,23 @@ export default function GitHubIntake({ onComplete }: { onComplete: (result: Impo
     }
   }
 
-  async function save() {
-    if (!preview) return;
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!preview || !selected.length || busy) return;
+    const values = new FormData(event.currentTarget);
+    const category = String(values.get("category") ?? "").trim();
+    const tags = tagsFrom(String(values.get("tags") ?? ""));
+    if (tags.length > 100 || tags.some((tag) => [...tag].length > 128)) {
+      setError("最多填写 100 个标签，每个标签最多 128 个字符");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
       const result = await importSkill<ImportResult>({
         repositoryUrl: preview.source.repositoryUrl, sourceRef: preview.source.ref,
         commitSha: preview.result.resolvedCommitSha, skillPaths: selected,
+        category, tags,
       });
       if (result.failures?.length) {
         setFeedback(result);
@@ -88,10 +97,19 @@ export default function GitHubIntake({ onComplete }: { onComplete: (result: Impo
     {preview && <div className="github-preview">
       <p>Commit <code>{preview.result.resolvedCommitSha}</code></p>
       {(preview.result.skills?.length ?? 0) > 0
-        ? <><CandidatePicker items={preview.result.skills ?? []} selected={selected} onChange={setSelected} disabled={busy} />
-          <button type="button" disabled={busy || !selected.length} onClick={() => void save()}>
+        ? <form className="github-form" onSubmit={save}>
+          <CandidatePicker items={preview.result.skills ?? []} selected={selected} onChange={setSelected} disabled={busy} />
+          <fieldset className="skill-fields" disabled={busy} aria-describedby="github-import-metadata">
+            <legend className="sr-only">批量分类和标签</legend>
+            <span className="skillhub-hint" id="github-import-metadata">应用到本批新收录的 Skill</span>
+            <label>分类<input name="category" maxLength={128} list="github-import-categories" /></label>
+            <datalist id="github-import-categories">{categories.map((name) => <option key={name} value={name} />)}</datalist>
+            <label>标签<input name="tags" placeholder="用逗号分隔" /></label>
+          </fieldset>
+          <button type="submit" disabled={busy || !selected.length}>
             {busy ? "收录中…" : `收录所选（${selected.length}）`}
-          </button></>
+          </button>
+        </form>
         : <p role="status">没有找到 Skill</p>}
     </div>}
   </>;

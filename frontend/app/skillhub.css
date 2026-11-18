@@ -140,9 +140,10 @@
 
 .library-table { margin-top: 14px; border-top: 1px solid var(--line); }
 .library-table thead th:nth-child(1) { width: 42px; }
-.library-table thead th:nth-child(3) { width: 15%; }
-.library-table thead th:nth-child(4) { width: 18%; }
-.library-table thead th:nth-child(5) { width: 104px; }
+.library-table thead .library-source { width: 15%; }
+.library-table thead .library-classification { width: 18%; }
+.library-table thead th:last-child { width: 104px; }
+.library-table td:is(.library-source, .library-classification) { overflow-wrap: anywhere; }
 .library-table thead th { padding-block: 9px; font-weight: 600; }
 .library-table .skillhub-entry td { padding-block: 9px; vertical-align: middle; }
 .library-table .skillhub-entry:hover td, .library-table .skillhub-entry:focus-within td,
@@ -292,9 +293,9 @@
 .version-notes-text { overflow-wrap: anywhere; color: var(--muted); }
 
 @media (max-width: 760px) {
-  .library-table :is(.library-source, .library-classification, th:nth-child(3), th:nth-child(4)) { display: none; }
-  .library-mobile-source { display: block; font-size: 12px; }
-  .library-table thead th:nth-child(5) { width: 96px; }
+  .library-table :is(.library-source, .library-classification) { display: none; }
+  .library-mobile-source { display: block; font-size: 12px; overflow-wrap: anywhere; }
+  .library-table thead th:last-child { width: 96px; }
 }
 @media (max-width: 480px) {
   .library-shell { margin-top: 20px; }

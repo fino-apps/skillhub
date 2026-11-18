@@ -65,8 +65,20 @@ func PreviewGitHub(ctx context.Context, source Source, collection bool) (*Previe
 	return &Preview{Commit: commit, Items: items}, nil
 }
 
-func (s *Library) ImportDirectories(ctx context.Context, repositoryURL, ref, sha string, paths []string) (*ImportResult, error) {
-	source := Source{Kind: "folder"}
+type ImportMetadata struct {
+	Category string
+	Tags     []string
+}
+
+func (s *Library) ImportDirectories(ctx context.Context, repositoryURL, ref, sha string, paths []string, metadata ImportMetadata) (*ImportResult, error) {
+	tags, err := normalizeTags(metadata.Tags)
+	if err != nil {
+		return nil, err
+	}
+	source := Source{
+		Kind:            "folder",
+		InitialMetadata: ImportMetadata{Category: strings.TrimSpace(metadata.Category), Tags: tags},
+	}
 	var root string
 	if repositoryURL != "" {
 		repository, err := GitHubURL(repositoryURL)
@@ -80,7 +92,7 @@ func (s *Library) ImportDirectories(ctx context.Context, repositoryURL, ref, sha
 		}
 		defer cleanup()
 		root = dir
-		source = Source{Kind: "github", Repository: repository, Ref: ref, Commit: commit}
+		source.Kind, source.Repository, source.Ref, source.Commit = "github", repository, ref, commit
 	}
 	var result ImportResult
 	for _, path := range paths {

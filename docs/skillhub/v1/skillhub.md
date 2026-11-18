@@ -307,6 +307,8 @@ POST /skillhub/v1/imports
 | `sourceRef` | `string` |  | 否 |  | 最大长度为 200 |
 | `commitSha` | `string` |  | 否 |  | 最小长度为 40；最大长度为 40 |
 | `skillPaths` | `Array<string>` |  | 是 |  | 最大长度为 100 |
+| `category` | `string` |  | 否 |  | 分类和标签仅应用到本批新收录的 Skill。；最大长度为 128 |
+| `tags` | `Array<string>` |  | 否 |  | 最大长度为 100 |
 
 ### 返回值
 

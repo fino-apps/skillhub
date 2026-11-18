@@ -144,7 +144,12 @@ function Detail({ skillId }: { skillId: string }) {
           <summary>来源 {sourceLabel(skill)}</summary>
           <dl>
             <dt>导入方式</dt><dd>{sourceNames[skill.importKind ?? ""] || "未知"}</dd>
-            {skill.upstreamUrl && <><dt>上游出处</dt><dd><a href={skill.upstreamUrl} target="_blank" rel="noreferrer">{skill.upstreamUrl}</a></dd></>}
+            {(skill.upstreamName || skill.upstreamUrl) && <>
+              <dt>上游出处</dt>
+              <dd>{skill.upstreamUrl
+                ? <a href={skill.upstreamUrl} target="_blank" rel="noreferrer">{skill.upstreamName || skill.upstreamUrl}</a>
+                : skill.upstreamName}</dd>
+            </>}
             {skill.repositoryUrl && <><dt>绑定仓库</dt><dd>{skill.repositoryUrl}{skill.repositoryPath && <code> · {skill.repositoryPath}</code>}</dd></>}
             {skill.localPath && <><dt>绑定目录</dt><dd><code>{skill.localPath}</code></dd></>}
             {view?.upstreamRepository && <><dt>归档来源</dt><dd>{view.upstreamRepository}{view.upstreamPath && <code> · {view.upstreamPath}</code>}</dd></>}

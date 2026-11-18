@@ -244,7 +244,7 @@ func (s skillhubServer) PreviewImport(ctx context.Context, in *pb.PreviewImportR
 	}, nil
 }
 
-// ImportSkill implements Interface. fino:req-fields 1=RepositoryUrl,2=SourceRef,3=CommitSha,4=SkillPaths
+// ImportSkill implements Interface. fino:req-fields 1=RepositoryUrl,2=SourceRef,3=CommitSha,4=SkillPaths,5=Category,6=Tags
 func (s skillhubServer) ImportSkill(ctx context.Context, in *pb.ImportSkillRequest) (*pb.ImportSkillResponse, error) {
 	logs.Ctx(ctx).Debugw("ImportSkill")
 	if in == nil {
@@ -252,7 +252,8 @@ func (s skillhubServer) ImportSkill(ctx context.Context, in *pb.ImportSkillReque
 		return nil, errcode.NewSkillhubRequestMissing()
 	}
 
-	result, err := s.library.ImportDirectories(ctx, in.GetRepositoryUrl(), in.GetSourceRef(), in.GetCommitSha(), in.GetSkillPaths())
+	metadata := service.ImportMetadata{Category: in.GetCategory(), Tags: in.GetTags()}
+	result, err := s.library.ImportDirectories(ctx, in.GetRepositoryUrl(), in.GetSourceRef(), in.GetCommitSha(), in.GetSkillPaths(), metadata)
 	if err != nil {
 		return nil, rpcError(ctx, "ImportSkill", err)
 	}

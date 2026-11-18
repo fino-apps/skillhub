@@ -814,6 +814,10 @@ components:
       title: skillhub.v1.ImportSkillRequest
       type: object
       properties:
+        category:
+          description: 分类和标签仅应用到本批新收录的 Skill。
+          type: string
+          maxLength: 128
         commitSha:
           type: string
           minLength: 40
@@ -830,6 +834,11 @@ components:
         sourceRef:
           type: string
           maxLength: 200
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 100
       required:
         - skillPaths
     skillhub.v1.ImportSkillResponse:

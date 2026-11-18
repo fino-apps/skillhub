@@ -15,6 +15,7 @@ import (
 
 type Source struct {
 	Kind, Repository, Path, Ref, Commit string
+	InitialMetadata                     ImportMetadata
 }
 
 type VersionInput struct {
@@ -82,7 +83,7 @@ func (s *Library) saveDirectory(ctx context.Context, dir, target string, source 
 			}
 			skill = model.SkillSnapshot{ID: model.SkillID(id.String()), Name: manifest.Name, Description: manifest.Description,
 				SourceKey: key, ImportKind: source.Kind, RepositoryUrl: source.Repository, RepositoryPath: source.Path,
-				CreateTime: now, UpdateTime: now}
+				Category: source.InitialMetadata.Category, CreateTime: now, UpdateTime: now}
 			if source.Kind == "folder" {
 				skill.LocalPath = dir
 			}
@@ -91,6 +92,11 @@ func (s *Library) saveDirectory(ctx context.Context, dir, target string, source 
 			}
 			if err := tx.CreateSkill(skill); err != nil {
 				return err
+			}
+			if tags := source.InitialMetadata.Tags; len(tags) > 0 {
+				if err := tx.ChangeTags(string(skill.ID), false, tags, nil); err != nil {
+					return err
+				}
 			}
 		}
 

@@ -249,11 +249,17 @@ export default function HomePage() {
       <thead><tr>
         <th scope="col"><input ref={selectAll} type="checkbox" aria-label={skills.length > 100 ? "选择前 100 项" : "选择当前已加载条目"} checked={allSelected}
           onChange={() => setSelected(allSelected ? [] : selectable.map(({ id }) => id))} /></th>
-        <th scope="col">Skill / 用途</th><th scope="col">来源</th><th scope="col">分类 / 标签</th><th scope="col">操作</th>
+        <th scope="col">Skill / 用途</th>
+        <th scope="col" className="library-source">来源</th>
+        <th scope="col" className="library-classification">分类 / 标签</th>
+        <th scope="col">操作</th>
       </tr></thead>
       <tbody>{skills.map((skill) => {
         const version = skill.defaultVersion;
         const tags = skill.tags ?? [];
+        const source = sourceLabel(skill);
+        const classification = [skill.category, ...tags.slice(0, 2)].filter(Boolean).join(" · ")
+          + (tags.length > 2 ? ` +${tags.length - 2}` : "");
         const purpose = skill.purpose || skill.description || "";
         return <tr key={skill.id} className="skillhub-entry" data-selected={selected.includes(skill.id) || undefined}>
           <td><input type="checkbox" aria-label={`选择 ${skill.name}`} checked={selected.includes(skill.id)}
@@ -263,10 +269,10 @@ export default function HomePage() {
             <Link id={`skill-link-${skill.id}`} className="library-name" to={`/skills/${skill.id}`} state={{ library }}
               onClick={() => { libraryNavigation.returning = { scope, skills, token, scroll: window.scrollY, skillId: skill.id, revision: libraryNavigation.revision }; }}>{skill.name}</Link>
             {purpose && <span className="library-purpose" title={purpose}>{purpose}</span>}
-            <span className="library-mobile-source">{[sourceLabel(skill), skill.category, ...tags.slice(0, 2)].filter(Boolean).join(" · ")}{tags.length > 2 && ` +${tags.length - 2}`}</span>
+            <span className="library-mobile-source">{[source, classification].filter(Boolean).join(" · ")}</span>
           </td>
-          <td className="library-source">{sourceLabel(skill)}</td>
-          <td className="library-classification">{[skill.category || "未分类", ...tags.slice(0, 2)].join(" · ")}{tags.length > 2 && ` +${tags.length - 2}`}</td>
+          <td className="library-source">{source}</td>
+          <td className="library-classification">{classification || "未分类"}</td>
           <td className="library-row-actions"><div className="library-row-controls">
             {version && (version.available
               ? <button type="button" className="skillhub-text-button" disabled={!!operation.busy}
@@ -289,7 +295,9 @@ export default function HomePage() {
       <LocalIntake onComplete={imported} onCancel={() => setPanel(null)}
         onVersion={(skill, path) => setPanel({ kind: "new-version", skill, path })} />
     </Dialog>}
-    {panel?.kind === "github" && <Dialog title="导入 GitHub" compact onClose={() => setPanel(null)}><GitHubIntake onComplete={imported} /></Dialog>}
+    {panel?.kind === "github" && <Dialog title="导入 GitHub" compact onClose={() => setPanel(null)}>
+      <GitHubIntake categories={facets.categories ?? []} onComplete={imported} />
+    </Dialog>}
     {panel?.kind === "zip" && <Dialog title="导入 ZIP" compact onClose={() => setPanel(null)}><ZipIntake onComplete={imported} /></Dialog>}
     {panel?.kind === "new-version" && <Dialog title="保存新版本" onClose={() => setPanel(null)}>
       <Suspense fallback={<p>加载中…</p>}><VersionPanel skill={panel.skill} from="folder" path={panel.path} onSaved={editComplete} /></Suspense>

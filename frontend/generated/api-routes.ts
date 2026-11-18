@@ -175,6 +175,8 @@ export const apiRoutes = {
       sourceRef: "",
       commitSha: "",
       skillPaths: [],
+      category: "",
+      tags: [],
     },
   },
   setDefaultVersion: {

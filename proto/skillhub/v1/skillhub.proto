@@ -278,6 +278,9 @@ message ImportSkillRequest {
   string source_ref = 2 [(fino.validate) = {omitempty: true max: 200}];
   string commit_sha = 3 [(fino.validate) = {omitempty: true min: 40 max: 40}];
   repeated string skill_paths = 4 [(fino.validate) = {required: true max: 100}];
+  // 分类和标签仅应用到本批新收录的 Skill。
+  string category = 5 [(fino.validate) = {omitempty: true max: 128}];
+  repeated string tags = 6 [(fino.validate) = {omitempty: true max: 100}];
 }
 
 message ImportFailure {
