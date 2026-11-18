@@ -25,6 +25,7 @@ services:
       SERVER_GRPC_PORT: "${SERVER_GRPC_PORT}"
       SERVER_DEBUG_PORT: "${SERVER_DEBUG_PORT}"
       PAGINATION_ENCODED_KEY: "${PAGINATION_ENCODED_KEY}"
+      SKILLHUB_URL: "${SKILLHUB_URL:-}"
       OTEL_ENDPOINT: "alloy:4318"
     entrypoint: [ "sh", "/app/bootstrap/entrypoint.sh" ]
     healthcheck:

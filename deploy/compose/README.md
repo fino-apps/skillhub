@@ -58,6 +58,8 @@ SkillHub 使用本地 SQLite，可以只启动业务。首次部署时用 `docke
 
 ### 访问与数据
 
+通过 Tailscale 直接访问时，在群晖的 `deploy/compose/.env` 中设置浏览器使用的完整地址，例如 `SKILLHUB_URL=http://100.118.125.84:30082`，再按前面的业务 Compose 命令启动。使用 HTTPS 反向代理时，将变量设为 HTTPS 地址，并保留浏览器请求的 Host。
+
 前端默认绑定宿主机的 `127.0.0.1:8082`，后端通过 Docker 网络访问。部署到群晖或其他远程主机时，可通过宿主机上的反向代理提供访问入口。启用共享观测平台后，可通过 http://127.0.0.1:8082/monitor/ 打开 Grafana。
 
 SQLite、快照、上传暂存和导出文件保存在 `skillhub_data` 卷，应用重建时会复用该卷。备份 SQLite 和文件时，先停后端，再备份整卷。
