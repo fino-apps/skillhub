@@ -147,7 +147,8 @@ function Detail({ skillId }: { skillId: string }) {
           <dl>
             <dt>导入方式</dt><dd>{sourceNames[skill.importKind ?? ""] || "未知"}</dd>
             {url && <><dt>来源</dt><dd><a href={url} target="_blank" rel="noreferrer">{url}</a></dd></>}
-            {skill.repositoryUrl && <><dt>绑定仓库</dt><dd>{skill.repositoryUrl}{skill.repositoryPath && <code> · {skill.repositoryPath}</code>}</dd></>}
+            {skill.repositoryUrl && <><dt>绑定仓库</dt><dd>{skill.repositoryUrl}</dd></>}
+            {skill.repositoryPath && <><dt>仓库内目录</dt><dd><code>{skill.repositoryPath}</code></dd></>}
             {skill.localPath && <><dt>绑定目录</dt><dd><code>{skill.localPath}</code></dd></>}
             {view?.upstreamRepository && <><dt>归档来源</dt><dd>{view.upstreamRepository}{view.upstreamPath && <code> · {view.upstreamPath}</code>}</dd></>}
             {view?.upstreamCommit && <><dt>归档来源 Commit</dt><dd><code>{view.upstreamCommit}</code></dd></>}

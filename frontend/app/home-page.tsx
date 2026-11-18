@@ -4,7 +4,7 @@ import { batchDeleteSkills, listFacets, listSkills, repairVersion } from "@/gene
 import GitHubIntake from "./github-intake";
 import LocalIntake, { ZipIntake } from "./local-intake";
 import { BatchMetadata } from "./skill-metadata";
-import { fetchAllSkills, libraryNavigation, message, sourceLabel, sourceNames, sourceURL, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
+import { fetchAllSkills, libraryNavigation, message, sourceNames, sourceURL, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
 import { Dialog, Failure, Menu, OperationFeedback, Popover, useSkillOperation } from "./skill-ui";
 
 import "./skillhub.css";
@@ -258,9 +258,12 @@ export default function HomePage() {
       </tr></thead>
       <tbody>{skills.map((skill) => {
         const version = skill.defaultVersion;
-        const source = sourceLabel(skill);
+        const source = sourceNames[skill.importKind ?? ""] || skill.importKind || "未知";
         const url = sourceURL(skill);
-        const sourceLink = url ? <a href={url} title={url} target="_blank" rel="noreferrer">{source}</a> : source;
+        const destination = url.replace(/^https?:\/\/(?:github\.com\/(?=.+))?/i, "");
+        const sourceLink = url && (
+          <a className="library-source-link" href={url} title={url} target="_blank" rel="noreferrer">{destination}</a>
+        );
         const classification = [skill.category, ...(skill.tags ?? [])].filter(Boolean).join(" · ");
         const description = skill.description;
         return <tr key={skill.id} className="skillhub-entry" data-selected={selected.includes(skill.id) || undefined}>
@@ -275,10 +278,13 @@ export default function HomePage() {
             </div>
             {description && <span className="library-purpose" title={description}>{description}</span>}
             <span className="library-mobile-source" title={classification ? `${source} · ${classification}` : undefined}>
-              {sourceLink}{classification && ` · ${classification}`}
+              {source}{sourceLink && <> · {sourceLink}</>}{classification && ` · ${classification}`}
             </span>
           </td>
-          <td className="library-source">{sourceLink}</td>
+          <td className="library-source">
+            <span className="library-source-kind">{source}</span>
+            {sourceLink}
+          </td>
           <td className="library-classification"><span title={classification || undefined}>{classification || "未分类"}</span></td>
           <td className="library-row-actions"><div className="library-row-controls">
             {version && (version.available

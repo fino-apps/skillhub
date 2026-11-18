@@ -200,7 +200,25 @@
 .library-table thead .library-classification { width: 15%; }
 .library-table thead th:last-child { width: 104px; }
 .library-table td:is(.library-source, .library-classification) { overflow-wrap: anywhere; }
-.library-source > a, .library-classification > span {
+.library-source-kind {
+  display: block;
+  color: var(--text);
+  line-height: 1.4;
+}
+.library-source > .library-source-link {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.4;
+  text-decoration: none;
+}
+.library-source > .library-source-link:is(:hover, :focus-visible) { text-decoration: underline; }
+.library-classification > span {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
