@@ -1,7 +1,9 @@
 FROM alpine:3.20
 
 WORKDIR /app
-RUN apk add --no-cache ca-certificates tzdata && chown nobody:nobody /app
+RUN apk add --no-cache ca-certificates git tzdata \
+    && mkdir /app/skillhub-data \
+    && chown nobody:nobody /app /app/skillhub-data
 
 ARG TARGETOS
 ARG TARGETARCH

@@ -57,7 +57,7 @@ dockers_v2:
   - id: skillhub-server
     ids:
       - skillhub-server
-    dockerfile: backend/build/skillhub-server/Dockerfile.release
+    dockerfile: backend/build/skillhub-server/Dockerfile
     images:
       - 100.118.125.84/skillhub/skillhub-server
     tags:
