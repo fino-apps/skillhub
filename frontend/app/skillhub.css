@@ -50,8 +50,14 @@
 .file-import-dialog { width: min(440px, calc(100% - 32px)); }
 .file-import-dialog .dialog-header, .file-import-dialog .dialog-body { padding: 14px 16px; }
 .file-import-pick { padding-inline: 14px; }
-.file-import-path > summary { font-size: 13px; color: var(--muted); }
-.file-import-path[open] > form { margin-top: 8px; }
+.file-import-options, .file-import-source { display: flex; align-items: center; gap: 14px; }
+.file-import-options { flex-wrap: wrap; }
+.file-import-source { justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 8px; font-size: 13px; }
+.file-import-source > span, .file-import-metadata summary > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-import-source > button { flex: none; }
+.file-import-metadata { min-width: 0; border-top: 1px solid var(--line); padding-top: 10px; }
+.file-import-metadata summary { font-size: 13px; }
+.file-import-metadata summary > span { display: inline-block; max-width: 55%; margin-inline-start: 8px; vertical-align: bottom; color: var(--muted); }
 .local-intake p { margin: 0; overflow-wrap: anywhere; }
 .local-intake .skill-fields > button { max-width: 100%; overflow-wrap: anywhere; }
 .local-intake-candidate { font-size: 14px; }

@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent, type ReactNode } from "react";
+import { useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { commitUpload, importSkill, listSkills, scanProject } from "@/generated/api-client";
 import { backendDirectoryLabel, canPickDirectory, localCandidate, message, pickDirectory, stageZip, tagsFrom, type Candidate, type ImportResult, type LibraryPage, type Skill } from "./library-api";
 import { Failure } from "./skill-ui";
@@ -79,6 +79,10 @@ export default function LocalIntake({ categories, onComplete, onVersion, childre
   const [result, setResult] = useState<ImportResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [manual, setManual] = useState(false);
+  const [metadataSummary, setMetadataSummary] = useState("");
+  const pathId = useId();
+  const metadataFields = useRef<HTMLDetailsElement>(null);
 
   async function choose() {
     await run(async () => {
@@ -89,11 +93,16 @@ export default function LocalIntake({ categories, onComplete, onVersion, childre
     });
   }
 
-  async function inspect(path: string) {
+  function resetPreview() {
     setItems([]);
     setSelected([]);
     setMatching([]);
     setResult(null);
+    setMetadataSummary("");
+  }
+
+  async function inspect(path: string) {
+    resetPreview();
     const reply = await scanProject<{ skills?: Candidate[] }>({ projectPath: path });
     const found = (reply.skills ?? []).map((item) => ({ ...item, path: localCandidate(path, item.path) }));
     setItems(found);
@@ -130,7 +139,13 @@ export default function LocalIntake({ categories, onComplete, onVersion, childre
     if (!selected.length || busy) return;
     const form = event.currentTarget;
     void run(async () => {
-      const metadata = readImportMetadata(form);
+      let metadata;
+      try {
+        metadata = readImportMetadata(form);
+      } catch (err) {
+        if (metadataFields.current) metadataFields.current.open = true;
+        throw err;
+      }
       const reply = await importSkill<ImportResult>({ skillPaths: selected, ...metadata });
       if (reply.failures?.length) {
         setResult(reply);
@@ -140,8 +155,9 @@ export default function LocalIntake({ categories, onComplete, onVersion, childre
     });
   }
 
-  const directoryForm = <form className="github-form" onSubmit={submit}>
-    <label>{backendDirectoryLabel}<input value={directory} onChange={(event) => setDirectory(event.target.value)} required /></label>
+  const directoryForm = <form id={pathId} className="github-form" onSubmit={submit}>
+    <label>{backendDirectoryLabel}<input value={directory} onChange={(event) => setDirectory(event.target.value)}
+      autoFocus={canPickDirectory && manual} required /></label>
     <button type="submit" className={canPickDirectory ? "secondary" : undefined}>扫描目录</button>
   </form>;
 
@@ -150,15 +166,22 @@ export default function LocalIntake({ categories, onComplete, onVersion, childre
     <Failure error={error} />
     <ImportFeedback result={result} />
     {!busy && !items.length && <>
-      {canPickDirectory ? <>
-        <button type="button" className="file-import-pick" onClick={() => void choose()}>选择文件夹</button>
-        <details className="skill-disclosure file-import-path">
-          <summary>手动输入路径</summary>
-          {directoryForm}
-        </details>
-      </> : directoryForm}
-      {children}
+      {canPickDirectory && <button type="button" className="file-import-pick" onClick={() => void choose()}>选择文件夹</button>}
+      {!canPickDirectory && directoryForm}
+      <div className="file-import-options">
+        {canPickDirectory && <button type="button" className="skillhub-text-button" aria-expanded={manual}
+          aria-controls={manual ? pathId : undefined} onClick={() => setManual(!manual)}>手动输入路径</button>}
+        {children}
+      </div>
+      {canPickDirectory && manual && directoryForm}
     </>}
+    {items.length > 0 && <div className="file-import-source">
+      <span title={directory}>{directory.trim().split(/[/\\]/).filter(Boolean).pop() || directory}</span>
+      <button type="button" className="skillhub-text-button" disabled={busy} onClick={() => {
+        setError("");
+        resetPreview();
+      }}>更换目录</button>
+    </div>}
     {items.length === 1 && <p className="local-intake-candidate">
       <strong>{items[0].name}</strong>
       {items[0].description && <span className="candidate-description">{items[0].description}</span>}
@@ -170,9 +193,19 @@ export default function LocalIntake({ categories, onComplete, onVersion, childre
     </div>}
     {items.length > 0 && <form className="github-form" onSubmit={save}>
       {items.length > 1 && <CandidatePicker items={items} selected={selected} onChange={setSelected} disabled={busy} />}
-      <ImportMetadataFields categories={categories} disabled={busy} />
+      <details className="skill-disclosure file-import-metadata" ref={metadataFields} onChange={(event) => {
+        const form = event.currentTarget.closest("form");
+        if (!form) return;
+        const values = new FormData(form);
+        const category = String(values.get("category") ?? "").trim();
+        const count = tagsFrom(String(values.get("tags") ?? "")).length;
+        setMetadataSummary([category, count ? `${count} 个标签` : ""].filter(Boolean).join(" · "));
+      }}>
+        <summary>分类和标签{metadataSummary ? <span title={metadataSummary}>{metadataSummary}</span> : "（选填）"}</summary>
+        <ImportMetadataFields categories={categories} disabled={busy} />
+      </details>
       <button type="submit" disabled={!selected.length || busy}>
-        {busy ? "处理中…" : matching.length ? "作为独立条目收录" : items.length === 1 ? "确认收录" : `收录所选（${selected.length}）`}
+        {busy ? "处理中…" : matching.length ? "作为独立条目收录" : items.length === 1 ? "确认收录" : `收录 ${selected.length} 项`}
       </button>
     </form>}
   </div>;
@@ -232,7 +265,7 @@ export function ZipIntake({ skillId, onComplete, onBack }: {
   }
 
   return <div className="skill-fields">
-    <label>ZIP 文件<input type="file" accept=".zip,application/zip" disabled={busy} onChange={(event) => void read(event.target.files?.[0])} /></label>
+    <label>ZIP 文件<input type="file" accept=".zip,application/zip" autoFocus={!!onBack} disabled={busy} onChange={(event) => void read(event.target.files?.[0])} /></label>
     {items.length > 0 && <CandidatePicker items={items} selected={selected} disabled={busy} single={!!skillId} onChange={setSelected} />}
     <Failure error={error} />
     <ImportFeedback result={result} />
