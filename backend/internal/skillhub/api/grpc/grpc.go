@@ -74,6 +74,12 @@ func MakeGRPCServer(endpoints endpoint.Endpoints) pb.SkillhubServiceServer {
 			EncodeGRPCDeleteSkillResponse,
 			serverOptions...,
 		),
+		batchDeleteSkills: grpctransport.NewServer(
+			endpoints.BatchDeleteSkillsEndpoint,
+			DecodeGRPCBatchDeleteSkillsRequest,
+			EncodeGRPCBatchDeleteSkillsResponse,
+			serverOptions...,
+		),
 		listVersions: grpctransport.NewServer(
 			endpoints.ListVersionsEndpoint,
 			DecodeGRPCListVersionsRequest,
@@ -199,6 +205,7 @@ type grpcServer struct {
 	getSkill                 grpctransport.Handler
 	updateSkill              grpctransport.Handler
 	deleteSkill              grpctransport.Handler
+	batchDeleteSkills        grpctransport.Handler
 	listVersions             grpctransport.Handler
 	createVersion            grpctransport.Handler
 	scanProject              grpctransport.Handler
@@ -248,6 +255,14 @@ func (s *grpcServer) UpdateSkill(ctx context.Context, req *pb.UpdateSkillRequest
 
 func (s *grpcServer) DeleteSkill(ctx context.Context, req *pb.DeleteSkillRequest) (*core.Null, error) {
 	_, rep, err := s.deleteSkill.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*core.Null), nil
+}
+
+func (s *grpcServer) BatchDeleteSkills(ctx context.Context, req *pb.BatchDeleteSkillsRequest) (*core.Null, error) {
+	_, rep, err := s.batchDeleteSkills.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -436,6 +451,13 @@ func DecodeGRPCDeleteSkillRequest(_ context.Context, grpcReq interface{}) (inter
 	return req, nil
 }
 
+// DecodeGRPCBatchDeleteSkillsRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC BatchDeleteSkills request to a user-domain BatchDeleteSkills request. Primarily useful in a server.
+func DecodeGRPCBatchDeleteSkillsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.BatchDeleteSkillsRequest)
+	return req, nil
+}
+
 // DecodeGRPCListVersionsRequest is a transport/grpc.DecodeRequestFunc that converts a
 // gRPC ListVersions request to a user-domain ListVersions request. Primarily useful in a server.
 func DecodeGRPCListVersionsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -595,6 +617,13 @@ func EncodeGRPCUpdateSkillResponse(_ context.Context, response interface{}) (int
 // EncodeGRPCDeleteSkillResponse is a transport/grpc.EncodeResponseFunc that converts a
 // user-domain DeleteSkill response to a gRPC DeleteSkill reply. Primarily useful in a server.
 func EncodeGRPCDeleteSkillResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*core.Null)
+	return resp, nil
+}
+
+// EncodeGRPCBatchDeleteSkillsResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain BatchDeleteSkills response to a gRPC BatchDeleteSkills reply. Primarily useful in a server.
+func EncodeGRPCBatchDeleteSkillsResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(*core.Null)
 	return resp, nil
 }

@@ -163,6 +163,26 @@ func RegisterHttpHandler(router *mux.Router, endpoints endpoint.Endpoints, cfg *
 
 	{
 		route := httpmw.Route{
+			MethodName:  "BatchDeleteSkills",
+			BindingName: "BatchDeleteSkills",
+			Method:      "POST",
+			Path:        "/skillhub/v1/skills:batchDelete",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.BatchDeleteSkillsEndpoint,
+					DecodeHTTPBatchDeleteSkillsRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
 			MethodName:  "ListVersions",
 			BindingName: "ListVersions",
 			Method:      "GET",
@@ -793,6 +813,35 @@ func DecodeHTTPDeleteSkillRequest(_ context.Context, r *http.Request) (interface
 	if err != nil && !core.IsNotFoundError(err) {
 		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
 	}
+
+	return &req, nil
+}
+
+// DecodeHTTPBatchDeleteSkillsRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded batchdeleteskills request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPBatchDeleteSkillsRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.BatchDeleteSkillsRequest
+
+	buf, err := readHTTPBody(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(buf) > 0 {
+		if err = protojson.Unmarshal(buf, &req); err != nil {
+			return nil, nhttp.WrapError(err,
+				http.StatusBadRequest,
+				"cannot parse request body as JSON",
+			)
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
 
 	return &req, nil
 }

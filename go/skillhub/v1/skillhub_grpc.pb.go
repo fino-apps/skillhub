@@ -24,6 +24,7 @@ const (
 	SkillhubService_GetSkill_FullMethodName                 = "/skillhub.v1.SkillhubService/GetSkill"
 	SkillhubService_UpdateSkill_FullMethodName              = "/skillhub.v1.SkillhubService/UpdateSkill"
 	SkillhubService_DeleteSkill_FullMethodName              = "/skillhub.v1.SkillhubService/DeleteSkill"
+	SkillhubService_BatchDeleteSkills_FullMethodName        = "/skillhub.v1.SkillhubService/BatchDeleteSkills"
 	SkillhubService_ListVersions_FullMethodName             = "/skillhub.v1.SkillhubService/ListVersions"
 	SkillhubService_CreateVersion_FullMethodName            = "/skillhub.v1.SkillhubService/CreateVersion"
 	SkillhubService_ScanProject_FullMethodName              = "/skillhub.v1.SkillhubService/ScanProject"
@@ -53,6 +54,7 @@ type SkillhubServiceClient interface {
 	GetSkill(ctx context.Context, in *GetSkillRequest, opts ...grpc.CallOption) (*GetSkillResponse, error)
 	UpdateSkill(ctx context.Context, in *UpdateSkillRequest, opts ...grpc.CallOption) (*UpdateSkillResponse, error)
 	DeleteSkill(ctx context.Context, in *DeleteSkillRequest, opts ...grpc.CallOption) (*core.Null, error)
+	BatchDeleteSkills(ctx context.Context, in *BatchDeleteSkillsRequest, opts ...grpc.CallOption) (*core.Null, error)
 	ListVersions(ctx context.Context, in *ListVersionsRequest, opts ...grpc.CallOption) (*ListVersionsResponse, error)
 	CreateVersion(ctx context.Context, in *CreateVersionRequest, opts ...grpc.CallOption) (*CreateVersionResponse, error)
 	ScanProject(ctx context.Context, in *ScanProjectRequest, opts ...grpc.CallOption) (*ScanProjectResponse, error)
@@ -112,6 +114,15 @@ func (c *skillhubServiceClient) UpdateSkill(ctx context.Context, in *UpdateSkill
 func (c *skillhubServiceClient) DeleteSkill(ctx context.Context, in *DeleteSkillRequest, opts ...grpc.CallOption) (*core.Null, error) {
 	out := new(core.Null)
 	err := c.cc.Invoke(ctx, SkillhubService_DeleteSkill_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *skillhubServiceClient) BatchDeleteSkills(ctx context.Context, in *BatchDeleteSkillsRequest, opts ...grpc.CallOption) (*core.Null, error) {
+	out := new(core.Null)
+	err := c.cc.Invoke(ctx, SkillhubService_BatchDeleteSkills_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -297,6 +308,7 @@ type SkillhubServiceServer interface {
 	GetSkill(context.Context, *GetSkillRequest) (*GetSkillResponse, error)
 	UpdateSkill(context.Context, *UpdateSkillRequest) (*UpdateSkillResponse, error)
 	DeleteSkill(context.Context, *DeleteSkillRequest) (*core.Null, error)
+	BatchDeleteSkills(context.Context, *BatchDeleteSkillsRequest) (*core.Null, error)
 	ListVersions(context.Context, *ListVersionsRequest) (*ListVersionsResponse, error)
 	CreateVersion(context.Context, *CreateVersionRequest) (*CreateVersionResponse, error)
 	ScanProject(context.Context, *ScanProjectRequest) (*ScanProjectResponse, error)
@@ -334,6 +346,9 @@ func (UnimplementedSkillhubServiceServer) UpdateSkill(context.Context, *UpdateSk
 }
 func (UnimplementedSkillhubServiceServer) DeleteSkill(context.Context, *DeleteSkillRequest) (*core.Null, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteSkill not implemented")
+}
+func (UnimplementedSkillhubServiceServer) BatchDeleteSkills(context.Context, *BatchDeleteSkillsRequest) (*core.Null, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteSkills not implemented")
 }
 func (UnimplementedSkillhubServiceServer) ListVersions(context.Context, *ListVersionsRequest) (*ListVersionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListVersions not implemented")
@@ -473,6 +488,24 @@ func _SkillhubService_DeleteSkill_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SkillhubServiceServer).DeleteSkill(ctx, req.(*DeleteSkillRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SkillhubService_BatchDeleteSkills_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchDeleteSkillsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SkillhubServiceServer).BatchDeleteSkills(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SkillhubService_BatchDeleteSkills_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SkillhubServiceServer).BatchDeleteSkills(ctx, req.(*BatchDeleteSkillsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -841,6 +874,10 @@ var SkillhubService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteSkill",
 			Handler:    _SkillhubService_DeleteSkill_Handler,
+		},
+		{
+			MethodName: "BatchDeleteSkills",
+			Handler:    _SkillhubService_BatchDeleteSkills_Handler,
 		},
 		{
 			MethodName: "ListVersions",

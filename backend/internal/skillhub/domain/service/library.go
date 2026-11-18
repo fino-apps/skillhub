@@ -277,16 +277,46 @@ func (s *Library) DeleteVersion(ctx context.Context, skillID, versionID string) 
 }
 
 func (s *Library) DeleteSkill(ctx context.Context, id string) error {
+	return s.deleteSkills(ctx, []string{id})
+}
+
+func (s *Library) BatchDeleteSkills(ctx context.Context, ids []string) error {
+	if len(ids) == 0 || len(ids) > 100 {
+		return ErrInvalid
+	}
+	unique := make(map[uuid.UUID]struct{}, len(ids))
+	skillIDs := make([]string, 0, len(ids))
+	for _, id := range ids {
+		parsed, err := uuid.Parse(id)
+		if err != nil || len(id) != 36 {
+			return ErrInvalid
+		}
+		if _, exists := unique[parsed]; exists {
+			continue
+		}
+		unique[parsed] = struct{}{}
+		skillIDs = append(skillIDs, parsed.String())
+	}
+	return s.deleteSkills(ctx, skillIDs)
+}
+
+func (s *Library) deleteSkills(ctx context.Context, ids []string) error {
 	s.writes.Lock()
 	defer s.writes.Unlock()
 	var versions []string
 	err := s.store.Transaction(ctx, func(tx repo.LibraryTx) error {
-		skill, err := tx.Skill(id)
-		if err != nil {
-			return err
+		for _, id := range ids {
+			skill, err := tx.Skill(id)
+			if err != nil {
+				return err
+			}
+			removed, err := tx.DeleteSkill(skill)
+			if err != nil {
+				return err
+			}
+			versions = append(versions, removed...)
 		}
-		versions, err = tx.DeleteSkill(skill)
-		return err
+		return nil
 	})
 	if err == nil {
 		for _, id := range versions {

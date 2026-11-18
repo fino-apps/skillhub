@@ -417,6 +417,18 @@ paths:
       responses:
         "200":
           description: OK
+  /skillhub/v1/skills:batchDelete:
+    post:
+      operationId: BatchDeleteSkills
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.BatchDeleteSkillsRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
   /skillhub/v1/skills:compare:
     post:
       operationId: CompareSkills
@@ -505,6 +517,18 @@ components:
           type: array
           items:
             type: object
+    skillhub.v1.BatchDeleteSkillsRequest:
+      title: skillhub.v1.BatchDeleteSkillsRequest
+      type: object
+      properties:
+        skillIds:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 100
+      required:
+        - skillIds
     skillhub.v1.BatchUpdateSkillMetadataRequest:
       title: skillhub.v1.BatchUpdateSkillMetadataRequest
       type: object

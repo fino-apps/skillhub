@@ -38,6 +38,7 @@ type Endpoints struct {
 	GetSkillEndpoint                 endpoint.Endpoint
 	UpdateSkillEndpoint              endpoint.Endpoint
 	DeleteSkillEndpoint              endpoint.Endpoint
+	BatchDeleteSkillsEndpoint        endpoint.Endpoint
 	ListVersionsEndpoint             endpoint.Endpoint
 	CreateVersionEndpoint            endpoint.Endpoint
 	ScanProjectEndpoint              endpoint.Endpoint
@@ -66,6 +67,7 @@ func NewEndpoints(service pb.SkillhubServiceServer) Endpoints {
 		GetSkillEndpoint:                 MakeGetSkillEndpoint(service),
 		UpdateSkillEndpoint:              MakeUpdateSkillEndpoint(service),
 		DeleteSkillEndpoint:              MakeDeleteSkillEndpoint(service),
+		BatchDeleteSkillsEndpoint:        MakeBatchDeleteSkillsEndpoint(service),
 		ListVersionsEndpoint:             MakeListVersionsEndpoint(service),
 		CreateVersionEndpoint:            MakeCreateVersionEndpoint(service),
 		ScanProjectEndpoint:              MakeScanProjectEndpoint(service),
@@ -151,6 +153,23 @@ func MakeDeleteSkillEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 			return nil, fmt.Errorf("unexpected DeleteSkill request type %T", request)
 		}
 		v, err := s.DeleteSkill(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeBatchDeleteSkillsEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint BatchDeleteSkills")
+		}
+		req, ok := request.(*pb.BatchDeleteSkillsRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected BatchDeleteSkills request type %T", request)
+		}
+		v, err := s.BatchDeleteSkills(ctx, req)
 		if err != nil {
 			return nil, err
 		}
@@ -490,6 +509,7 @@ func (e *Endpoints) WrapAll(middleware endpoint.Middleware) {
 	e.GetSkillEndpoint = middleware(e.GetSkillEndpoint)
 	e.UpdateSkillEndpoint = middleware(e.UpdateSkillEndpoint)
 	e.DeleteSkillEndpoint = middleware(e.DeleteSkillEndpoint)
+	e.BatchDeleteSkillsEndpoint = middleware(e.BatchDeleteSkillsEndpoint)
 	e.ListVersionsEndpoint = middleware(e.ListVersionsEndpoint)
 	e.CreateVersionEndpoint = middleware(e.CreateVersionEndpoint)
 	e.ScanProjectEndpoint = middleware(e.ScanProjectEndpoint)
@@ -523,6 +543,7 @@ func (e *Endpoints) WrapAllLabeled(middleware LabeledMiddleware) {
 	e.GetSkillEndpoint = middleware("GetSkill", e.GetSkillEndpoint)
 	e.UpdateSkillEndpoint = middleware("UpdateSkill", e.UpdateSkillEndpoint)
 	e.DeleteSkillEndpoint = middleware("DeleteSkill", e.DeleteSkillEndpoint)
+	e.BatchDeleteSkillsEndpoint = middleware("BatchDeleteSkills", e.BatchDeleteSkillsEndpoint)
 	e.ListVersionsEndpoint = middleware("ListVersions", e.ListVersionsEndpoint)
 	e.CreateVersionEndpoint = middleware("CreateVersion", e.CreateVersionEndpoint)
 	e.ScanProjectEndpoint = middleware("ScanProject", e.ScanProjectEndpoint)

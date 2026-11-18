@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { listFacets, listSkills, repairVersion } from "@/generated/api-client";
+import { batchDeleteSkills, listFacets, listSkills, repairVersion } from "@/generated/api-client";
 import GitHubIntake from "./github-intake";
 import LocalIntake, { ZipIntake } from "./local-intake";
 import { BatchMetadata } from "./skill-metadata";
@@ -196,6 +196,16 @@ export default function HomePage() {
     await operation.run("compare", async () => setPanel({ kind: "compare", skills: await fetchAllSkills() }));
   }
 
+  function removeSelected() {
+    if (!window.confirm(`删除选中的 ${selected.length} 项 Skill 及其已保存版本？`)) return;
+    void operation.run("batch-delete", async () => {
+      await batchDeleteSkills({ skillIds: selected });
+      libraryNavigation.revision += 1;
+      reload();
+      operation.setNotice(`已删除 ${selected.length} 项 Skill。`);
+    });
+  }
+
   const selectable = skills.slice(0, 100);
   const allSelected = selectable.length > 0 && selectable.every(({ id }) => selected.includes(id));
   useEffect(() => {
@@ -223,6 +233,7 @@ export default function HomePage() {
       {selected.length > 0 && <div className="library-actions library-selection" role="group" aria-label="批量操作">
         <span role="status">已选 {selected.length} 项</span>
         <button type="button" className="secondary" onClick={() => setPanel({ kind: "batch" })}>批量编辑</button>
+        <button type="button" className="secondary" disabled={!!operation.busy} onClick={removeSelected}>批量删除</button>
         <button type="button" className="skillhub-text-button" onClick={() => {
           setSelected([]);
           selectAll.current?.focus({ preventScroll: true });

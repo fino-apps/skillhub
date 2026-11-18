@@ -90,6 +90,8 @@ func validateRequest(request interface{}) error {
 		return validateUpdateSkillRequest(request)
 	case *pb.DeleteSkillRequest:
 		return validateDeleteSkillRequest(request)
+	case *pb.BatchDeleteSkillsRequest:
+		return validateBatchDeleteSkillsRequest(request)
 	case *pb.ListVersionsRequest:
 		return validateListVersionsRequest(request)
 	case *pb.CreateVersionRequest:
@@ -202,6 +204,14 @@ func validateUpdateSkillRequest(req *pb.UpdateSkillRequest) error {
 func validateDeleteSkillRequest(req *pb.DeleteSkillRequest) error {
 	if err := requestValidator.Var(req.GetSkillId(), "required,max=36,uuid"); err != nil {
 		return newRequestValidationError("skill_id", err)
+	}
+
+	return nil
+}
+
+func validateBatchDeleteSkillsRequest(req *pb.BatchDeleteSkillsRequest) error {
+	if err := requestValidator.Var(req.GetSkillIds(), "required,min=1,max=100"); err != nil {
+		return newRequestValidationError("skill_ids", err)
 	}
 
 	return nil

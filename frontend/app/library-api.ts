@@ -28,6 +28,10 @@ export type ImportResult = { addedCount?: number; existingCount?: number; failur
 export const sourceNames: Record<string, string> = { folder: "本机目录", github: "GitHub", zip: "ZIP" };
 
 export function sourceLabel(skill: Skill) {
+  const owner = skill.repositoryUrl?.match(/^https:\/\/github\.com\/([^/]+)\//)?.[1];
+  if (skill.importKind === "github" && owner) {
+    return `github.com/${owner}`;
+  }
   return skill.upstreamName || sourceNames[skill.importKind ?? ""] || "未知";
 }
 

@@ -555,3 +555,19 @@ func (s skillhubServer) GetInstallCommand(ctx context.Context, in *pb.GetInstall
 		Command: command,
 	}, nil
 }
+
+// BatchDeleteSkills implements Interface. fino:req-fields 1=SkillIds
+func (s skillhubServer) BatchDeleteSkills(ctx context.Context, in *pb.BatchDeleteSkillsRequest) (*core.Null, error) {
+	logs.Ctx(ctx).Debugw("BatchDeleteSkills")
+	if in == nil {
+		logs.Ctx(ctx).Warnw("invalid batch_delete_skills request", "reason", "request_missing")
+		return nil, errcode.NewSkillhubRequestMissing()
+	}
+
+	if err := s.library.BatchDeleteSkills(ctx, in.GetSkillIds()); err != nil {
+		return nil, rpcError(ctx, "BatchDeleteSkills", err)
+	}
+
+	logs.Ctx(ctx).Infow("BatchDeleteSkills succeeded", "requested_count", len(in.GetSkillIds()))
+	return &core.Null{}, nil
+}

@@ -81,6 +81,19 @@ export const apiRoutes = {
       skillId: "",
     },
   },
+  batchDeleteSkills: {
+    service: "SkillhubService",
+    rpc: "BatchDeleteSkills",
+    binding: "BatchDeleteSkills",
+    method: "POST",
+    path: "/skillhub/v1/skills:batchDelete",
+    pathParams: [],
+    queryParams: [],
+    body: "*",
+    defaultPayload: {
+      skillIds: [],
+    },
+  },
   listVersions: {
     service: "SkillhubService",
     rpc: "ListVersions",

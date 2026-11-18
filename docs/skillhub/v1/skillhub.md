@@ -145,6 +145,29 @@ DELETE /skillhub/v1/skills/{skill_id}
 对象为空
 
 
+## Batch Delete Skills
+
+### 请求路径
+
+```http
+POST /skillhub/v1/skills:batchDelete
+```
+
+### 请求参数
+
+#### Body 请求对象
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `skillIds` | `Array<string>` |  | 是 |  | 最小长度为 1；最大长度为 100 |
+
+### 返回值
+
+#### 返回对象
+
+对象为空
+
+
 ## List Versions
 
 ### 请求路径

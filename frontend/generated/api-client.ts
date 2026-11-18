@@ -222,6 +222,10 @@ export function deleteSkill<TResponse = unknown>(payload: ApiRequest = {}, optio
   return requestApi<TResponse>(apiRoutes.deleteSkill, payload, options);
 }
 
+export function batchDeleteSkills<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.batchDeleteSkills, payload, options);
+}
+
 export function listVersions<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
   return requestApi<TResponse>(apiRoutes.listVersions, payload, options);
 }
