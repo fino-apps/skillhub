@@ -19,6 +19,9 @@ type Panel =
 function LibraryToolbar({ params, facets, onChange, status, children }: {
   params: URLSearchParams; facets: Facets; onChange: (next: URLSearchParams) => void; status: ReactNode; children: ReactNode;
 }) {
+  const [composition, setComposition] = useState<string | null>(null);
+  const composing = useRef(false);
+  const query = params.get("q") ?? "";
   const source = params.get("source") ?? "";
   const tags = params.getAll("tag");
   const category = params.get("category") ?? "";
@@ -43,7 +46,22 @@ function LibraryToolbar({ params, facets, onChange, status, children }: {
       <h1 id="skill-library-heading" className="library-heading" tabIndex={-1}>技能库</h1>
       <label className="skillhub-search">
         <span aria-hidden="true">⌕</span><span className="sr-only">搜索 Skill</span>
-        <input type="search" name="q" autoComplete="off" placeholder="搜索名称、用途或标签…" value={params.get("q") ?? ""} onChange={(event) => set("q", event.target.value)} />
+        <input type="search" name="q" autoComplete="off" autoCorrect="off" autoCapitalize="none" spellCheck={false}
+          placeholder="搜索名称、用途或标签…" value={composition ?? query}
+          onCompositionStart={(event) => {
+            composing.current = true;
+            setComposition(event.currentTarget.value);
+          }}
+          onCompositionEnd={(event) => {
+            composing.current = false;
+            setComposition(null);
+            if (event.currentTarget.value !== query) set("q", event.currentTarget.value);
+          }}
+          onChange={(event) => {
+            const value = event.currentTarget.value;
+            if (composing.current) setComposition(value);
+            else if (value !== query) set("q", value);
+          }} />
       </label>
       <div className="library-facets" role="group" aria-label="筛选技能">
         <label className="library-facet" data-active={!!source || undefined}>
