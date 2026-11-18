@@ -2,8 +2,8 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { exportVersionToDirectory } from "@/generated/api-client";
 import { backendDirectoryLabel, canPickDirectory, message } from "./library-api";
 
-export function Dialog({ title, children, onClose, compact }: {
-  title: string; children: ReactNode; onClose: () => void; compact?: boolean;
+export function Dialog({ title, children, onClose, compact, className = "" }: {
+  title: string; children: ReactNode; onClose: () => void; compact?: boolean; className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -15,7 +15,7 @@ export function Dialog({ title, children, onClose, compact }: {
       if (trigger instanceof HTMLElement && trigger.isConnected) trigger.focus();
     };
   }, []);
-  return <dialog ref={ref} className={`skillhub-dialog${compact ? " skillhub-dialog-compact" : ""}`} onClose={onClose} aria-labelledby={titleId}>
+  return <dialog ref={ref} className={`skillhub-dialog${compact ? " skillhub-dialog-compact" : ""} ${className}`} onClose={onClose} aria-labelledby={titleId}>
     <div className="dialog-header">
       <h2 id={titleId}>{title}</h2>
       <button className="dialog-close" type="button" onClick={() => ref.current?.close()} aria-label="关闭">×</button>

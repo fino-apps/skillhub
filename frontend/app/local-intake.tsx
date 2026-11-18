@@ -67,8 +67,9 @@ export function readImportMetadata(form: HTMLFormElement) {
   return { category, tags };
 }
 
-export default function LocalIntake({ categories, onComplete, onVersion }: {
+export default function LocalIntake({ categories, onComplete, onVersion, children }: {
   categories: string[];
+  children?: ReactNode;
   onComplete: (result: ImportResult) => void; onVersion: (skill: Skill, path: string) => void;
 }) {
   const [directory, setDirectory] = useState("");
@@ -139,15 +140,25 @@ export default function LocalIntake({ categories, onComplete, onVersion }: {
     });
   }
 
+  const directoryForm = <form className="github-form" onSubmit={submit}>
+    <label>{backendDirectoryLabel}<input value={directory} onChange={(event) => setDirectory(event.target.value)} required /></label>
+    <button type="submit" className={canPickDirectory ? "secondary" : undefined}>扫描目录</button>
+  </form>;
+
   return <div className="skill-fields local-intake">
     {busy && !items.length && <p role="status">正在读取文件夹…</p>}
     <Failure error={error} />
     <ImportFeedback result={result} />
-    {!busy && !items.length && <form className="github-form" onSubmit={submit}>
-      <label>{backendDirectoryLabel}<input value={directory} onChange={(event) => setDirectory(event.target.value)} required /></label>
-      <button type="submit">扫描目录</button>
-      {canPickDirectory && <button type="button" className="secondary" onClick={() => void choose()}>选择文件夹</button>}
-    </form>}
+    {!busy && !items.length && <>
+      {canPickDirectory ? <>
+        <button type="button" className="file-import-pick" onClick={() => void choose()}>选择文件夹</button>
+        <details className="skill-disclosure file-import-path">
+          <summary>手动输入路径</summary>
+          {directoryForm}
+        </details>
+      </> : directoryForm}
+      {children}
+    </>}
     {items.length === 1 && <p className="local-intake-candidate">
       <strong>{items[0].name}</strong>
       {items[0].description && <span className="candidate-description">{items[0].description}</span>}
@@ -167,8 +178,8 @@ export default function LocalIntake({ categories, onComplete, onVersion }: {
   </div>;
 }
 
-export function ZipIntake({ skillId, onComplete, children }: {
-  skillId?: string; onComplete: (result: ImportResult, pending?: boolean) => void; children?: ReactNode;
+export function ZipIntake({ skillId, onComplete, onBack }: {
+  skillId?: string; onComplete: (result: ImportResult, pending?: boolean) => void; onBack?: () => void;
 }) {
   const [uploadId, setUploadId] = useState("");
   const [items, setItems] = useState<Candidate[]>([]);
@@ -227,6 +238,6 @@ export function ZipIntake({ skillId, onComplete, children }: {
     <ImportFeedback result={result} />
     {busy && <p role="status">处理中…</p>}
     {uploadId && <button type="button" disabled={busy || !selected.length} onClick={() => void commit()}>确认收录</button>}
-    {!busy && !uploadId && children}
+    {onBack && <button type="button" className="skillhub-text-button" disabled={busy} onClick={onBack}>返回文件夹导入</button>}
   </div>;
 }

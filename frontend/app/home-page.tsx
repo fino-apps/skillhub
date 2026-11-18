@@ -12,7 +12,8 @@ import "./skillhub.css";
 const VersionPanel = lazy(() => import("./version-panel"));
 
 type Panel =
-  | { kind: "file" | "github" | "batch" }
+  | { kind: "github" | "batch" }
+  | { kind: "file"; zip?: boolean }
   | { kind: "new-version"; skill: Skill; path: string };
 
 function LibraryToolbar({ params, facets, onChange, status, children }: {
@@ -293,14 +294,12 @@ export default function HomePage() {
       {loading ? "加载中…" : error?.pageToken ? "重试加载更多" : "加载更多"}
     </button>}
 
-    {panel?.kind === "file" && <Dialog title="导入文件" compact onClose={() => setPanel(null)}>
-      <ZipIntake onComplete={imported}>
-        <details className="skill-disclosure">
-          <summary>从文件夹导入</summary>
-          <LocalIntake categories={facets.categories ?? []} onComplete={imported}
-            onVersion={(skill, path) => setPanel({ kind: "new-version", skill, path })} />
-        </details>
-      </ZipIntake>
+    {panel?.kind === "file" && <Dialog title="导入文件" className="file-import-dialog" onClose={() => setPanel(null)}>
+      {panel.zip ? <ZipIntake onComplete={imported} onBack={() => setPanel({ kind: "file" })} />
+        : <LocalIntake categories={facets.categories ?? []} onComplete={imported}
+        onVersion={(skill, path) => setPanel({ kind: "new-version", skill, path })}>
+        <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file", zip: true })}>改用 ZIP 文件</button>
+      </LocalIntake>}
     </Dialog>}
     {panel?.kind === "github" && <Dialog title="导入 GitHub" compact onClose={() => setPanel(null)}>
       <GitHubIntake categories={facets.categories ?? []} onComplete={imported} />

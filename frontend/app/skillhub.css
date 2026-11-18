@@ -47,7 +47,11 @@
 .candidate-selection button { min-height: 32px; }
 .github-candidates small, .candidate-description { color: var(--muted); font-weight: 400; }
 .candidate-description { display: block; }
-.skill-disclosure > .local-intake { margin-top: 12px; }
+.file-import-dialog { width: min(440px, calc(100% - 32px)); }
+.file-import-dialog .dialog-header, .file-import-dialog .dialog-body { padding: 14px 16px; }
+.file-import-pick { padding-inline: 14px; }
+.file-import-path > summary { font-size: 13px; color: var(--muted); }
+.file-import-path[open] > form { margin-top: 8px; }
 .local-intake p { margin: 0; overflow-wrap: anywhere; }
 .local-intake .skill-fields > button { max-width: 100%; overflow-wrap: anywhere; }
 .local-intake-candidate { font-size: 14px; }
