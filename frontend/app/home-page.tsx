@@ -23,6 +23,7 @@ function LibraryToolbar({ params, facets, onChange, status, children }: {
   const source = params.get("source") ?? "";
   const tags = params.getAll("tag");
   const category = params.get("category") ?? "";
+  const tagOptions = Array.from(new Set([...(facets.tags ?? []), ...tags]));
 
   function set(name: string, value: string) {
     const next = new URLSearchParams(params);
@@ -39,47 +40,48 @@ function LibraryToolbar({ params, facets, onChange, status, children }: {
   }
 
   return <>
-    <div className="library-filterbar">
+    <div className="library-toolbar">
       <h1 id="skill-library-heading" className="library-heading" tabIndex={-1}>技能库</h1>
       <label className="skillhub-search">
         <span aria-hidden="true">⌕</span><span className="sr-only">搜索 Skill</span>
         <input type="search" name="q" autoComplete="off" placeholder="搜索名称、用途或标签…" value={params.get("q") ?? ""} onChange={(event) => set("q", event.target.value)} />
       </label>
-      <div className="library-facets">
-        <label><span className="sr-only">来源</span>
-          <select value={source} onChange={(event) => set("source", event.target.value)}>
+      <div className="library-facets" role="group" aria-label="筛选技能">
+        <label className="library-facet" data-active={!!source || undefined}>
+          <span className="library-facet-text" aria-hidden="true">{source ? sourceNames[source] || source : "全部来源"}</span>
+          <select aria-label="来源" value={source} onChange={(event) => set("source", event.target.value)}>
             <option value="">全部来源</option>
             {source && !facets.sources?.includes(source) && <option value={source}>{sourceNames[source] || source}</option>}
             {facets.sources?.map((value) => <option key={value} value={value}>{sourceNames[value] || value}</option>)}
           </select>
         </label>
-        <label><span className="sr-only">分类</span>
-          <select value={category} onChange={(event) => set("category", event.target.value)}>
+        <label className="library-facet" data-active={!!category || undefined}>
+          <span className="library-facet-text" aria-hidden="true">{category === "~" ? "未分类" : category || "全部分类"}</span>
+          <select aria-label="分类" value={category} onChange={(event) => set("category", event.target.value)}>
             <option value="">全部分类</option><option value="~">未分类</option>
             {category && category !== "~" && !facets.categories?.includes(category) && <option>{category}</option>}
             {facets.categories?.map((category) => <option key={category}>{category}</option>)}
           </select>
         </label>
-        {!!facets.tags?.length && <Popover className={`skill-filter${tags.length ? " has-filters" : ""}`} summary="标签">
-          <div className="filter-panel skill-fields">
+        <Popover className={`skill-filter${tags.length ? " has-filters" : ""}`} summary={<span className="library-facet-text">标签</span>}>
+          <div className="filter-panel">
             <fieldset className="skill-fields filter-tags">
-              <legend>标签</legend>
-              {facets.tags.map((tag) => <label key={tag} className="github-checkbox">
+              <legend className="sr-only">标签</legend>
+              {tagOptions.length === 0 && <p>暂无可筛选的标签</p>}
+              {tagOptions.map((tag) => <label key={tag} className="github-checkbox">
                 <input type="checkbox" checked={tags.includes(tag)} onChange={(event) =>
                   setTags(event.target.checked ? [...tags, tag] : tags.filter((value) => value !== tag))} />{tag}
               </label>)}
             </fieldset>
           </div>
-        </Popover>}
+        </Popover>
       </div>
-      <div className="library-filter-end">
-        <div className="library-filter-status">
-          {status}
-          {params.size > 0 && <button type="button" className="skillhub-text-button"
-            onClick={() => onChange(new URLSearchParams())}>清除筛选</button>}
-        </div>
-        {children}
+      <div className="library-filter-status">
+        {status}
+        {params.size > 0 && <button type="button" className="skillhub-text-button"
+          onClick={() => onChange(new URLSearchParams())}>清除筛选</button>}
       </div>
+      {children}
     </div>
     {!!tags.length && <div className="library-tags" aria-label="已选标签" role="group">
       {tags.map((tag) => <button key={tag} type="button" className="secondary" aria-label={`移除标签 ${tag}`}

@@ -74,7 +74,7 @@
 .copy-command { max-height: 260px; padding: 14px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; font-size: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-muted); }
 
 
-.skillhub-shell :where(select, .skill-filter > summary) {
+.skillhub-shell :where(select, .library-facet, .skill-filter > summary) {
   min-height: 36px;
   padding: 0 10px;
   border: 1px solid var(--line);
@@ -87,22 +87,69 @@
 .skillhub-shell :where(input[type="checkbox"]) { width: 16px; height: 16px; accent-color: var(--accent); }
 .skillhub-shell :where(button:not(.skillhub-text-button):not(.dialog-close)) { padding-inline: 12px; }
 
-.library-filterbar { --filter-height: 36px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.library-heading { margin: 0 6px 0 0; font-size: 22px; line-height: 1.2; white-space: nowrap; }
-.library-filterbar :is(.skillhub-search, select) { height: var(--filter-height); }
-.library-filterbar > .skillhub-search { flex: 1 1 180px; min-width: 0; max-inline-size: 320px; }
-.library-facets { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.library-facets select { display: block; max-width: 150px; }
-.library-filter-end { display: flex; flex: 1 1 auto; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
-.library-filter-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; color: var(--muted); font-size: 13px; }
-.library-filter-status .skillhub-text-button { min-height: 28px; }
+.library-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.library-heading { margin: 0; font-size: 22px; line-height: 1.2; white-space: nowrap; }
+.library-toolbar > .skillhub-search { flex: 1 1 140px; min-width: 0; max-inline-size: 320px; height: 36px; }
 .library-import-actions { gap: 8px; margin-inline-start: auto; }
+.library-facets {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) 72px;
+  flex: none;
+  width: min(296px, 100%);
+  gap: 8px;
+}
+.library-facets :is(.library-facet, .skill-filter > summary) {
+  position: relative;
+  display: block;
+  min-width: 0;
+  height: 36px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+}
+.library-facet-text {
+  position: absolute;
+  inset-inline: 10px 26px;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.library-facet select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.library-facet:has(select:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.library-facet::after,
+.skill-filter > summary::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: 12px;
+  inset-block-start: 14px;
+  width: 6px;
+  height: 6px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+.library-facets .skill-filter[open] > summary::after { transform: translateY(3px) rotate(225deg); }
+.library-facets :is(.library-facet, summary):hover { background: var(--surface-muted); }
+.library-facet[data-active],
+.skill-filter[open] > summary,
+.skill-filter.has-filters > summary {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+  background: var(--surface-muted);
+}
+.library-filter-status { display: grid; grid-template-columns: 8em 4em; align-items: center; gap: 12px; min-height: 28px; color: var(--muted); font-size: 13px; }
+.library-filter-status .skillhub-text-button { min-height: 28px; white-space: nowrap; }
 .library-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .library-tags button { min-height: 28px; max-width: 100%; overflow-wrap: anywhere; font-size: 12px; }
-.skill-filter, .skill-menu { position: relative; }
-.skill-filter > summary, .skill-menu > summary { display: grid; place-items: center; cursor: pointer; white-space: nowrap; }
-.skill-filter > summary { min-width: 58px; }
-.skill-filter > summary:hover { background: var(--surface-muted); }
+.skill-filter > summary { list-style: none; }
+.skill-menu { position: relative; }
+.skill-menu > summary { display: grid; place-items: center; cursor: pointer; white-space: nowrap; }
 .skill-menu > summary { min-width: 36px; min-height: 36px; border-radius: 6px; color: var(--muted); font-size: 19px; line-height: 1; }
 .skill-menu > summary:hover, .skill-menu[open] > summary { background: var(--surface-muted); }
 .skill-menu > summary::-webkit-details-marker, .skill-filter > summary::-webkit-details-marker { display: none; }
@@ -116,10 +163,19 @@
   background: var(--surface);
   box-shadow: 0 8px 24px #0002;
 }
-.skill-filter[open] > summary, .skill-filter.has-filters > summary { border-color: var(--accent); color: var(--accent-strong); }
-.skill-filter > .filter-panel { width: 248px; max-height: min(340px, 55vh); overflow: auto; padding: 14px; border: 1px solid var(--line); }
-.filter-tags label { overflow-wrap: anywhere; }
-.filter-tags legend { margin-bottom: 6px; color: var(--muted); font-size: 13px; }
+.skill-filter > .filter-panel {
+  width: max-content;
+  min-width: min(132px, 100%);
+  max-width: min(216px, 100%);
+  max-height: min(280px, 55vh);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+}
+.filter-tags.skill-fields { gap: 2px; }
+.filter-tags label { padding: 6px 8px; border-radius: 4px; overflow-wrap: anywhere; cursor: pointer; }
+.filter-tags label:is(:hover, :focus-within) { background: var(--surface-muted); }
+.filter-tags p { margin: 0; padding: 6px 8px; color: var(--muted); font-size: 13px; }
 .skill-menu-items { display: grid; min-width: max-content; padding: 4px; }
 .skillhub-shell .skill-menu-items :is(button, a) {
   display: block;
@@ -317,10 +373,7 @@ html[data-theme="dark"] .skill-short-purpose { font-weight: 400; }
 @media (max-width: 480px) {
   .library-shell { margin-top: 20px; }
   .library-heading { flex-basis: 100%; }
-  .library-filterbar > .skillhub-search, .library-facets { flex-basis: 100%; }
-  .library-filterbar > .skillhub-search { max-inline-size: none; }
-  .library-facets > label { flex: 1; min-width: 0; }
-  .library-facets select { width: 100%; max-width: none; }
+  .library-toolbar > .skillhub-search { flex-basis: 100%; max-inline-size: none; }
   .library-import-actions { gap: 4px; }
   .library-actions.library-import-actions > button { padding-inline: 8px; }
   .library-table thead th:nth-child(1) { width: 28px; }
