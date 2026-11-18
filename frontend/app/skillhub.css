@@ -157,6 +157,9 @@
 .library-table .skillhub-entry[data-selected] td { background: var(--surface-muted); }
 .library-table .library-name { display: inline-block; color: var(--text); font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
 .library-table .library-name:hover { color: var(--accent); text-decoration: underline; }
+.skill-name-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+.skill-short-purpose { min-width: 0; color: #fb8c00; font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
+html[data-theme="dark"] .skill-short-purpose { font-weight: 400; }
 .library-purpose { color: var(--muted); overflow-wrap: anywhere; }
 .library-table .library-purpose {
   display: -webkit-box;

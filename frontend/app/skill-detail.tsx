@@ -77,7 +77,7 @@ function Detail({ skillId }: { skillId: string }) {
   const busy = !!operation.busy;
   const updateSource = skill?.repositoryUrl ? "github" : "folder";
   const canCompare = versions.filter((version) => version.available).length >= 2;
-  const purpose = skill?.purpose || skill?.description || "";
+  const description = skill?.description || "";
 
   function repair(version: SkillVersion) {
     void operation.run(version.id, async () => {
@@ -121,8 +121,9 @@ function Detail({ skillId }: { skillId: string }) {
     {!skill && !error && <p role="status">读取中…</p>}
     {skill && <>
       <div className="skillhub-heading skill-detail-heading">
-        <div className="skill-identity">
+        <div className="skill-identity skill-name-line">
           <h1>{skill.name}</h1>
+          {skill.purpose && <span className="skill-short-purpose">{skill.purpose}</span>}
         </div>
         <div className="library-actions">
           {view && (view.available
@@ -145,7 +146,7 @@ function Detail({ skillId }: { skillId: string }) {
           <summary>来源 {sourceLabel(skill)}</summary>
           <dl>
             <dt>导入方式</dt><dd>{sourceNames[skill.importKind ?? ""] || "未知"}</dd>
-            {url && <><dt>来源链接</dt><dd><a href={url} target="_blank" rel="noreferrer">{url}</a></dd></>}
+            {url && <><dt>来源</dt><dd><a href={url} target="_blank" rel="noreferrer">{url}</a></dd></>}
             {skill.repositoryUrl && <><dt>绑定仓库</dt><dd>{skill.repositoryUrl}{skill.repositoryPath && <code> · {skill.repositoryPath}</code>}</dd></>}
             {skill.localPath && <><dt>绑定目录</dt><dd><code>{skill.localPath}</code></dd></>}
             {view?.upstreamRepository && <><dt>归档来源</dt><dd>{view.upstreamRepository}{view.upstreamPath && <code> · {view.upstreamPath}</code>}</dd></>}
@@ -155,14 +156,14 @@ function Detail({ skillId }: { skillId: string }) {
         {skill.category && <span>{skill.category}</span>}
         {skill.tags?.map((tag) => <span key={tag}>{tag}</span>)}
       </div>
-      {purpose && <p className="skill-detail-purpose">{purpose}</p>}
+      {description && <p className="skill-detail-purpose">{description}</p>}
       {panel?.kind !== "export" && <OperationFeedback {...operation} floating />}
       <nav className="skill-tabs" aria-label="Skill 详情">
         <button type="button" aria-pressed={!versionsTab} onClick={() => routeValue("tab", "")}>内容</button>
         <button type="button" aria-pressed={versionsTab} onClick={() => routeValue("tab", "versions")}>版本</button>
       </nav>
       {!versionsTab && (view
-        ? <SkillContent key={view.id} skillId={skillId} skillName={skill.name} versionId={view.id} available={!!view.available} purpose={purpose} />
+        ? <SkillContent key={view.id} skillId={skillId} skillName={skill.name} versionId={view.id} available={!!view.available} description={description} />
         : <p className="skillhub-empty">暂无版本</p>)}
       {versionsTab && <section className="skill-versions">
         <div className="library-actions">

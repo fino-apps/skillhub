@@ -65,8 +65,8 @@ function markdownBody(text: string, skillName: string) {
   return title && normalize(title[1]) === normalize(skillName) ? body.slice(title[0].length) : body;
 }
 
-export default function SkillContent({ skillId, skillName, versionId, available, purpose }: {
-  skillId: string; skillName: string; versionId: string; available: boolean; purpose: string;
+export default function SkillContent({ skillId, skillName, versionId, available, description }: {
+  skillId: string; skillName: string; versionId: string; available: boolean; description: string;
 }) {
   const [contents, setContents] = useState<Contents>({});
   const [path, setPath] = useState("SKILL.md");
@@ -140,7 +140,7 @@ export default function SkillContent({ skillId, skillName, versionId, available,
         <summary>浏览文件 <span className="skillhub-hint">{files.length}</span></summary>
         <FileTree tree={tree} selected={path} onSelect={open} />
       </details>}
-      {contents.description && contents.description.trim() !== purpose.trim() &&
+      {contents.description && contents.description.trim() !== description.trim() &&
         <details className="skill-disclosure"><summary>原始描述</summary><p>{contents.description}</p></details>}
     </div>
     {path !== "SKILL.md" && <div className="library-actions skill-file-heading">

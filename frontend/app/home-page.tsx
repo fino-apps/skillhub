@@ -260,15 +260,18 @@ export default function HomePage() {
         const url = sourceURL(skill);
         const sourceLink = url ? <a href={url} title={url} target="_blank" rel="noreferrer">{source}</a> : source;
         const classification = [skill.category, ...(skill.tags ?? [])].filter(Boolean).join(" · ");
-        const purpose = skill.purpose || skill.description || "";
+        const description = skill.description;
         return <tr key={skill.id} className="skillhub-entry" data-selected={selected.includes(skill.id) || undefined}>
           <td><input type="checkbox" aria-label={`选择 ${skill.name}`} checked={selected.includes(skill.id)}
             disabled={selected.length >= 100 && !selected.includes(skill.id)}
             onChange={() => setSelected((ids) => ids.includes(skill.id) ? ids.filter((id) => id !== skill.id) : [...ids, skill.id])} /></td>
           <td>
-            <Link id={`skill-link-${skill.id}`} className="library-name" to={`/skills/${skill.id}`} state={{ library }}
-              onClick={() => { libraryNavigation.returning = { scope, skills, token, scroll: window.scrollY, skillId: skill.id, revision: libraryNavigation.revision }; }}>{skill.name}</Link>
-            {purpose && <span className="library-purpose" title={purpose}>{purpose}</span>}
+            <div className="skill-name-line">
+              <Link id={`skill-link-${skill.id}`} className="library-name" to={`/skills/${skill.id}`} state={{ library }}
+                onClick={() => { libraryNavigation.returning = { scope, skills, token, scroll: window.scrollY, skillId: skill.id, revision: libraryNavigation.revision }; }}>{skill.name}</Link>
+              {skill.purpose && <span className="skill-short-purpose">{skill.purpose}</span>}
+            </div>
+            {description && <span className="library-purpose" title={description}>{description}</span>}
             <span className="library-mobile-source" title={classification ? `${source} · ${classification}` : undefined}>
               {sourceLink}{classification && ` · ${classification}`}
             </span>
