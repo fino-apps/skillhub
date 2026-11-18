@@ -53,7 +53,7 @@ docker compose \
 
 ## 调试
 
-业务 Compose 已将后端 HTTP、gRPC 和 Debug 端口映射到宿主机 `127.0.0.1`，可直接使用本机工具访问，无需额外配置。端口由 `.env` 中的 `SERVER_HTTP_PORT`、`SERVER_GRPC_PORT` 和 `SERVER_DEBUG_PORT` 指定。
+业务 Compose 仅将前端 HTTP 端口绑定到宿主机 `127.0.0.1`，默认入口为 `http://127.0.0.1:8082`。后端 HTTP、gRPC 和 Debug 端口在 Docker 网络内访问，端口由 `.env` 中的 `SERVER_HTTP_PORT`、`SERVER_GRPC_PORT` 和 `SERVER_DEBUG_PORT` 指定。SQLite、快照、上传暂存和导出文件保存在 `skillhub_data` 卷，重建容器会复用该卷。
 
 业务服务输出 JSON 到 stdout，带有 `fino.logs=true` 标签的容器由 Alloy 自动发现并写入 Loki；Docker 本地日志限制为单文件 10 MiB、最多 3 个文件。Grafana 中可使用预置日志面板集中查询，命令行仍可使用 `docker compose logs -f <service>`。
 
@@ -136,7 +136,7 @@ docker compose -f "deploy/compose/compose.yaml" --env-file "deploy/compose/.env"
 
 ## 约束
 
-- 后端 HTTP、gRPC 和 Debug 端口仅绑定宿主机 `127.0.0.1`；生成前端时，`frontend` 提供对外入口。
+- 后端端口在 Docker 网络内访问，前端 HTTP 端口绑定宿主机 `127.0.0.1`。
 - 平台与业务分别启动，不能将两个 Compose 文件作为同一个 `-f` 合并运行，因为 `infra` 网络在平台侧创建、业务侧以外部网络接入。
 - Compose 从 `bootstrap/caddy` 只读挂载 Caddy 配置，提供静态文件、SPA fallback、压缩和 API 反向代理。
 - 部署模板资产由 `fino build` 刷新；环境 `.env`、外部 values 和后端业务配置保留。`.goreleaser.yaml` 是项目发布配置，可按需要扩展。

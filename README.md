@@ -17,7 +17,7 @@ CC='zig cc -target x86_64-linux-musl' \
 test -f deploy/compose/.env || cp deploy/compose/.env.example deploy/compose/.env
 docker network inspect infra >/dev/null 2>&1 || docker network create infra
 docker compose --env-file deploy/compose/.env \
-  -f deploy/compose/compose.yaml -f deploy/compose/compose.skillhub.yaml up -d --wait
+  -f deploy/compose/compose.yaml up -d --wait
 ```
 
 打开 `http://127.0.0.1:8082`。Caddy 提供页面，并通过 Docker 网络转发 `/skillhub/v1` 请求。SQLite、快照和导出文件保存在 `skillhub_data` 卷。容器部署时，导入路径必须能被后端容器访问，也可以从浏览器导入或下载 ZIP。
@@ -25,7 +25,6 @@ docker compose --env-file deploy/compose/.env \
 | 环境变量 | 默认值与用途 |
 | --- | --- |
 | `SERVER_HTTP_PORT` | `31101`，后端 HTTP 端口 |
-| `SERVER_HTTP_HOST` | 本地开发默认 `127.0.0.1`，Compose 在容器内监听 `0.0.0.0` |
 | `SERVER_GRPC_PORT` | `31102`，Fino 本机 gRPC 端口 |
 | `SERVER_DEBUG_PORT` | `31103`，Fino 本机调试端口，提供 `/readyz` 和 `/healthz` |
 | `SKILLHUB_EXPORT_DIR` | 默认使用后端工作目录下的 `skillhub-data/exports` |
