@@ -29,5 +29,10 @@ export function shortVersion(version: SkillVersion, versions: SkillVersion[] = [
 
 export function versionLabel(version: SkillVersion) {
   const date = version.createTime ? new Date(version.createTime) : null;
-  return date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString("zh-CN") : "未记录日期";
+  return date && !Number.isNaN(date.getTime())
+    ? date.toLocaleString("zh-CN", {
+      year: "numeric", month: "numeric", day: "numeric",
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
+    })
+    : "未记录日期";
 }
