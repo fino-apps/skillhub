@@ -4,7 +4,7 @@ import { batchDeleteSkills, listFacets, listSkills, repairVersion } from "@/gene
 import GitHubIntake from "./github-intake";
 import LocalIntake, { ZipIntake } from "./local-intake";
 import { BatchMetadata } from "./skill-metadata";
-import { fetchAllSkills, libraryNavigation, message, sourceLabel, sourceNames, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
+import { fetchAllSkills, libraryNavigation, message, sourceLabel, sourceNames, sourceURL, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
 import { Dialog, Failure, Menu, OperationFeedback, Popover, useSkillOperation } from "./skill-ui";
 
 import "./skillhub.css";
@@ -256,10 +256,10 @@ export default function HomePage() {
       </tr></thead>
       <tbody>{skills.map((skill) => {
         const version = skill.defaultVersion;
-        const tags = skill.tags ?? [];
         const source = sourceLabel(skill);
-        const classification = [skill.category, ...tags.slice(0, 2)].filter(Boolean).join(" · ")
-          + (tags.length > 2 ? ` +${tags.length - 2}` : "");
+        const url = sourceURL(skill);
+        const sourceLink = url ? <a href={url} title={url} target="_blank" rel="noreferrer">{source}</a> : source;
+        const classification = [skill.category, ...(skill.tags ?? [])].filter(Boolean).join(" · ");
         const purpose = skill.purpose || skill.description || "";
         return <tr key={skill.id} className="skillhub-entry" data-selected={selected.includes(skill.id) || undefined}>
           <td><input type="checkbox" aria-label={`选择 ${skill.name}`} checked={selected.includes(skill.id)}
@@ -269,10 +269,12 @@ export default function HomePage() {
             <Link id={`skill-link-${skill.id}`} className="library-name" to={`/skills/${skill.id}`} state={{ library }}
               onClick={() => { libraryNavigation.returning = { scope, skills, token, scroll: window.scrollY, skillId: skill.id, revision: libraryNavigation.revision }; }}>{skill.name}</Link>
             {purpose && <span className="library-purpose" title={purpose}>{purpose}</span>}
-            <span className="library-mobile-source">{[source, classification].filter(Boolean).join(" · ")}</span>
+            <span className="library-mobile-source" title={classification ? `${source} · ${classification}` : undefined}>
+              {sourceLink}{classification && ` · ${classification}`}
+            </span>
           </td>
-          <td className="library-source">{source}</td>
-          <td className="library-classification">{classification || "未分类"}</td>
+          <td className="library-source">{sourceLink}</td>
+          <td className="library-classification"><span title={classification || undefined}>{classification || "未分类"}</span></td>
           <td className="library-row-actions"><div className="library-row-controls">
             {version && (version.available
               ? <button type="button" className="skillhub-text-button" disabled={!!operation.busy}

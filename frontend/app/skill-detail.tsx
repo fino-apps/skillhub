@@ -5,7 +5,7 @@ import InstallCommand from "./install-command";
 import { ZipIntake } from "./local-intake";
 import SkillContent from "./skill-content";
 import SkillMetadata from "./skill-metadata";
-import { archiveURL, fetchAllVersions, libraryNavigation, message, sourceLabel, sourceNames, type Facets, type Skill } from "./library-api";
+import { archiveURL, fetchAllVersions, libraryNavigation, message, sourceLabel, sourceNames, sourceURL, type Facets, type Skill } from "./library-api";
 import { Dialog, ExportLocation, Failure, Menu, OperationFeedback, useSkillOperation } from "./skill-ui";
 import { shortVersion, versionDigest, versionLabel, type SkillVersion } from "./skill-version";
 
@@ -113,6 +113,7 @@ function Detail({ skillId }: { skillId: string }) {
     });
   }
 
+  const url = skill && sourceURL(skill);
   return <main className="skillhub-shell skill-detail-shell">
     <Link className="skill-back" to={back}>‹ 技能库</Link>
     <Failure error={error} />
@@ -144,12 +145,7 @@ function Detail({ skillId }: { skillId: string }) {
           <summary>来源 {sourceLabel(skill)}</summary>
           <dl>
             <dt>导入方式</dt><dd>{sourceNames[skill.importKind ?? ""] || "未知"}</dd>
-            {(skill.upstreamName || skill.upstreamUrl) && <>
-              <dt>上游出处</dt>
-              <dd>{skill.upstreamUrl
-                ? <a href={skill.upstreamUrl} target="_blank" rel="noreferrer">{skill.upstreamName || skill.upstreamUrl}</a>
-                : skill.upstreamName}</dd>
-            </>}
+            {url && <><dt>来源链接</dt><dd><a href={url} target="_blank" rel="noreferrer">{url}</a></dd></>}
             {skill.repositoryUrl && <><dt>绑定仓库</dt><dd>{skill.repositoryUrl}{skill.repositoryPath && <code> · {skill.repositoryPath}</code>}</dd></>}
             {skill.localPath && <><dt>绑定目录</dt><dd><code>{skill.localPath}</code></dd></>}
             {view?.upstreamRepository && <><dt>归档来源</dt><dd>{view.upstreamRepository}{view.upstreamPath && <code> · {view.upstreamPath}</code>}</dd></>}

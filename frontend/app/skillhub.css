@@ -140,10 +140,17 @@
 
 .library-table { margin-top: 14px; border-top: 1px solid var(--line); }
 .library-table thead th:nth-child(1) { width: 42px; }
-.library-table thead .library-source { width: 15%; }
-.library-table thead .library-classification { width: 18%; }
+.library-table thead .library-source { width: 16%; }
+.library-table thead .library-classification { width: 15%; }
 .library-table thead th:last-child { width: 104px; }
 .library-table td:is(.library-source, .library-classification) { overflow-wrap: anywhere; }
+.library-source > a, .library-classification > span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
 .library-table thead th { padding-block: 9px; font-weight: 600; }
 .library-table .skillhub-entry td { padding-block: 9px; vertical-align: middle; }
 .library-table .skillhub-entry:hover td, .library-table .skillhub-entry:focus-within td,
@@ -159,8 +166,8 @@
   line-height: 1.45;
 }
 .library-mobile-source { display: none; }
-.library-table :is(th:last-child, .library-row-actions) { padding-inline-end: 3px; text-align: right; }
-.library-row-controls { display: flex; justify-content: flex-end; align-items: center; gap: 8px; white-space: nowrap; }
+.library-table .library-row-actions { padding-inline-end: 3px; }
+.library-row-controls { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
 .library-row-controls > button { min-height: 36px; }
 .library-overlays {
   position: fixed;
@@ -294,7 +301,14 @@
 
 @media (max-width: 760px) {
   .library-table :is(.library-source, .library-classification) { display: none; }
-  .library-mobile-source { display: block; font-size: 12px; overflow-wrap: anywhere; }
+  .library-mobile-source {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    font-size: 12px;
+  }
   .library-table thead th:last-child { width: 96px; }
 }
 @media (max-width: 480px) {

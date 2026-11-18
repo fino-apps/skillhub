@@ -146,7 +146,7 @@ export default function LocalIntake({ onComplete, onCancel, onVersion }: {
     {matching.length > 0 && <div className="skill-fields">
       <p>已有同名 Skill</p>
       {matching.map((skill) => <button key={skill.id} type="button" className="secondary" disabled={busy}
-        onClick={() => onVersion(skill, selected[0])}>保存到 {skill.name} · {skill.upstreamName || skill.localPath || "当前库"}</button>)}
+        onClick={() => onVersion(skill, selected[0])}>保存到 {skill.name} · {skill.upstreamUrl || skill.localPath || "当前库"}</button>)}
       <button type="button" disabled={busy} onClick={() => void run(() => commit(selected))}>作为独立条目收录</button>
     </div>}
     {!matching.length && items.length > 0 && <div className="skill-fields">
