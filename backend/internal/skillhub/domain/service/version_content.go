@@ -149,6 +149,7 @@ func (s *Library) InstallCommand(ctx context.Context, skill, version string, glo
 	if global {
 		target = "\"$HOME\"/" + quote(".agents/skills/"+SafeName(row.Name))
 	}
-	command := "mkdir -p " + target + " && unzip -o " + quote(s.snapshotPath(string(row.ID))) + " -d " + target
+	archivePath := "/skillhub/v1/skills/" + skill + "/versions/" + version + "/archive"
+	command := "( archive=$(mktemp) && trap 'rm -f \"$archive\"' EXIT && curl -fSL -o \"$archive\" -- \"${SKILLHUB_URL:?Set SKILLHUB_URL to the SkillHub address}" + archivePath + "\" && mkdir -p " + target + " && unzip -o \"$archive\" -d " + target + " )"
 	return command, nil
 }

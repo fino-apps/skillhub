@@ -185,9 +185,9 @@ export default function HomePage() {
     setRefresh((value) => value + 1);
   }
 
-  function imported(result: ImportResult) {
+  function imported(result: ImportResult, pending = false) {
     reload();
-    if (result.failures?.length) return;
+    if (pending || result.failures?.length) return;
     setPanel(null);
     operation.setNotice(`新增 ${result.addedCount ?? 0} 项，已有 ${result.existingCount ?? 0} 项。`);
   }

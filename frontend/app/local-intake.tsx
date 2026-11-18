@@ -155,7 +155,7 @@ export default function LocalIntake({ onComplete, onCancel, onVersion }: {
   </>;
 }
 
-export function ZipIntake({ skillId, onComplete }: { skillId?: string; onComplete: (result: ImportResult) => void }) {
+export function ZipIntake({ skillId, onComplete }: { skillId?: string; onComplete: (result: ImportResult, pending?: boolean) => void }) {
   const [uploadId, setUploadId] = useState("");
   const [items, setItems] = useState<Candidate[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
@@ -188,9 +188,17 @@ export function ZipIntake({ skillId, onComplete }: { skillId?: string; onComplet
     setError("");
     try {
       const reply = await commitUpload<ImportResult>({ uploadId, skillPaths: selected, targetSkillId: skillId });
-      setResult(reply.failures?.length ? reply : null);
-      if (reply.failures?.length) setSelected(reply.failures.map(({ path }) => path ?? ""));
-      onComplete(reply);
+      const failed = new Set(reply.failures?.map(({ path }) => path ?? "") ?? []);
+      const remaining = items.filter((item) => !selected.includes(item.path ?? "") || failed.has(item.path ?? ""));
+      setItems(remaining);
+      setSelected(remaining.slice(0, skillId ? 1 : importLimit).map((item) => item.path ?? ""));
+      const total = {
+        ...reply,
+        addedCount: (result?.addedCount ?? 0) + (reply.addedCount ?? 0),
+        existingCount: (result?.existingCount ?? 0) + (reply.existingCount ?? 0),
+      };
+      setResult(total);
+      onComplete(total, remaining.length > 0);
     } catch (err) {
       setError(message(err));
     } finally {

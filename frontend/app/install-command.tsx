@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { config } from "@/lib/config";
 import { getInstallCommand } from "@/generated/api-client";
 
 export default function InstallCommand({ skillId, versionId }: { skillId: string; versionId: string }) {
@@ -14,7 +15,9 @@ export default function InstallCommand({ skillId, versionId }: { skillId: string
     setCopyStatus("");
     try {
       const result = await getInstallCommand<{ command: string }>({ skillId, versionId, global });
-      setCommand(result.command);
+      const base = new URL(config.apiBase || window.location.origin, window.location.origin).origin;
+      const quotedBase = "'" + base.replaceAll("'", "'\"'\"'") + "'";
+      setCommand(result.command.replace("( ", () => "( SKILLHUB_URL=" + quotedBase + "; "));
     } catch (reason) {
       setError(reason instanceof Error && reason.message ? reason.message : "请稍后重试");
     } finally {

@@ -42,7 +42,7 @@ func (r *Library) Skills(ctx context.Context, filter port.SkillFilter, size int,
 
 	if filter.Keyword != "" {
 		value := filter.Keyword
-		query = query.Where("instr(lower(name), lower(?)) > 0 OR instr(lower(description), lower(?)) > 0 OR instr(lower(purpose), lower(?)) > 0", value, value, value)
+		query = query.Where("instr(lower(name), lower(?)) > 0 OR instr(lower(description), lower(?)) > 0 OR instr(lower(purpose), lower(?)) > 0 OR id IN (SELECT skill_id FROM skill_tag WHERE instr(lower(tag), lower(?)) > 0)", value, value, value, value)
 	}
 
 	if filter.Uncategorized || filter.Category != "" {

@@ -60,7 +60,17 @@ func (s *Library) saveDirectory(ctx context.Context, dir, target string, source 
 			}
 			skill = row
 		} else {
-			if _, err := tx.SkillBySource(key); err == nil {
+			if existing, err := tx.SkillBySource(key); err == nil {
+				version, err = tx.MatchingVersion(string(existing.ID), source.Commit, digest)
+				if errors.Is(err, repo.ErrNotFound) {
+					return nil
+				}
+				if err != nil {
+					return err
+				}
+				if !s.Available(version) {
+					return s.restoreSnapshot(version, data, digest)
+				}
 				return nil
 			} else if !errors.Is(err, repo.ErrNotFound) {
 				return err
@@ -88,6 +98,11 @@ func (s *Library) saveDirectory(ctx context.Context, dir, target string, source 
 		switch {
 		case err == nil:
 			version = existing
+			if !s.Available(version) {
+				if err := s.restoreSnapshot(version, data, digest); err != nil {
+					return err
+				}
+			}
 		case errors.Is(err, repo.ErrNotFound):
 			id, err := uuid.NewV7()
 			if err != nil {
@@ -118,6 +133,22 @@ func (s *Library) saveDirectory(ctx context.Context, dir, target string, source 
 		_ = os.Remove(savedFile)
 	}
 	return version, created, err
+}
+
+func (s *Library) restoreSnapshot(version model.SkillVersionSnapshot, data []byte, digest string) error {
+	if version.ContentDigest != "" && version.ContentDigest != digest {
+		return ErrConflict
+	}
+	temporary, err := os.CreateTemp(s.snapshots, ".restore-")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(temporary.Name())
+	_, err = temporary.Write(data)
+	if err = errors.Join(err, temporary.Close()); err != nil {
+		return err
+	}
+	return os.Rename(temporary.Name(), s.snapshotPath(string(version.ID)))
 }
 
 func (s *Library) Repair(ctx context.Context, skillID, versionID string) error {
@@ -160,16 +191,7 @@ func (s *Library) Repair(ctx context.Context, skillID, versionID string) error {
 		return err
 	}
 
-	temporary, err := os.CreateTemp(s.snapshots, ".repair-")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(temporary.Name())
-	_, err = temporary.Write(data)
-	if err = errors.Join(err, temporary.Close()); err != nil {
-		return err
-	}
-	return os.Rename(temporary.Name(), s.snapshotPath(versionID))
+	return s.restoreSnapshot(row, data, digest)
 }
 
 func invalid(err error) error {

@@ -209,9 +209,6 @@ func (s *Library) ImportArchive(ctx context.Context, upload, target string, path
 		accountImport(&result, path, created, err)
 	}
 
-	if len(result.Failures) == 0 {
-		_ = os.RemoveAll(root)
-	}
 	return &result, nil
 }
 

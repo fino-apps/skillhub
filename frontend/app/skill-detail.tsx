@@ -203,7 +203,7 @@ function Detail({ skillId }: { skillId: string }) {
         <OperationFeedback {...operation} />
       </Dialog>}
       {panel?.kind === "zip" && <Dialog title="从 ZIP 保存版本" compact onClose={() => setPanel(null)}>
-        <ZipIntake skillId={skillId} onComplete={(result) => { if (!result.failures?.length) saved(); }} />
+        <ZipIntake skillId={skillId} onComplete={(result, pending) => { if (!pending && !result.failures?.length) saved(); else reload(); }} />
       </Dialog>}
       {panel?.kind === "update" && <Dialog title={panel.source === "github" ? "检查更新" : "保存新版本"} onClose={() => setPanel(null)}>
         <Suspense fallback={<p>加载中…</p>}><VersionPanel skill={skill} from={panel.source} onSaved={(version) => {
