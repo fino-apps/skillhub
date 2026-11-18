@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { batchDeleteSkills, listFacets, listSkills, repairVersion } from "@/generated/api-client";
+import ComparePanel from "./compare-panel";
 import GitHubIntake from "./github-intake";
 import LocalIntake, { ZipIntake } from "./local-intake";
 import { BatchMetadata } from "./skill-metadata";
@@ -9,7 +10,6 @@ import { Dialog, Failure, Menu, OperationFeedback, Popover, useSkillOperation } 
 
 import "./skillhub.css";
 
-const ComparePanel = lazy(() => import("./compare-panel"));
 const VersionPanel = lazy(() => import("./version-panel"));
 
 type Panel =
@@ -319,7 +319,7 @@ export default function HomePage() {
       <BatchMetadata ids={selected} categories={facets.categories ?? []} onSaved={editComplete} />
     </Dialog>}
     {panel?.kind === "compare" && <Dialog title="比对 Skill" onClose={() => setPanel(null)}>
-      <Suspense fallback={<p>加载中…</p>}><ComparePanel skills={panel.skills} /></Suspense>
+      <ComparePanel skills={panel.skills} />
     </Dialog>}
   </main>;
 }

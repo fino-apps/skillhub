@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { deleteSkill, deleteVersion, getSkill, listFacets, repairVersion, setDefaultVersion } from "@/generated/api-client";
+import ComparePanel from "./compare-panel";
 import InstallCommand from "./install-command";
 import { ZipIntake } from "./local-intake";
 import SkillContent from "./skill-content";
@@ -11,7 +12,6 @@ import { shortVersion, versionDigest, versionLabel, type SkillVersion } from "./
 
 import "./skillhub.css";
 
-const ComparePanel = lazy(() => import("./compare-panel"));
 const VersionPanel = lazy(() => import("./version-panel"));
 
 type Panel =
@@ -215,7 +215,7 @@ function Detail({ skillId }: { skillId: string }) {
         }} /></Suspense>
       </Dialog>}
       {panel?.kind === "compare" && <Dialog title="比对版本" onClose={() => setPanel(null)}>
-        <Suspense fallback={<p>加载中…</p>}><ComparePanel skills={[skill]} skillId={skillId} candidate={view?.id !== skill.defaultVersion?.id ? view?.id : ""} /></Suspense>
+        <ComparePanel skills={[skill]} skillId={skillId} candidate={view?.id !== skill.defaultVersion?.id ? view?.id : ""} />
       </Dialog>}
     </>}
   </main>;

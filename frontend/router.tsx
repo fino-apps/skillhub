@@ -33,9 +33,22 @@ function NotFoundPage() {
   );
 }
 
+function RouteError() {
+  return (
+    <main className="home-shell">
+      <section className="home-hero" role="alert">
+        <h1>页面加载失败</h1>
+        <p className="home-copy">请刷新页面后再试。</p>
+        <button type="button" onClick={() => window.location.reload()}>刷新页面</button>
+      </section>
+    </main>
+  );
+}
+
 export const router = createBrowserRouter([
   {
     Component: AppLayout,
+    ErrorBoundary: RouteError,
     HydrateFallback: RouteLoading,
     children: [
       { index: true, lazy: lazyPage(() => import("@/app/home-page")) },
