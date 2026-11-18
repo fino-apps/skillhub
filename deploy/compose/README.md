@@ -1,14 +1,12 @@
 # Docker Compose
 
-本目录分别提供业务 `compose.yaml` 和共享平台 `compose.infra.yaml`。先启动共享平台，再启动业务；两者独立更新和停止。
-
-本文命令默认在项目根目录执行。Helm 部署说明见 [Helm README](../helm/README.md)。
+命令默认在项目根目录执行。集群部署见 [Helm 文档](../helm/README.md)。
 
 ## 构建与发布
 
-在项目根目录使用 `.goreleaser.yaml`。准备 GoReleaser 2.15+、项目 `go.mod` 要求的 Go，以及带 Buildx 的 Docker。Node.js 版本见 `frontend/package.json`，构建 hook 会安装前端依赖并生成静态资源。
+准备 GoReleaser 2.15+、项目 `go.mod` 要求的 Go，以及带 Buildx 的 Docker。Node.js 版本见 `frontend/package.json`，构建 hook 会安装前端依赖并生成静态资源。
 
-先检查 `builds` 和 `dockers_v2` 的目标架构及镜像仓库。以下命令按 `linux/amd64` 构建。SQLite 后端启用了 CGO，需要安装 Zig 并通过 `CC` 指定 Linux musl 交叉编译器。构建其他架构时，二进制、镜像平台和编译器目标需一起调整。
+以下命令按 `linux/amd64` 构建。SQLite 后端需要 Zig 编译 CGO。
 
 ### 本地构建
 
@@ -18,9 +16,9 @@ CC='zig cc -target x86_64-linux-musl' \
   goreleaser release --config .goreleaser.yaml --snapshot --clean
 ```
 
-Snapshot 会将应用镜像加载到本机 Docker。保留上述参数，`--skip=publish` 会跳过 `dockers_v2` 镜像构建。二进制归档、部署归档和 `checksums.txt` 位于 `.fino/release/`，`--clean` 会清理该目录上次生成的产物。
+Snapshot 将镜像加载到本机 Docker，归档和校验文件写入 `.fino/release/`。使用 `--skip=publish` 会跳过镜像构建。
 
-构建完成后，将 `deploy/compose/.env` 中的 `IMAGE_REPOSITORY` 和应用镜像名及标签与构建产物对齐。按本地构建产物确认带平台后缀的标签，例如 `latest-amd64`，再核对 Compose 实际使用的镜像。
+启动前将 `.env` 的 `IMAGE_REPOSITORY` 和应用镜像标签与构建产物对齐，可以用以下命令核对。
 
 ```sh
 docker compose --env-file deploy/compose/.env -f deploy/compose/compose.yaml config --images
@@ -37,92 +35,31 @@ CC='zig cc -target x86_64-linux-musl' \
 
 ## 配置与启动
 
-生成器仅提供 `.env.example`；首次使用时自行复制为 `.env` 并调整配置。后续生成不会创建或修改 `.env`。
+首次部署时创建 `.env`。更新时保留已有的 `PAGINATION_ENCODED_KEY`。
 
 ```sh
 test -f deploy/compose/.env || cp deploy/compose/.env.example deploy/compose/.env
 ```
 
-`.env.example` 首次生成时预填随机分页密钥，复制为 `.env` 即可使用。重建保留已有示例；已有 `.env` 应保留原 `PAGINATION_ENCODED_KEY`，避免已发出的分页 token 失效。
-
-- 平台依赖：`deploy/compose/compose.infra.yaml`
-- 业务服务：`deploy/compose/compose.yaml`
-- 部署环境变量与服务端口：`deploy/compose/.env`
-
-infra provider 来源于当前服务的 `fino.yaml`；未配置的 provider 不生成对应依赖。PostgreSQL 使用官方 `postgres:16.15-bookworm` 镜像。显式配置 SQLite 时不生成外部数据库容器。当前平台还提供 Loki、Tempo、Grafana Alloy、Prometheus 和 Grafana。Alloy 统一采集 Docker 日志并接收 OTLP；Tempo 使用本地卷存储 trace，Grafana 统一查询日志、指标和链路。服务接入约定如下：
-
-- Docker 网络：`infra`（业务 Compose 中为 `external: true`）
-- 服务地址：业务依赖地址见 `compose.yaml` 的 environment；观测服务为 `loki:3100`、`tempo:3200`、`alloy:4317/4318`、`prometheus:9090`、`grafana:3000`
-- 平台配置：镜像和共享凭据位于 `.env`；修改后应以同一份配置启动平台和依赖它的服务
-
-平台端口仅绑定到 `127.0.0.1`，可安全供本机工具使用：Redis、MinIO API/Console、NATS 客户端/监控、Loki、Alloy UI/OTLP、Prometheus 和 Grafana 的默认端口分别为 `6379`、`9000/9001`、`4222/8222`、`3100`、`12345/4317/4318`、`9090`、`3000`。Tempo 只在 Docker 网络内提供服务。端口可在 `.env` 中统一调整。
-
-Grafana 默认关闭匿名访问和自助注册。启动前请在 `.env` 中为 `GRAFANA_ADMIN_PASSWORD` 设置唯一强密码。
-
-Grafana 通过前端同源路径提供访问，默认入口为 `http://127.0.0.1:8082/monitor/`；平台预置服务指标和集中日志面板。
-
-
-两份 Compose 已通过顶层 `name` 固定项目名：平台为 `infra`，业务为 `skillhub`，日常命令无需指定 `-p`。同一台机器上的共享平台由同一份 Compose 配置与凭据统一管理；其他服务只启动自己的业务 Compose，并确认平台包含所需组件。
-
-先启动一次共享平台：
+使用 Grafana 时，先在 `.env` 中设置 `GRAFANA_ADMIN_PASSWORD`。两份 Compose 通过外部网络 `infra` 连接，分别启动；共享平台已运行时可直接启动业务。
 
 ```sh
-docker compose \
-  -f "deploy/compose/compose.infra.yaml" \
-  --env-file "deploy/compose/.env" \
-  up -d --wait
+docker compose --env-file deploy/compose/.env -f deploy/compose/compose.infra.yaml up -d --wait
+docker compose --env-file deploy/compose/.env -f deploy/compose/compose.yaml up -d --wait
 ```
 
-当前业务 Compose 会在服务启动前直接使用 SQLite 本地文件，不会创建或停止共享平台：
+前端默认访问 http://127.0.0.1:8082，Grafana 入口为 http://127.0.0.1:8082/monitor/。后端端口仅在 Docker 网络内开放。SQLite、快照、上传暂存和导出文件保存在 `skillhub_data` 卷。
+
+只运行 SkillHub 时，也可以用 `docker network create infra` 创建共享网络，再单独启动业务 Compose。
+
+## 日志与停止
 
 ```sh
-docker compose \
-  -f "deploy/compose/compose.yaml" \
-  --env-file "deploy/compose/.env" \
-  up -d --wait
+docker compose --env-file deploy/compose/.env -f deploy/compose/compose.yaml logs -f
+docker compose --env-file deploy/compose/.env -f deploy/compose/compose.yaml down
 ```
 
-## 调试
-
-业务 Compose 仅将前端 HTTP 端口绑定到宿主机 `127.0.0.1`，默认入口为 `http://127.0.0.1:8082`。后端 HTTP、gRPC 和 Debug 端口在 Docker 网络内访问，端口由 `.env` 中的 `SERVER_HTTP_PORT`、`SERVER_GRPC_PORT` 和 `SERVER_DEBUG_PORT` 指定。SQLite、快照、上传暂存和导出文件保存在 `skillhub_data` 卷，重建容器会复用该卷。
-
-业务服务输出 JSON 到 stdout，带有 `fino.logs=true` 标签的容器由 Alloy 自动发现并写入 Loki；Docker 本地日志限制为单文件 10 MiB、最多 3 个文件。Grafana 中可使用预置日志面板集中查询，命令行仍可使用 `docker compose logs -f <service>`。
-
-Compose 内应用通过 `alloy:4318` 发送 OTLP 日志和 trace，宿主机进程使用 `OTEL_ENDPOINT=127.0.0.1:4318`。服务 tracing 默认关闭；启用后 Alloy 将 trace 批量转发给 Tempo，Tempo 使用本地持久卷存储，并按 `${TEMPO_RETENTION}` 清理。Prometheus 同时采集 Tempo 与 Alloy 指标。生产环境应按流量下调各服务 `tracing.sampleRatio`。
-
-Loki 使用单体 TSDB 和本地持久卷，日志保留 30 天。该配置面向单机、小规模部署；需要跨主机高可用时应改用对象存储和集群部署。
-
-### 本地前端调试
-
-如果后端服务已在宿主机启动，可运行 Vite 开发服务器（首次执行使用 `npm ci`）：
-
-```sh
-cd frontend && \
-VITE_APP_ID=1 \
-VITE_API_BASE=http://127.0.0.1:31101 npm run dev -- --host 127.0.0.1 --port 32180
-```
-
-访问 `http://127.0.0.1:32180/`。`VITE_API_BASE` 用于将浏览器请求指向宿主机后端；Compose 默认使用同源 API。
-
-## 停止
-
-停止当前业务服务：
-
-```sh
-docker compose \
-  -f "deploy/compose/compose.yaml" \
-  --env-file "deploy/compose/.env" \
-  down
-```
-
-平台由所有微服务共享；确认没有服务正在使用后再停止。追加 `-v` 会清理共享持久化卷：
-
-```sh
-docker compose \
-  -f "deploy/compose/compose.infra.yaml" \
-  --env-file "deploy/compose/.env" \
-  down
-```
+确认其他服务已停用共享平台后，可对 `compose.infra.yaml` 执行 `down`。`down -v` 会删除持久化卷。
 
 ## 离线包
 
@@ -164,10 +101,3 @@ cd package-*/
 docker compose -f "deploy/compose/compose.infra.yaml" --env-file "deploy/compose/.env" up -d --wait
 docker compose -f "deploy/compose/compose.yaml" --env-file "deploy/compose/.env" up -d --wait
 ```
-
-## 约束
-
-- 后端端口在 Docker 网络内访问，前端 HTTP 端口绑定宿主机 `127.0.0.1`。
-- 平台与业务分别启动，不能将两个 Compose 文件作为同一个 `-f` 合并运行，因为 `infra` 网络在平台侧创建、业务侧以外部网络接入。
-- Compose 从 `bootstrap/caddy` 只读挂载 Caddy 配置，提供静态文件、SPA fallback、压缩和 API 反向代理。
-- 部署模板资产由 `fino build` 刷新；环境 `.env`、外部 values 和后端业务配置保留。`.goreleaser.yaml` 是项目发布配置，可按需要扩展。
