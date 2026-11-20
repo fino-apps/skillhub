@@ -89,7 +89,9 @@ export function archiveURL(skillId: string, versionId: string) {
   const path = apiRoutes.downloadZip.path
     .replace("{skill_id}", encodeURIComponent(skillId))
     .replace("{version_id}", encodeURIComponent(versionId));
-  return new URL(path, config.apiBase || window.location.origin).href;
+  const url = new URL(path, config.apiBase || window.location.origin);
+  url.searchParams.set("includeRootDirectory", "true");
+  return url.href;
 }
 
 export function stageZip(file: File) {

@@ -360,6 +360,10 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: includeRootDirectory
+          in: query
+          schema:
+            type: boolean
       responses:
         "200":
           headers:
@@ -813,6 +817,8 @@ components:
       title: skillhub.v1.DownloadZipRequest
       type: object
       properties:
+        includeRootDirectory:
+          type: boolean
         skillId:
           type: string
           format: uuid

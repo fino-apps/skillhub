@@ -84,7 +84,12 @@ function Detail({ skillId }: { skillId: string }) {
   const busy = !!operation.busy;
   const updateSource = skill?.repositoryUrl ? "github" : "folder";
   const canCompare = versions.some((version) => version.available);
-  const description = skill?.description || "";
+  const purpose = skill?.purpose?.trim() ?? "";
+  const description = skill?.description?.trim() ?? "";
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [versionsTab]);
 
   function repair(version: SkillVersion) {
     void operation.run(version.id, async () => {
@@ -128,21 +133,23 @@ function Detail({ skillId }: { skillId: string }) {
     {!skill && !error && <p role="status">读取中…</p>}
     {skill && <>
       <div className="skillhub-heading skill-detail-heading">
-        <div className="skill-identity skill-name-line">
+        <div className="skill-identity">
           <h1>{skill.name}</h1>
-          {skill.purpose && <span className="skill-short-purpose">{skill.purpose}</span>}
+          {purpose && <p className="skill-detail-purpose">{purpose}</p>}
+          {description && description !== purpose && <p className="skill-detail-purpose">{description}</p>}
         </div>
         <div className="library-actions">
           {view && (view.available
-            ? <button type="button" disabled={busy} onClick={() => void operation.save(skillId, view.id)}>{busy ? "处理中…" : "保存到本机"}</button>
+            ? <button type="button" disabled={busy} onClick={() => void operation.save(skillId, view.id)}>
+              {busy ? "处理中…" : "导出到服务端默认目录"}
+            </button>
             : <button type="button" disabled={busy} onClick={() => repair(view)}>补齐版本</button>)}
-          {canCompare && <button type="button" className="secondary" disabled={busy} onClick={() => setPanel({ kind: "compare" })}>比对</button>}
           <Menu label="Skill 更多操作">
             <button type="button" onClick={() => setPanel({ kind: "metadata" })}>编辑整理信息</button>
             {view?.available && <>
-              <button type="button" onClick={() => { operation.dismiss(); setPanel({ kind: "export", version: view }); }}>另存到…</button>
+              <button type="button" onClick={() => { operation.dismiss(); setPanel({ kind: "export", version: view }); }}>导出到指定目录…</button>
               <a href={archiveURL(skillId, view.id)}>下载 ZIP</a>
-              <button type="button" onClick={() => setPanel({ kind: "install", version: view })}>复制安装命令</button>
+              <button type="button" onClick={() => setPanel({ kind: "install", version: view })}>Codex 安装命令</button>
             </>}
             <button type="button" disabled={busy} onClick={() => setPanel({ kind: "merge" })}>合并到其他 Skill</button>
             <button type="button" className="skill-danger" disabled={busy} onClick={() => removeSkill(skill.name)}>删除 Skill</button>
@@ -150,9 +157,13 @@ function Detail({ skillId }: { skillId: string }) {
         </div>
       </div>
       <div className="skill-detail-meta">
-        {view && <span>当前版本 <code title={versionDigest(view)}>{shortVersion(view, versions)}</code></span>}
+        {view && <span>
+          {view.id === skill.defaultVersion?.id ? "默认版本" : "历史版本"} <code title={versionDigest(view)}>{shortVersion(view, versions)}</code>
+        </span>}
         <details className="skill-disclosure">
-          <summary>来源 {sourceLabel(skill)}</summary>
+          <summary>{view?.upstreamRepository
+            ? `快照来源 ${view.upstreamRepository.replace(/^https?:\/\/(?:github\.com\/)?/i, "")}`
+            : `收录来源 ${sourceLabel(skill)}`}</summary>
           <dl>
             <dt>导入方式</dt><dd>{sourceNames[skill.importKind ?? ""] || "未知"}</dd>
             {url && <><dt>来源</dt><dd><a href={url} target="_blank" rel="noreferrer">{url}</a></dd></>}
@@ -166,7 +177,6 @@ function Detail({ skillId }: { skillId: string }) {
         {skill.category && <span>{skill.category}</span>}
         {skill.tags?.map((tag) => <span key={tag}>{tag}</span>)}
       </div>
-      {description && <p className="skill-detail-purpose">{description}</p>}
       {panel?.kind !== "export" && <OperationFeedback {...operation} floating />}
       <nav className="skill-tabs" aria-label="Skill 详情">
         <button type="button" aria-pressed={!versionsTab} onClick={() => routeValue("tab", "")}>内容</button>
@@ -180,6 +190,7 @@ function Detail({ skillId }: { skillId: string }) {
           <button type="button" className="secondary" onClick={() => setPanel({ kind: "update", source: updateSource })}>
             {updateSource === "github" ? "检查更新" : "保存新版本"}
           </button>
+          {canCompare && <button type="button" className="secondary" disabled={busy} onClick={() => setPanel({ kind: "compare" })}>比对</button>}
           <Menu label="版本更多操作">
             {updateSource === "github" && <button type="button" onClick={() => setPanel({ kind: "update", source: "folder" })}>从文件夹保存版本</button>}
             <button type="button" onClick={() => setPanel({ kind: "zip" })}>从 ZIP 保存版本</button>
@@ -189,9 +200,14 @@ function Detail({ skillId }: { skillId: string }) {
         <ul className="version-history">
           {versions.map((version) => {
             const isDefault = skill.defaultVersion?.id === version.id;
+            const contentParams = new URLSearchParams(params);
+            contentParams.delete("tab");
+            contentParams.set("version", version.id);
             return <li key={version.id}>
-              <button type="button" className="skillhub-text-button" title={versionDigest(version)}
-                aria-pressed={view?.id === version.id} onClick={() => routeValue("version", version.id)}><code>{shortVersion(version, versions)}</code></button>
+              <Link className="version-content-link" to={{ search: contentParams.toString() }} state={location.state}
+                title={versionDigest(version)} aria-current={view?.id === version.id ? "true" : undefined}>
+                <code>{shortVersion(version, versions)}</code>
+              </Link>
               <span>{isDefault ? "默认" : ""}{view?.id === version.id && !isDefault ? "正在查看" : ""}</span>
               <time dateTime={version.createTime}>{versionLabel(version)}</time>
               <span className="version-notes-text">{version.available ? version.notes : "待补齐"}</span>
@@ -215,7 +231,7 @@ function Detail({ skillId }: { skillId: string }) {
       {panel?.kind === "install" && <Dialog title="Codex 安装命令" compact onClose={() => setPanel(null)}>
         <InstallCommand skillId={skillId} versionId={panel.version.id} />
       </Dialog>}
-      {panel?.kind === "export" && <Dialog title="另存到本机" compact onClose={() => setPanel(null)}>
+      {panel?.kind === "export" && <Dialog title="导出到指定目录" compact onClose={() => setPanel(null)}>
         <ExportLocation busy={busy} onSave={(dir) => void operation.save(skillId, panel.version.id, dir === undefined, dir)} />
         <OperationFeedback {...operation} />
       </Dialog>}

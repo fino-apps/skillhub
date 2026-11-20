@@ -131,7 +131,7 @@ export function OperationFeedback({ error, notice, savedPath, floating, dismiss 
     <div className="operation-feedback-content">
       <Failure error={error} />
       {notice && <p role="status">{notice}</p>}
-      {savedPath && <p role="status">已保存到 <code>{savedPath}</code></p>}
+      {savedPath && <p role="status">已导出到 <code>{savedPath}</code></p>}
       <span role="status" className={!copyStatus || copyStatus === "已复制" ? "sr-only" : "skillhub-hint"}>{copyStatus}</span>
     </div>
     {savedPath && <button type="button" className="skillhub-text-button" onClick={() => void copyPath()}>{copyStatus === "已复制" ? "已复制" : "复制路径"}</button>}
@@ -147,6 +147,6 @@ export function ExportLocation({ onSave, busy }: { onSave: (directory?: string) 
   }}>
     {canPickDirectory && <button type="button" className="secondary" disabled={busy} onClick={() => onSave()}>选择文件夹</button>}
     <label>{backendDirectoryLabel}<input name="directory" disabled={busy} required /></label>
-    <button type="submit" disabled={busy}>{busy ? "保存中…" : "保存到指定目录"}</button>
+    <button type="submit" disabled={busy}>{busy ? "导出中…" : "导出"}</button>
   </form>;
 }

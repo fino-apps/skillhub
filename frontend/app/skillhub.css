@@ -358,7 +358,7 @@ html[data-theme="dark"] .skill-short-purpose { font-weight: 400; }
 .skill-detail-shell { margin-top: 24px; }
 .skill-back { display: inline-block; margin-bottom: 10px; font-size: 13px; color: var(--muted); text-decoration: none; }
 .skill-back:hover { color: var(--accent); text-decoration: underline; }
-.skill-detail-heading { margin-block-end: 8px; }
+.skill-detail-heading { align-items: start; margin-block-end: 8px; }
 .skill-detail-heading .skill-identity { flex: 1 1 300px; min-width: 0; }
 .skill-detail-heading .skill-identity h1 { overflow-wrap: anywhere; }
 .skill-detail-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; font-size: 13px; color: var(--muted); }
@@ -367,13 +367,13 @@ html[data-theme="dark"] .skill-short-purpose { font-weight: 400; }
 .skill-detail-meta dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 12px; overflow-wrap: anywhere; }
 .skill-detail-meta dd { margin: 0; color: var(--text); }
 .skill-detail-purpose, .skill-markdown { max-inline-size: 960px; }
-.skill-detail-purpose { margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.skill-detail-purpose { margin: 6px 0 0; color: var(--muted); font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
 .skill-tabs { display: flex; gap: 6px; margin-block: 14px 12px; border-bottom: 1px solid var(--line); }
 .skillhub-shell .skill-tabs button { border: 0; border-radius: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); }
 .skillhub-shell .skill-tabs button:hover { color: var(--text); }
 .skillhub-shell .skill-tabs button[aria-pressed="true"] { border-bottom-color: var(--accent); color: var(--accent-strong); }
 .skill-content { scroll-margin-top: calc(var(--site-header-height) + 12px); }
-.skill-content-tools { display: flex; align-items: start; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 14px; color: var(--muted); font-size: 13px; }
+.skill-content-tools { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 14px; color: var(--muted); font-size: 13px; }
 .skill-content-tools:empty { display: none; }
 .skill-content-tools > details { min-width: 0; overflow-wrap: anywhere; }
 .skill-content-tools > details[open] { flex-basis: 100%; }
@@ -382,7 +382,8 @@ html[data-theme="dark"] .skill-short-purpose { font-weight: 400; }
 .skill-file-tree button[aria-pressed="true"] { text-decoration: underline; font-weight: 700; }
 .skill-file-heading { position: sticky; top: 0; z-index: 1; padding-block: 6px; background: var(--background); }
 .skill-file-heading button { min-height: 28px; }
-.skill-file-heading h2 { flex: 1; min-width: 0; margin: 0; font-size: 14px; font-weight: 500; overflow-wrap: anywhere; scroll-margin-top: 6px; }
+.skill-file-title { min-width: 0; margin: 0; color: var(--text); font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.skill-file-heading .skill-file-title { flex: 1; scroll-margin-top: 6px; }
 .skill-file-code, .skill-markdown pre {
   max-width: 100%;
   margin-inline: 0;
@@ -421,8 +422,8 @@ html[data-theme="dark"] .skill-short-purpose { font-weight: 400; }
   padding-block: 4px;
   border-bottom: 1px solid var(--line);
 }
-.version-history > li > button { justify-self: start; }
-.version-history button[aria-pressed="true"] { font-weight: 700; text-decoration: underline; }
+.version-content-link { justify-self: start; min-width: 0; color: var(--accent); overflow-wrap: anywhere; text-underline-offset: 2px; }
+.version-content-link[aria-current] { font-weight: 700; }
 .version-history time { font-variant-numeric: tabular-nums; }
 .version-notes-text { overflow-wrap: anywhere; color: var(--muted); }
 
@@ -445,7 +446,7 @@ html[data-theme="dark"] .skill-short-purpose { font-weight: 400; }
   .library-import-actions { gap: 4px; }
   .library-actions.library-import-actions > button { padding-inline: 8px; }
   .library-table thead th:nth-child(1) { width: 28px; }
-  .skill-detail-heading .skill-identity { flex-basis: 120px; }
+  .skill-detail-heading .skill-identity { flex-basis: 100%; }
   .skill-detail-heading .library-actions { gap: 6px; }
   .version-history > li { grid-template-columns: minmax(72px, 1fr) 61px minmax(0, 140px) 36px; gap: 4px; }
   .version-history .version-notes-text { grid-column: 1 / -1; grid-row: 2; }

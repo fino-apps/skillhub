@@ -448,6 +448,12 @@ GET /skillhub/v1/skills/{skill_id}/versions/{version_id}/archive
 | `skill_id` | `string` |  | UUID |
 | `version_id` | `string` |  | UUID |
 
+#### Query 参数
+
+| 参数名 | 参数类型 | 格式类型 | 是否必须 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `includeRootDirectory` | `boolean` |  | 否 |  |  |
+
 ### 返回值
 
 #### 返回对象

@@ -92,6 +92,38 @@ func (s *Library) VersionFile(ctx context.Context, skill, id, path string) (File
 	return FilePreview{}, repo.ErrNotFound
 }
 
+func (s *Library) DownloadArchive(ctx context.Context, skill, id string, includeRootDirectory bool) (string, []byte, error) {
+	row, err := s.Version(ctx, skill, id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	name := SafeName(row.Name)
+	data, err := s.ReadArchive(row)
+	if err != nil || !includeRootDirectory {
+		return name, data, err
+	}
+
+	archive, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		return "", nil, err
+	}
+
+	var output bytes.Buffer
+	writer := zip.NewWriter(&output)
+	for _, file := range archive.File {
+		entry := *file
+		entry.Name = name + "/" + file.Name
+		if err := writer.Copy(&entry); err != nil {
+			return "", nil, err
+		}
+	}
+	if err := writer.Close(); err != nil {
+		return "", nil, err
+	}
+	return name, output.Bytes(), nil
+}
+
 func (s *Library) Export(ctx context.Context, skill, version, base string, choose bool) (string, error) {
 	row, err := s.Version(ctx, skill, version)
 	if err != nil {

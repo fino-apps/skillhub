@@ -314,10 +314,10 @@ export default function HomePage() {
           <td className="library-row-actions"><div className="library-row-controls">
             {version && (version.available
               ? <button type="button" className="skillhub-text-button" disabled={!!operation.busy}
-                onClick={() => void operation.save(skill.id, version.id)}>{operation.busy === version.id ? "保存中…" : "保存到本机"}</button>
+                onClick={() => void operation.save(skill.id, version.id)}>{operation.busy === version.id ? "导出中…" : "导出到服务端"}</button>
               : <button type="button" className="skillhub-text-button" disabled={!!operation.busy} onClick={() => void operation.run(version.id, async () => {
                 await repairVersion({ skillId: skill.id, versionId: version.id });
-                operation.setNotice("版本已补齐，可以保存到本机。");
+                operation.setNotice("版本已补齐，可以导出。");
                 reload();
               })}>补齐版本</button>)}
           </div></td>

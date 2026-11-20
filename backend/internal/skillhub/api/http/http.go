@@ -1255,6 +1255,11 @@ func DecodeHTTPDownloadZipRequest(_ context.Context, r *http.Request) (interface
 		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the version_id path parameter")
 	}
 
+	err = unmarshalQueryParam(queryParams, &req.IncludeRootDirectory, "includeRootDirectory")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the includeRootDirectory query parameter")
+	}
+
 	return &req, nil
 }
 

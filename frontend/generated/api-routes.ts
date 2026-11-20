@@ -243,12 +243,13 @@ export const apiRoutes = {
     method: "GET",
     path: "/skillhub/v1/skills/{skill_id}/versions/{version_id}/archive",
     pathParams: ["skill_id", "version_id"],
-    queryParams: [],
+    queryParams: ["includeRootDirectory"],
     body: "",
     rawResponse: true,
     defaultPayload: {
       skillId: "",
       versionId: "",
+      includeRootDirectory: false,
     },
   },
   selectLocalDirectory: {

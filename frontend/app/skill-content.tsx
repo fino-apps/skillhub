@@ -136,6 +136,7 @@ export default function SkillContent({ skillId, skillName, versionId, available,
   const markdown = path.toLowerCase().endsWith(".md");
   return <section className="skill-content" ref={reader} tabIndex={-1} aria-label="文件预览">
     <div className="skill-content-tools">
+      {path === "SKILL.md" && <h2 className="skill-file-title"><code>SKILL.md</code></h2>}
       {files.length > 1 && <details className="skill-disclosure">
         <summary>浏览文件 <span className="skillhub-hint">{files.length}</span></summary>
         <FileTree tree={tree} selected={path} onSelect={open} />
@@ -145,12 +146,12 @@ export default function SkillContent({ skillId, skillName, versionId, available,
     </div>
     {path !== "SKILL.md" && <div className="library-actions skill-file-heading">
       <button type="button" className="skillhub-text-button" onClick={back}>‹ 返回</button>
-      <h2 ref={previewHeading} tabIndex={-1}><code>{path}</code></h2>
+      <h2 className="skill-file-title" ref={previewHeading} tabIndex={-1}><code>{path}</code></h2>
     </div>}
     <Failure error={error} />
     {!preview && !error && <p role="status">读取中…</p>}
     {preview?.binary && <p>二进制文件 · {preview.size ?? 0} 字节</p>}
-    {preview?.tooLarge && <p>文件过大，可保存版本到本机查看。</p>}
+    {preview?.tooLarge && <p>文件过大，可下载 ZIP 后查看。</p>}
     {preview && !preview.binary && !preview.tooLarge && (markdown
       ? <article className="skill-markdown">
         <ReactMarkdown skipHtml disallowedElements={["img"]} remarkPlugins={[remarkGfm]} components={{

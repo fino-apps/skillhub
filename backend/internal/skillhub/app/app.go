@@ -344,7 +344,7 @@ func (s skillhubServer) GetVersionFile(ctx context.Context, in *pb.GetVersionFil
 	}, nil
 }
 
-// DownloadZip implements Interface. fino:req-fields 1=SkillId,2=VersionId
+// DownloadZip implements Interface. fino:req-fields 1=SkillId,2=VersionId,3=IncludeRootDirectory
 func (s skillhubServer) DownloadZip(ctx context.Context, in *pb.DownloadZipRequest) (*pb.DownloadZipResponse, error) {
 	logs.Ctx(ctx).Debugw("DownloadZip")
 	if in == nil {
@@ -352,12 +352,7 @@ func (s skillhubServer) DownloadZip(ctx context.Context, in *pb.DownloadZipReque
 		return nil, errcode.NewSkillhubRequestMissing()
 	}
 
-	row, err := s.library.Version(ctx, in.GetSkillId(), in.GetVersionId())
-	if err != nil {
-		return nil, rpcError(ctx, "DownloadZip", err)
-	}
-
-	data, err := s.library.ReadArchive(row)
+	name, data, err := s.library.DownloadArchive(ctx, in.GetSkillId(), in.GetVersionId(), in.GetIncludeRootDirectory())
 	if err != nil {
 		return nil, rpcError(ctx, "DownloadZip", err)
 	}
@@ -366,7 +361,7 @@ func (s skillhubServer) DownloadZip(ctx context.Context, in *pb.DownloadZipReque
 
 	return &pb.DownloadZipResponse{
 		Archive:  &httpbody.HttpBody{Data: data, ContentType: "application/zip"},
-		Filename: service.SafeName(row.Name) + ".zip",
+		Filename: name + ".zip",
 	}, nil
 }
 
