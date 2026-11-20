@@ -44,6 +44,8 @@ const (
 	SkillhubService_CommitUpload_FullMethodName             = "/skillhub.v1.SkillhubService/CommitUpload"
 	SkillhubService_CompareSkills_FullMethodName            = "/skillhub.v1.SkillhubService/CompareSkills"
 	SkillhubService_GetInstallCommand_FullMethodName        = "/skillhub.v1.SkillhubService/GetInstallCommand"
+	SkillhubService_ExportLibrary_FullMethodName            = "/skillhub.v1.SkillhubService/ExportLibrary"
+	SkillhubService_ImportLibrary_FullMethodName            = "/skillhub.v1.SkillhubService/ImportLibrary"
 )
 
 // SkillhubServiceClient is the client API for SkillhubService service.
@@ -74,6 +76,8 @@ type SkillhubServiceClient interface {
 	CommitUpload(ctx context.Context, in *CommitUploadRequest, opts ...grpc.CallOption) (*ImportSkillResponse, error)
 	CompareSkills(ctx context.Context, in *CompareSkillsRequest, opts ...grpc.CallOption) (*CompareSkillsResponse, error)
 	GetInstallCommand(ctx context.Context, in *GetInstallCommandRequest, opts ...grpc.CallOption) (*GetInstallCommandResponse, error)
+	ExportLibrary(ctx context.Context, in *ExportLibraryRequest, opts ...grpc.CallOption) (*ExportLibraryResponse, error)
+	ImportLibrary(ctx context.Context, in *ImportLibraryRequest, opts ...grpc.CallOption) (*ImportLibraryResponse, error)
 }
 
 type skillhubServiceClient struct {
@@ -300,6 +304,24 @@ func (c *skillhubServiceClient) GetInstallCommand(ctx context.Context, in *GetIn
 	return out, nil
 }
 
+func (c *skillhubServiceClient) ExportLibrary(ctx context.Context, in *ExportLibraryRequest, opts ...grpc.CallOption) (*ExportLibraryResponse, error) {
+	out := new(ExportLibraryResponse)
+	err := c.cc.Invoke(ctx, SkillhubService_ExportLibrary_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *skillhubServiceClient) ImportLibrary(ctx context.Context, in *ImportLibraryRequest, opts ...grpc.CallOption) (*ImportLibraryResponse, error) {
+	out := new(ImportLibraryResponse)
+	err := c.cc.Invoke(ctx, SkillhubService_ImportLibrary_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SkillhubServiceServer is the server API for SkillhubService service.
 // All implementations must embed UnimplementedSkillhubServiceServer
 // for forward compatibility
@@ -328,6 +350,8 @@ type SkillhubServiceServer interface {
 	CommitUpload(context.Context, *CommitUploadRequest) (*ImportSkillResponse, error)
 	CompareSkills(context.Context, *CompareSkillsRequest) (*CompareSkillsResponse, error)
 	GetInstallCommand(context.Context, *GetInstallCommandRequest) (*GetInstallCommandResponse, error)
+	ExportLibrary(context.Context, *ExportLibraryRequest) (*ExportLibraryResponse, error)
+	ImportLibrary(context.Context, *ImportLibraryRequest) (*ImportLibraryResponse, error)
 	mustEmbedUnimplementedSkillhubServiceServer()
 }
 
@@ -406,6 +430,12 @@ func (UnimplementedSkillhubServiceServer) CompareSkills(context.Context, *Compar
 }
 func (UnimplementedSkillhubServiceServer) GetInstallCommand(context.Context, *GetInstallCommandRequest) (*GetInstallCommandResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetInstallCommand not implemented")
+}
+func (UnimplementedSkillhubServiceServer) ExportLibrary(context.Context, *ExportLibraryRequest) (*ExportLibraryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExportLibrary not implemented")
+}
+func (UnimplementedSkillhubServiceServer) ImportLibrary(context.Context, *ImportLibraryRequest) (*ImportLibraryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ImportLibrary not implemented")
 }
 func (UnimplementedSkillhubServiceServer) mustEmbedUnimplementedSkillhubServiceServer() {}
 
@@ -852,6 +882,42 @@ func _SkillhubService_GetInstallCommand_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SkillhubService_ExportLibrary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExportLibraryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SkillhubServiceServer).ExportLibrary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SkillhubService_ExportLibrary_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SkillhubServiceServer).ExportLibrary(ctx, req.(*ExportLibraryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SkillhubService_ImportLibrary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImportLibraryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SkillhubServiceServer).ImportLibrary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SkillhubService_ImportLibrary_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SkillhubServiceServer).ImportLibrary(ctx, req.(*ImportLibraryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SkillhubService_ServiceDesc is the grpc.ServiceDesc for SkillhubService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -954,6 +1020,14 @@ var SkillhubService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetInstallCommand",
 			Handler:    _SkillhubService_GetInstallCommand_Handler,
+		},
+		{
+			MethodName: "ExportLibrary",
+			Handler:    _SkillhubService_ExportLibrary_Handler,
+		},
+		{
+			MethodName: "ImportLibrary",
+			Handler:    _SkillhubService_ImportLibrary_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -301,3 +301,11 @@ export function compareSkills<TResponse = unknown>(payload: ApiRequest = {}, opt
 export function getInstallCommand<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
   return requestApi<TResponse>(apiRoutes.getInstallCommand, payload, options);
 }
+
+export function exportLibrary(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<Blob> {
+  return requestApi<Blob>(apiRoutes.exportLibrary, payload, options);
+}
+
+export function importLibrary<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.importLibrary, payload, options);
+}

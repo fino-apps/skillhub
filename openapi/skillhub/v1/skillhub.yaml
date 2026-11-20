@@ -77,6 +77,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/skillhub.v1.GetInstallCommandResponse'
+  /skillhub/v1/library/backup:
+    get:
+      operationId: ExportLibrary
+      responses:
+        "200":
+          headers:
+            Content-Disposition:
+              description: Attachment with the suggested filename.
+              schema:
+                type: string
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+    post:
+      operationId: ImportLibrary
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+                - file
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.ImportLibraryResponse'
   /skillhub/v1/projects:scan:
     post:
       operationId: ScanProject
@@ -650,6 +687,17 @@ components:
           $ref: '#/components/schemas/google.api.HttpBody'
         filename:
           type: string
+    skillhub.v1.ExportLibraryRequest:
+      title: skillhub.v1.ExportLibraryRequest
+      type: object
+    skillhub.v1.ExportLibraryResponse:
+      title: skillhub.v1.ExportLibraryResponse
+      type: object
+      properties:
+        archive:
+          $ref: '#/components/schemas/google.api.HttpBody'
+        filename:
+          type: string
     skillhub.v1.ExportVersionToDirectoryRequest:
       title: skillhub.v1.ExportVersionToDirectoryRequest
       type: object
@@ -810,6 +858,23 @@ components:
           type: string
         path:
           type: string
+    skillhub.v1.ImportLibraryRequest:
+      title: skillhub.v1.ImportLibraryRequest
+      type: object
+      properties:
+        file:
+          type: string
+          format: byte
+    skillhub.v1.ImportLibraryResponse:
+      title: skillhub.v1.ImportLibraryResponse
+      type: object
+      properties:
+        addedCount:
+          type: integer
+          format: int32
+        existingCount:
+          type: integer
+          format: int32
     skillhub.v1.ImportSkillRequest:
       title: skillhub.v1.ImportSkillRequest
       type: object

@@ -111,6 +111,19 @@ service SkillhubService {
   rpc GetInstallCommand(GetInstallCommandRequest) returns (GetInstallCommandResponse) {
     option (google.api.http) = {post: "/skillhub/v1/install-commands:generate" body: "*"};
   }
+
+  rpc ExportLibrary(ExportLibraryRequest) returns (ExportLibraryResponse) {
+    option (google.api.http) = {
+      get: "/skillhub/v1/library/backup"
+      response_body: "archive"
+    };
+    option (fino.http) = {attachment_filename_field: "filename"};
+  }
+
+  rpc ImportLibrary(ImportLibraryRequest) returns (ImportLibraryResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/library/backup" body: "file"};
+    option (fino.http) = {multipart: {max_file_bytes: 268435456}};
+  }
 }
 
 message ListSkillsRequest {
@@ -432,4 +445,20 @@ message CommitUploadRequest {
   repeated string skill_paths = 2 [(fino.validate) = {required: true max: 100}];
   string target_skill_id = 3 [(fino.validate) = {omitempty: true uuid: true}];
   bool make_default = 4;
+}
+
+message ExportLibraryRequest {}
+
+message ExportLibraryResponse {
+  google.api.HttpBody archive = 1;
+  string filename = 2;
+}
+
+message ImportLibraryRequest {
+  bytes file = 1;
+}
+
+message ImportLibraryResponse {
+  int32 added_count = 1;
+  int32 existing_count = 2;
 }

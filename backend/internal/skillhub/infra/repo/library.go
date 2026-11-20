@@ -207,6 +207,35 @@ func (tx libraryTx) MatchingVersion(skill, commit, digest string) (domain.SkillV
 	return domain.SkillVersionSnapshot(row), notFound(err)
 }
 
+func (tx libraryTx) BackupData() (port.LibraryData, error) {
+	var data port.LibraryData
+	var skills []model.Skill
+	var tags []model.SkillTag
+	var versions []model.SkillVersion
+	if err := tx.db.Order("id").Find(&skills).Error; err != nil {
+		return data, err
+	}
+	if err := tx.db.Order("id").Find(&tags).Error; err != nil {
+		return data, err
+	}
+	if err := tx.db.Order("id").Find(&versions).Error; err != nil {
+		return data, err
+	}
+	for _, skill := range skills {
+		data.Skills = append(data.Skills, domain.SkillSnapshot(skill))
+	}
+	for _, tag := range tags {
+		data.Tags = append(data.Tags, domain.SkillTagSnapshot(tag))
+	}
+	data.Versions = versionSnapshots(versions)
+	return data, nil
+}
+
+func (tx libraryTx) CreateTag(tag domain.SkillTagSnapshot) error {
+	row := model.SkillTag(tag)
+	return tx.db.Create(&row).Error
+}
+
 func (tx libraryTx) CreateSkill(skill domain.SkillSnapshot) error {
 	row := model.Skill(skill)
 	return tx.db.Create(&row).Error

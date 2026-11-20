@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "rea
 import { Link, useSearchParams } from "react-router-dom";
 import { batchDeleteSkills, listFacets, listSkills, repairVersion } from "@/generated/api-client";
 import GitHubIntake from "./github-intake";
+import LibraryBackup from "./library-backup";
 import LocalIntake, { ZipIntake } from "./local-intake";
 import { BatchMetadata } from "./skill-metadata";
 import { libraryNavigation, message, sourceNames, sourceURL, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
@@ -13,6 +14,7 @@ const VersionPanel = lazy(() => import("./version-panel"));
 
 type Panel =
   | { kind: "github" }
+  | { kind: "backup" }
   | { kind: "batch"; skills: Skill[] }
   | { kind: "file"; zip?: boolean }
   | { kind: "new-version"; skill: Skill; path: string };
@@ -238,6 +240,7 @@ export default function HomePage() {
       <div className="library-actions library-import-actions">
         <button type="button" onClick={() => setPanel({ kind: "file" })}>导入文件</button>
         <button type="button" className="secondary" onClick={() => setPanel({ kind: "github" })}>导入 GitHub</button>
+        <button type="button" className="secondary" onClick={() => setPanel({ kind: "backup" })}>备份与恢复</button>
       </div>
     </LibraryToolbar>
     <div className="library-overlays">
@@ -322,6 +325,14 @@ export default function HomePage() {
     </Dialog>}
     {panel?.kind === "github" && <Dialog title="导入 GitHub" compact onClose={() => setPanel(null)}>
       <GitHubIntake categories={facets.categories ?? []} onComplete={imported} />
+    </Dialog>}
+    {panel?.kind === "backup" && <Dialog title="备份与恢复" compact onClose={() => setPanel(null)}>
+      <LibraryBackup onImported={(result) => {
+        setPanel((current) => current?.kind === "backup" ? null : current);
+        libraryNavigation.revision += 1;
+        reload();
+        operation.setNotice(`已导入 ${result.addedCount ?? 0} 项，跳过已有 ${result.existingCount ?? 0} 项。`);
+      }} />
     </Dialog>}
     {panel?.kind === "new-version" && <Dialog title="保存新版本" className="skill-workflow-dialog" onClose={() => setPanel(null)}>
       <Suspense fallback={<p>加载中…</p>}><VersionPanel skill={panel.skill} from="folder" path={panel.path} onSaved={editComplete} /></Suspense>

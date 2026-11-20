@@ -29,7 +29,7 @@ docker compose --env-file deploy/compose/.env \
 | `SERVER_DEBUG_PORT` | `31103`，Fino 本机调试端口，提供 `/readyz` 和 `/healthz` |
 | `SKILLHUB_EXPORT_DIR` | 默认使用后端工作目录下的 `skillhub-data/exports` |
 
-本地数据默认保存在 `backend/skillhub-data`。备份时先停止后端，再复制 Docker 卷或本地数据目录。自定义 `db.dsn` 或 `SKILLHUB_SNAPSHOT_DIR` 后，备份时一并复制对应位置。版本快照以 ZIP 保存在快照目录。缺少快照的 GitHub 版本可按原 commit 重新拉取。
+本地数据默认保存在 `backend/skillhub-data`。完整部署目录可在停止后端后复制 Docker 卷或本地数据目录。自定义 `db.dsn` 或 `SKILLHUB_SNAPSHOT_DIR` 后，复制时一并保存对应位置。版本快照以 ZIP 保存在快照目录。缺少快照的 GitHub 版本可按原 commit 重新拉取。
 
 ## 日常使用
 
@@ -38,8 +38,11 @@ docker compose --env-file deploy/compose/.env \
 - **版本和导出**。首次收录设为默认，后续保存可按需设为默认。首页导出默认版本，详情导出正在查看的版本。ZIP 用于跨机器交换。历史版本可删除，删除默认版本前先改选。
 - **比对**。在 Skill 详情页点击「比对」。默认以当前 Skill 的默认版本为基准，可选择该 Skill 的其他版本、库里的另一个 Skill 或本地目录。
 - **ZIP 导入和下载**。在首页点击「导入文件」，再选择「改用 ZIP 文件」。上传支持最多 64 MiB 的单个 ZIP，预览后可选择要导入的条目。扫描结果支持分批收录，每批最多 100 项。ZIP 上传暂存保留 24 小时，后续上传或确认导入时清理过期目录，过期后需要重新上传。上传、确认导入和附件下载的接口都在 SkillHub 的 proto 中声明。
+- **数据备份与恢复**。在技能库首页打开「备份与恢复」。导出 ZIP 包含整库的 Skill 元数据、标签、历史版本、默认版本选择和已保存的快照，最大 256 MiB。已有缺失快照的版本会保留版本记录。导入时跳过 ID 或收录来源已存在的 Skill，其余条目一并恢复。跨机器恢复会保留原始本机来源路径。
 - **安装命令**。详情页生成的命令会从当前 SkillHub 地址下载 ZIP，在目标机器上需要 `curl` 和 `unzip`。直接调用安装命令 API 时，运行前设置 `SKILLHUB_URL` 为可访问的服务地址，例如 `http://127.0.0.1:8082`。
 - **整理**。按名称、用途、来源、分类和标签查找。多选可批量修改分类和标签，或确认后删除所选 Skill 及其已保存版本。
+
+备份接口为 `GET /skillhub/v1/library/backup`。恢复使用同一路径的 `POST`，以 multipart 的 `file` 字段上传导出的 ZIP，返回新增和已有的 Skill 数量。
 
 批量删除接口为 `POST /skillhub/v1/skills:batchDelete`，请求体格式为 `{"skillIds":["01900000-0000-7000-8000-000000000001"]}`。每次提交 1–100 个 Skill ID，重复 ID 只处理一次，任一 ID 不存在时整批回滚。
 

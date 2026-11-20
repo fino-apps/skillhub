@@ -33,7 +33,15 @@ type Library interface {
 	Facets(context.Context) (Facets, error)
 }
 
+type LibraryData struct {
+	Skills   []model.SkillSnapshot
+	Tags     []model.SkillTagSnapshot
+	Versions []model.SkillVersionSnapshot
+}
+
 type LibraryTx interface {
+	BackupData() (LibraryData, error)
+	CreateTag(model.SkillTagSnapshot) error
 	Skill(id string) (model.SkillSnapshot, error)
 	SkillBySource(key string) (model.SkillSnapshot, error)
 	Version(skill, id string) (model.SkillVersionSnapshot, error)

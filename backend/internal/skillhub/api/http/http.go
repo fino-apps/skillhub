@@ -563,6 +563,49 @@ func RegisterHttpHandler(router *mux.Router, endpoints endpoint.Endpoints, cfg *
 			),
 		)
 	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "ExportLibrary",
+			BindingName: "ExportLibrary",
+			Method:      "GET",
+			Path:        "/skillhub/v1/library/backup",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.ExportLibraryEndpoint,
+					DecodeHTTPExportLibraryRequest,
+					func(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+						r := response.(*pb.ExportLibraryResponse)
+						return writeRawHTTPBody(w, r.GetArchive(), r.GetFilename())
+					},
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "ImportLibrary",
+			BindingName: "ImportLibrary",
+			Method:      "POST",
+			Path:        "/skillhub/v1/library/backup",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.ImportLibraryEndpoint,
+					DecodeHTTPImportLibraryRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
 }
 
 // newErrorEncoder adapts the configured HTTP error encoder to the transport callback.
@@ -1373,6 +1416,40 @@ func DecodeHTTPGetInstallCommandRequest(_ context.Context, r *http.Request) (int
 			)
 		}
 	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	return &req, nil
+}
+
+// DecodeHTTPExportLibraryRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded exportlibrary request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPExportLibraryRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.ExportLibraryRequest
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+	return &req, nil
+}
+
+// DecodeHTTPImportLibraryRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded importlibrary request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPImportLibraryRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.ImportLibraryRequest
+	file, err := readMultipartHTTPFile(r, "file", 268435456)
+	if err != nil {
+		return nil, err
+	}
+	req.File = file
 
 	pathParams := mux.Vars(r)
 	_ = pathParams

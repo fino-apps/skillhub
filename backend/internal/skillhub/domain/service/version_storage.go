@@ -145,6 +145,10 @@ func (s *Library) restoreSnapshot(version model.SkillVersionSnapshot, data []byt
 	if version.ContentDigest != "" && version.ContentDigest != digest {
 		return ErrConflict
 	}
+	return s.writeSnapshot(string(version.ID), data)
+}
+
+func (s *Library) writeSnapshot(id string, data []byte) error {
 	temporary, err := os.CreateTemp(s.snapshots, ".restore-")
 	if err != nil {
 		return err
@@ -154,7 +158,7 @@ func (s *Library) restoreSnapshot(version model.SkillVersionSnapshot, data []byt
 	if err = errors.Join(err, temporary.Close()); err != nil {
 		return err
 	}
-	return os.Rename(temporary.Name(), s.snapshotPath(string(version.ID)))
+	return os.Rename(temporary.Name(), s.snapshotPath(id))
 }
 
 func (s *Library) Repair(ctx context.Context, skillID, versionID string) error {

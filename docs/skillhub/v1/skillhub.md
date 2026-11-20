@@ -701,6 +701,52 @@ POST /skillhub/v1/install-commands:generate
 | `command` | `string` |  | 否 |  |  |
 
 
+## Export Library
+
+### 请求路径
+
+```http
+GET /skillhub/v1/library/backup
+```
+
+### 请求参数
+
+### 返回值
+
+#### 返回对象
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `archive` | `google.api.HttpBody` |  | 否 |  |  |
+| `filename` | `string` |  | 否 |  |  |
+
+
+## Import Library
+
+### 请求路径
+
+```http
+POST /skillhub/v1/library/backup
+```
+
+### 请求参数
+
+#### Body 请求对象
+
+| type | description |
+|---|---|
+| `string` |  |
+
+### 返回值
+
+#### 返回对象
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `addedCount` | `integer` | `Int32` | 否 |  |  |
+| `existingCount` | `integer` | `Int32` | 否 |  |  |
+
+
 ## 数据模型
 
 ### `skillhub.v1.SkillView`

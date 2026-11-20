@@ -393,6 +393,32 @@ export const apiRoutes = {
       global: false,
     },
   },
+  exportLibrary: {
+    service: "SkillhubService",
+    rpc: "ExportLibrary",
+    binding: "ExportLibrary",
+    method: "GET",
+    path: "/skillhub/v1/library/backup",
+    pathParams: [],
+    queryParams: [],
+    body: "",
+    rawResponse: true,
+    defaultPayload: {},
+  },
+  importLibrary: {
+    service: "SkillhubService",
+    rpc: "ImportLibrary",
+    binding: "ImportLibrary",
+    method: "POST",
+    path: "/skillhub/v1/library/backup",
+    pathParams: [],
+    queryParams: [],
+    body: "file",
+    requestFormat: "multipart",
+    defaultPayload: {
+      file: "",
+    },
+  },
 } as const satisfies Record<string, ApiRoute>;
 
 export type ApiRouteName = keyof typeof apiRoutes;

@@ -572,3 +572,45 @@ func (s skillhubServer) BatchDeleteSkills(ctx context.Context, in *pb.BatchDelet
 	logs.Ctx(ctx).Infow("BatchDeleteSkills succeeded", "requested_count", len(in.GetSkillIds()))
 	return &core.Null{}, nil
 }
+
+// ExportLibrary implements Interface. fino:req-fields
+func (s skillhubServer) ExportLibrary(ctx context.Context, in *pb.ExportLibraryRequest) (*pb.ExportLibraryResponse, error) {
+	logs.Ctx(ctx).Debugw("ExportLibrary")
+	if in == nil {
+		logs.Ctx(ctx).Warnw("invalid export_library request", "reason", "request_missing")
+		return nil, errcode.NewSkillhubRequestMissing()
+	}
+
+	data, err := s.library.ExportBackup(ctx)
+	if err != nil {
+		return nil, rpcError(ctx, "ExportLibrary", err)
+	}
+
+	logs.Ctx(ctx).Infow("ExportLibrary succeeded")
+
+	return &pb.ExportLibraryResponse{
+		Archive:  &httpbody.HttpBody{Data: data, ContentType: "application/zip"},
+		Filename: "skillhub-backup.zip",
+	}, nil
+}
+
+// ImportLibrary implements Interface. fino:req-fields 1=File
+func (s skillhubServer) ImportLibrary(ctx context.Context, in *pb.ImportLibraryRequest) (*pb.ImportLibraryResponse, error) {
+	logs.Ctx(ctx).Debugw("ImportLibrary")
+	if in == nil {
+		logs.Ctx(ctx).Warnw("invalid import_library request", "reason", "request_missing")
+		return nil, errcode.NewSkillhubRequestMissing()
+	}
+
+	result, err := s.library.ImportBackup(ctx, in.GetFile())
+	if err != nil {
+		return nil, rpcError(ctx, "ImportLibrary", err)
+	}
+
+	logs.Ctx(ctx).Infow("ImportLibrary succeeded", "added_count", result.Added, "existing_count", result.Existing)
+
+	return &pb.ImportLibraryResponse{
+		AddedCount:    result.Added,
+		ExistingCount: result.Existing,
+	}, nil
+}

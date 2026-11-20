@@ -194,6 +194,18 @@ func MakeGRPCServer(endpoints endpoint.Endpoints) pb.SkillhubServiceServer {
 			EncodeGRPCGetInstallCommandResponse,
 			serverOptions...,
 		),
+		exportLibrary: grpctransport.NewServer(
+			endpoints.ExportLibraryEndpoint,
+			DecodeGRPCExportLibraryRequest,
+			EncodeGRPCExportLibraryResponse,
+			serverOptions...,
+		),
+		importLibrary: grpctransport.NewServer(
+			endpoints.ImportLibraryEndpoint,
+			DecodeGRPCImportLibraryRequest,
+			EncodeGRPCImportLibraryResponse,
+			serverOptions...,
+		),
 	}
 }
 
@@ -225,6 +237,8 @@ type grpcServer struct {
 	commitUpload             grpctransport.Handler
 	compareSkills            grpctransport.Handler
 	getInstallCommand        grpctransport.Handler
+	exportLibrary            grpctransport.Handler
+	importLibrary            grpctransport.Handler
 }
 
 // Methods for grpcServer to implement SkillhubServiceServer interface
@@ -421,6 +435,22 @@ func (s *grpcServer) GetInstallCommand(ctx context.Context, req *pb.GetInstallCo
 	return rep.(*pb.GetInstallCommandResponse), nil
 }
 
+func (s *grpcServer) ExportLibrary(ctx context.Context, req *pb.ExportLibraryRequest) (*pb.ExportLibraryResponse, error) {
+	_, rep, err := s.exportLibrary.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.ExportLibraryResponse), nil
+}
+
+func (s *grpcServer) ImportLibrary(ctx context.Context, req *pb.ImportLibraryRequest) (*pb.ImportLibraryResponse, error) {
+	_, rep, err := s.importLibrary.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.ImportLibraryResponse), nil
+}
+
 // Server Decode
 
 // DecodeGRPCListSkillsRequest is a transport/grpc.DecodeRequestFunc that converts a
@@ -591,6 +621,20 @@ func DecodeGRPCGetInstallCommandRequest(_ context.Context, grpcReq interface{}) 
 	return req, nil
 }
 
+// DecodeGRPCExportLibraryRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC ExportLibrary request to a user-domain ExportLibrary request. Primarily useful in a server.
+func DecodeGRPCExportLibraryRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.ExportLibraryRequest)
+	return req, nil
+}
+
+// DecodeGRPCImportLibraryRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC ImportLibrary request to a user-domain ImportLibrary request. Primarily useful in a server.
+func DecodeGRPCImportLibraryRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.ImportLibraryRequest)
+	return req, nil
+}
+
 // Server Encode
 
 // EncodeGRPCListSkillsResponse is a transport/grpc.EncodeResponseFunc that converts a
@@ -758,6 +802,20 @@ func EncodeGRPCCompareSkillsResponse(_ context.Context, response interface{}) (i
 // user-domain GetInstallCommand response to a gRPC GetInstallCommand reply. Primarily useful in a server.
 func EncodeGRPCGetInstallCommandResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(*pb.GetInstallCommandResponse)
+	return resp, nil
+}
+
+// EncodeGRPCExportLibraryResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain ExportLibrary response to a gRPC ExportLibrary reply. Primarily useful in a server.
+func EncodeGRPCExportLibraryResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.ExportLibraryResponse)
+	return resp, nil
+}
+
+// EncodeGRPCImportLibraryResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain ImportLibrary response to a gRPC ImportLibrary reply. Primarily useful in a server.
+func EncodeGRPCImportLibraryResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.ImportLibraryResponse)
 	return resp, nil
 }
 

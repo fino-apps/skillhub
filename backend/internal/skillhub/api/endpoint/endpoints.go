@@ -58,6 +58,8 @@ type Endpoints struct {
 	CommitUploadEndpoint             endpoint.Endpoint
 	CompareSkillsEndpoint            endpoint.Endpoint
 	GetInstallCommandEndpoint        endpoint.Endpoint
+	ExportLibraryEndpoint            endpoint.Endpoint
+	ImportLibraryEndpoint            endpoint.Endpoint
 }
 
 // NewEndpoints adapts each service method to an endpoint.
@@ -87,6 +89,8 @@ func NewEndpoints(service pb.SkillhubServiceServer) Endpoints {
 		CommitUploadEndpoint:             MakeCommitUploadEndpoint(service),
 		CompareSkillsEndpoint:            MakeCompareSkillsEndpoint(service),
 		GetInstallCommandEndpoint:        MakeGetInstallCommandEndpoint(service),
+		ExportLibraryEndpoint:            MakeExportLibraryEndpoint(service),
+		ImportLibraryEndpoint:            MakeImportLibraryEndpoint(service),
 	}
 }
 
@@ -500,6 +504,40 @@ func MakeGetInstallCommandEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint
 	}
 }
 
+func MakeExportLibraryEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint ExportLibrary")
+		}
+		req, ok := request.(*pb.ExportLibraryRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected ExportLibrary request type %T", request)
+		}
+		v, err := s.ExportLibrary(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeImportLibraryEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint ImportLibrary")
+		}
+		req, ok := request.(*pb.ImportLibraryRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected ImportLibrary request type %T", request)
+		}
+		v, err := s.ImportLibrary(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
 // WrapAll applies middleware to every endpoint.
 func (e *Endpoints) WrapAll(middleware endpoint.Middleware) {
 	if e == nil || middleware == nil {
@@ -529,6 +567,8 @@ func (e *Endpoints) WrapAll(middleware endpoint.Middleware) {
 	e.CommitUploadEndpoint = middleware(e.CommitUploadEndpoint)
 	e.CompareSkillsEndpoint = middleware(e.CompareSkillsEndpoint)
 	e.GetInstallCommandEndpoint = middleware(e.GetInstallCommandEndpoint)
+	e.ExportLibraryEndpoint = middleware(e.ExportLibraryEndpoint)
+	e.ImportLibraryEndpoint = middleware(e.ImportLibraryEndpoint)
 }
 
 // LabeledMiddleware receives the endpoint name.
@@ -563,4 +603,6 @@ func (e *Endpoints) WrapAllLabeled(middleware LabeledMiddleware) {
 	e.CommitUploadEndpoint = middleware("CommitUpload", e.CommitUploadEndpoint)
 	e.CompareSkillsEndpoint = middleware("CompareSkills", e.CompareSkillsEndpoint)
 	e.GetInstallCommandEndpoint = middleware("GetInstallCommand", e.GetInstallCommandEndpoint)
+	e.ExportLibraryEndpoint = middleware("ExportLibrary", e.ExportLibraryEndpoint)
+	e.ImportLibraryEndpoint = middleware("ImportLibrary", e.ImportLibraryEndpoint)
 }
