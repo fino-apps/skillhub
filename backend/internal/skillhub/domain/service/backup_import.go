@@ -1,7 +1,6 @@
 package service
 
 import (
-	"archive/zip"
 	"context"
 	"errors"
 	"os"
@@ -110,12 +109,12 @@ func matchSkillKeys(skill model.SkillSnapshot, versions []model.SkillVersionSnap
 }
 
 func (s *Library) PreviewBackupImport(ctx context.Context, data []byte) (BackupPreview, error) {
-	manifest, files, err := parseBackup(data)
+	backup, err := parseBackup(data)
 	if err != nil {
 		return BackupPreview{}, err
 	}
 	s.writes.Lock()
-	result, err := s.previewBackup(ctx, manifest, files)
+	result, err := s.previewBackup(ctx, backup)
 	s.writes.Unlock()
 	if err != nil {
 		return BackupPreview{}, err
@@ -138,7 +137,7 @@ func (s *Library) PreviewBackupImport(ctx context.Context, data []byte) (BackupP
 	return result, nil
 }
 
-func (s *Library) previewBackup(ctx context.Context, manifest backupManifest, files map[string]*zip.File) (BackupPreview, error) {
+func (s *Library) previewBackup(ctx context.Context, backup backupArchive) (BackupPreview, error) {
 	var current repo.LibraryData
 	if err := s.store.Transaction(ctx, func(tx repo.LibraryTx) error {
 		var err error
@@ -148,8 +147,8 @@ func (s *Library) previewBackup(ctx context.Context, manifest backupManifest, fi
 		return BackupPreview{}, err
 	}
 	var result BackupPreview
-	currentVersions, incomingVersions := versionsBySkill(current.Versions), versionsBySkill(manifest.Versions)
-	currentAliases, incomingAliases := sourceAliasesBySkill(current.Aliases), sourceAliasesBySkill(manifest.Aliases)
+	currentVersions, incomingVersions := versionsBySkill(current.Versions), versionsBySkill(backup.Versions)
+	currentAliases, incomingAliases := sourceAliasesBySkill(current.Aliases), sourceAliasesBySkill(backup.Aliases)
 	defaults := make(map[string]string, len(current.Skills))
 	currentUsable := s.snapshotChecks()
 	index := make(map[string]map[string]bool)
@@ -165,10 +164,7 @@ func (s *Library) previewBackup(ctx context.Context, manifest backupManifest, fi
 			index[key][id] = true
 		}
 	}
-	incomingAvailable := func(row model.SkillVersionSnapshot) bool {
-		return files[backupSnapshotName(row.ID)] != nil
-	}
-	for _, skill := range manifest.Skills {
+	for _, skill := range backup.Skills {
 		versions := incomingVersions[string(skill.ID)]
 		item := BackupImportItem{Skill: mergeEntry(skill, versions)}
 		all, exact := make(map[string]bool), make(map[string]bool)
@@ -191,12 +187,38 @@ func (s *Library) previewBackup(ctx context.Context, manifest backupManifest, fi
 		}
 		sort.Strings(candidates)
 		for _, id := range candidates {
-			plan := planVersionMerge(versions, currentVersions[id], defaults[id], incomingAvailable, currentUsable)
+			plan := planVersionMerge(versions, currentVersions[id], defaults[id], backup.hasSnapshot, currentUsable)
 			item.Candidates = append(item.Candidates, BackupMergeCandidate{TargetID: id, Summary: plan.summary})
 		}
 		result.Items = append(result.Items, item)
 	}
 	return result, nil
+}
+
+// openStagedBackup keeps the file open because ZIP entries read from it on demand.
+func (s *Library) openStagedBackup(uploadID string) (backupArchive, *os.File, error) {
+	file, err := os.Open(filepath.Join(s.uploads, uploadID, stagedBackupName))
+	if errors.Is(err, os.ErrNotExist) {
+		return backupArchive{}, nil, repo.ErrNotFound
+	}
+	if err != nil {
+		return backupArchive{}, nil, err
+	}
+	info, err := file.Stat()
+	if err != nil {
+		file.Close()
+		return backupArchive{}, nil, err
+	}
+	if time.Since(info.ModTime()) >= uploadLifetime {
+		file.Close()
+		return backupArchive{}, nil, repo.ErrNotFound
+	}
+	backup, err := parseBackupArchive(file, info.Size())
+	if err != nil {
+		file.Close()
+		return backupArchive{}, nil, err
+	}
+	return backup, file, nil
 }
 
 func (s *Library) PreviewBackupMerge(ctx context.Context, uploadID, sourceID, targetID string) (VersionMergeSummary, error) {
@@ -207,33 +229,18 @@ func (s *Library) PreviewBackupMerge(ctx context.Context, uploadID, sourceID, ta
 	s.commits.Lock()
 	defer s.commits.Unlock()
 
-	filename := filepath.Join(s.uploads, uploadID, stagedBackupName)
-	file, err := os.Open(filename)
-	if errors.Is(err, os.ErrNotExist) {
-		return summary, repo.ErrNotFound
-	}
+	backup, file, err := s.openStagedBackup(uploadID)
 	if err != nil {
 		return summary, err
 	}
 	defer file.Close()
-	info, err := file.Stat()
-	if err != nil {
-		return summary, err
-	}
-	if time.Since(info.ModTime()) >= 24*time.Hour {
-		return summary, repo.ErrNotFound
-	}
-	manifest, files, err := parseBackupArchive(file, info.Size())
-	if err != nil {
-		return summary, err
-	}
-	sourceIndex := slices.IndexFunc(manifest.Skills, func(skill model.SkillSnapshot) bool { return string(skill.ID) == sourceID })
+	sourceIndex := slices.IndexFunc(backup.Skills, func(skill model.SkillSnapshot) bool { return string(skill.ID) == sourceID })
 	if sourceIndex < 0 {
 		return summary, repo.ErrNotFound
 	}
-	source := manifest.Skills[sourceIndex]
+	source := backup.Skills[sourceIndex]
 	var incoming []model.SkillVersionSnapshot
-	for _, version := range manifest.Versions {
+	for _, version := range backup.Versions {
 		if version.SkillId == sourceID {
 			incoming = append(incoming, version)
 		}
@@ -249,9 +256,7 @@ func (s *Library) PreviewBackupMerge(ctx context.Context, uploadID, sourceID, ta
 		if err != nil {
 			return err
 		}
-		plan := planVersionMerge(incoming, current, target.DefaultVersionId, func(row model.SkillVersionSnapshot) bool {
-			return files[backupSnapshotName(row.ID)] != nil
-		}, s.snapshotChecks())
+		plan := planVersionMerge(incoming, current, target.DefaultVersionId, backup.hasSnapshot, s.snapshotChecks())
 		summary = plan.details(source)
 		return nil
 	})
@@ -268,39 +273,32 @@ func (s *Library) CommitBackupImport(ctx context.Context, uploadID string, choic
 	if err := s.cleanUploads(time.Now()); err != nil {
 		return result, err
 	}
-	dir := filepath.Join(s.uploads, uploadID)
-	data, err := os.ReadFile(filepath.Join(dir, stagedBackupName))
-	if errors.Is(err, os.ErrNotExist) {
-		return result, repo.ErrNotFound
-	}
+	backup, file, err := s.openStagedBackup(uploadID)
 	if err != nil {
 		return result, err
 	}
 
-	result, err = s.applyBackup(ctx, data, choices, false)
+	result, err = s.applyBackup(ctx, backup, choices, false)
+	_ = file.Close()
 	if err == nil {
-		_ = os.RemoveAll(dir)
+		_ = os.RemoveAll(filepath.Join(s.uploads, uploadID))
 	}
 	return result, err
 }
 
-func (s *Library) applyBackup(ctx context.Context, data []byte, choices []BackupChoice, skipExisting bool) (BackupCommitResult, error) {
+func (s *Library) applyBackup(ctx context.Context, backup backupArchive, choices []BackupChoice, skipExisting bool) (BackupCommitResult, error) {
 	var result BackupCommitResult
-	manifest, files, err := parseBackup(data)
-	if err != nil {
-		return result, err
-	}
-	decisions, err := backupDecisions(manifest, choices)
+	decisions, err := backupDecisions(backup.backupManifest, choices)
 	if err != nil {
 		return result, err
 	}
 
 	s.writes.Lock()
 	defer s.writes.Unlock()
-	bySkill := versionsBySkill(manifest.Versions)
-	aliases := sourceAliasesBySkill(manifest.Aliases)
+	bySkill := versionsBySkill(backup.Versions)
+	aliases := sourceAliasesBySkill(backup.Aliases)
 	tags := make(map[string][]model.SkillTagSnapshot)
-	for _, tag := range manifest.Tags {
+	for _, tag := range backup.Tags {
 		tags[tag.SkillId] = append(tags[tag.SkillId], tag)
 	}
 	changes := snapshotChanges{library: s}
@@ -308,7 +306,7 @@ func (s *Library) applyBackup(ctx context.Context, data []byte, choices []Backup
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		file := files[backupSnapshotName(version.ID)]
+		file := backup.snapshot(version)
 		if file == nil {
 			return nil
 		}
@@ -319,7 +317,7 @@ func (s *Library) applyBackup(ctx context.Context, data []byte, choices []Backup
 		return changes.write(target, data)
 	}
 	err = s.store.Transaction(ctx, func(tx repo.LibraryTx) error {
-		for _, skill := range manifest.Skills {
+		for _, skill := range backup.Skills {
 			id := string(skill.ID)
 			decision := decisions[id]
 			versions := bySkill[id]
@@ -335,9 +333,7 @@ func (s *Library) applyBackup(ctx context.Context, data []byte, choices []Backup
 				if err != nil {
 					return err
 				}
-				plan := planVersionMerge(versions, current, target.DefaultVersionId, func(row model.SkillVersionSnapshot) bool {
-					return files[backupSnapshotName(row.ID)] != nil
-				}, s.snapshotChecks())
+				plan := planVersionMerge(versions, current, target.DefaultVersionId, backup.hasSnapshot, s.snapshotChecks())
 				if err := applyVersionMerge(plan, skill, target, tx,
 					func(version model.SkillVersionSnapshot) (model.SkillVersionSnapshot, error) {
 						created, err := createImportedVersion(tx, version)
@@ -348,10 +344,7 @@ func (s *Library) applyBackup(ctx context.Context, data []byte, choices []Backup
 					}, restore); err != nil {
 					return err
 				}
-				if err := rememberSource(tx, decision.TargetID, skill.SourceKey, true); err != nil {
-					return err
-				}
-				for _, key := range aliases[id] {
+				for _, key := range append(aliases[id], skill.SourceKey) {
 					if err := rememberSource(tx, decision.TargetID, key, true); err != nil {
 						return err
 					}

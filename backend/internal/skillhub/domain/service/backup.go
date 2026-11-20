@@ -25,6 +25,19 @@ type backupManifest struct {
 	repo.LibraryData
 }
 
+type backupArchive struct {
+	backupManifest
+	files map[string]*zip.File
+}
+
+func (b backupArchive) snapshot(version model.SkillVersionSnapshot) *zip.File {
+	return b.files[backupSnapshotName(version.ID)]
+}
+
+func (b backupArchive) hasSnapshot(version model.SkillVersionSnapshot) bool {
+	return b.snapshot(version) != nil
+}
+
 type BackupImportResult struct {
 	Added, Existing int32
 }
@@ -127,32 +140,35 @@ func readBackupFile(file *zip.File) ([]byte, error) {
 	return io.ReadAll(input)
 }
 
-func parseBackup(data []byte) (backupManifest, map[string]*zip.File, error) {
+func parseBackup(data []byte) (backupArchive, error) {
 	return parseBackupArchive(bytes.NewReader(data), int64(len(data)))
 }
 
-func parseBackupArchive(input io.ReaderAt, size int64) (backupManifest, map[string]*zip.File, error) {
-	var manifest backupManifest
+func parseBackupArchive(input io.ReaderAt, size int64) (backupArchive, error) {
 	files, err := backupFiles(input, size)
 	if err != nil {
-		return manifest, nil, invalid(err)
+		return backupArchive{}, invalid(err)
 	}
 	metadata, err := readBackupFile(files[backupManifestName])
 	if err != nil {
-		return manifest, nil, invalid(err)
+		return backupArchive{}, invalid(err)
 	}
+	var manifest backupManifest
 	if err := json.Unmarshal(metadata, &manifest); err != nil || manifest.Format != 1 {
-		return manifest, nil, invalid(errors.New("无法读取技能库备份，或备份格式版本不受支持"))
+		return backupArchive{}, invalid(errors.New("无法读取技能库备份，或备份格式版本不受支持"))
 	}
 	if err := manifest.validate(files); err != nil {
-		return manifest, nil, invalid(err)
+		return backupArchive{}, invalid(err)
 	}
-
-	return manifest, files, nil
+	return backupArchive{backupManifest: manifest, files: files}, nil
 }
 
 func (s *Library) ImportBackup(ctx context.Context, data []byte) (BackupImportResult, error) {
-	result, err := s.applyBackup(ctx, data, nil, true)
+	backup, err := parseBackup(data)
+	if err != nil {
+		return BackupImportResult{}, err
+	}
+	result, err := s.applyBackup(ctx, backup, nil, true)
 	return BackupImportResult{Added: result.Added, Existing: result.Skipped}, err
 }
 

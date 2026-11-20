@@ -165,6 +165,8 @@ func (s *Library) StageArchive(file []byte) (*Upload, error) {
 	return &Upload{ID: id, Items: items}, nil
 }
 
+const uploadLifetime = 24 * time.Hour
+
 // Upload previews remain available for 24 hours, including failed import retries.
 func (s *Library) cleanUploads(now time.Time) error {
 	entries, err := os.ReadDir(s.uploads)
@@ -182,7 +184,7 @@ func (s *Library) cleanUploads(now time.Time) error {
 		if err != nil {
 			return err
 		}
-		if now.Sub(info.ModTime()) < 24*time.Hour {
+		if now.Sub(info.ModTime()) < uploadLifetime {
 			continue
 		}
 		if err := os.RemoveAll(filepath.Join(s.uploads, entry.Name())); err != nil {

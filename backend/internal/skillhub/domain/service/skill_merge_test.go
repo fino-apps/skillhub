@@ -66,8 +66,13 @@ func TestMergeRepairsDefaultAndKeepsSourceAlias(t *testing.T) {
 	backup, err := library.ExportBackup(ctx)
 	require.NoError(t, err)
 	restored := testSQLiteLibrary(t)
-	_, err = restored.ImportBackup(ctx, backup)
+	upload, err := restored.PreviewBackupImport(ctx, backup)
 	require.NoError(t, err)
+	result, err := restored.CommitBackupImport(ctx, upload.UploadID, nil)
+	require.NoError(t, err)
+	require.EqualValues(t, 1, result.Added)
+	_, err = restored.CommitBackupImport(ctx, upload.UploadID, nil)
+	require.ErrorIs(t, err, repo.ErrNotFound)
 	previewImport, err := restored.PreviewBackupImport(ctx, backup)
 	require.NoError(t, err)
 	require.Len(t, previewImport.Items, 1)
@@ -77,6 +82,35 @@ func TestMergeRepairsDefaultAndKeepsSourceAlias(t *testing.T) {
 		require.NoError(t, err)
 		require.False(t, created)
 	}
+}
+
+func TestMergeRejectsPreviewAfterSourceSnapshotChanges(t *testing.T) {
+	ctx := t.Context()
+	library := testSQLiteLibrary(t)
+	create := func(content string) model.SkillVersionSnapshot {
+		t.Helper()
+		dir := t.TempDir()
+		require.NoError(t, os.WriteFile(filepath.Join(dir, "SKILL.md"), []byte("---\nname: sample\n---\n"+content), 0600))
+		version, created, err := library.saveDirectory(ctx, dir, "", Source{Kind: "folder"}, VersionInput{})
+		require.NoError(t, err)
+		require.True(t, created)
+		return version
+	}
+	source, target := create("source"), create("target")
+	preview, err := library.MergeSkills(ctx, source.SkillId, target.SkillId, "")
+	require.NoError(t, err)
+	require.EqualValues(t, 1, preview.Added)
+
+	require.NoError(t, os.WriteFile(library.snapshotPath(string(source.ID)), []byte("damaged ZIP"), 0600))
+	_, err = library.MergeSkills(ctx, source.SkillId, target.SkillId, preview.Revision)
+	require.ErrorIs(t, err, ErrConflict)
+	_, err = library.Version(ctx, source.SkillId, string(source.ID))
+	require.NoError(t, err)
+
+	refreshed, err := library.MergeSkills(ctx, source.SkillId, target.SkillId, "")
+	require.NoError(t, err)
+	require.Equal(t, preview.Added, refreshed.Added)
+	require.NotEqual(t, preview.Revision, refreshed.Revision)
 }
 
 func TestSnapshotChangesPreserveReplacedFileOnRollback(t *testing.T) {

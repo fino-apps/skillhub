@@ -34,20 +34,22 @@ func (s *VersionMergeSummary) add(other VersionMergeSummary) {
 }
 
 type mergeTarget struct {
-	id       model.SkillVersionID
-	imported bool
+	ID       model.SkillVersionID
+	Imported bool
 }
 
 type versionMergeStep struct {
-	source  model.SkillVersionSnapshot
-	target  mergeTarget
-	add     bool
-	repairs []mergeTarget
+	Source       model.SkillVersionSnapshot
+	SourceUsable bool
+	Target       mergeTarget
+	Add          bool
+	Repairs      []mergeTarget
 }
 
 type versionMergePlan struct {
-	steps   []versionMergeStep
-	summary VersionMergeSummary
+	steps           []versionMergeStep
+	targetSnapshots map[model.SkillVersionID]bool
+	summary         VersionMergeSummary
 }
 
 func matchVersionKey(version model.SkillVersionSnapshot) string {
@@ -64,52 +66,57 @@ func planVersionMerge(incoming, current []model.SkillVersionSnapshot, defaultID 
 		target mergeTarget
 		usable bool
 	}
-	matches := make(map[string][]*match, len(current))
-	// Only matching versions can affect a repair or cause a source snapshot to be discarded.
-	keys := make(map[string]bool, len(incoming))
+
+	plan := versionMergePlan{targetSnapshots: make(map[model.SkillVersionID]bool)}
+	matches := make(map[string][]match, len(incoming))
 	for _, row := range incoming {
-		keys[matchVersionKey(row)] = true
+		matches[matchVersionKey(row)] = nil
 	}
+	// Only existing versions that can match an incoming version need snapshot validation.
 	for _, row := range current {
 		key := matchVersionKey(row)
-		if keys[key] {
-			matches[key] = append(matches[key], &match{target: mergeTarget{id: row.ID}, usable: currentUsable(row)})
+		if options, relevant := matches[key]; relevant {
+			usable := currentUsable(row)
+			matches[key] = append(options, match{target: mergeTarget{ID: row.ID}, usable: usable})
+			plan.targetSnapshots[row.ID] = usable
 		}
 	}
 
-	var plan versionMergePlan
 	for _, row := range incoming {
 		key := matchVersionKey(row)
 		options := matches[key]
-		step := versionMergeStep{source: row}
-		usable := incomingUsable(row)
+		step := versionMergeStep{Source: row, SourceUsable: incomingUsable(row)}
 		if len(options) == 0 {
-			step.add = true
-			matches[key] = []*match{{target: mergeTarget{id: row.ID, imported: true}, usable: usable}}
+			step.Add = true
+			matches[key] = []match{{target: mergeTarget{ID: row.ID, Imported: true}, usable: step.SourceUsable}}
 			plan.summary.Added++
-		} else {
-			preferred := options[0]
-			hasUsable := false
-			for _, option := range options {
-				id := string(option.target.id)
-				if option.target.id == row.ID || id == defaultID && preferred.target.id != row.ID {
-					preferred = option
-				}
-				hasUsable = hasUsable || option.usable
-				if usable && !option.usable && (option.target.id == row.ID || id == defaultID) {
-					step.repairs = append(step.repairs, option.target)
-					option.usable = true
-				}
+			plan.steps = append(plan.steps, step)
+			continue
+		}
+
+		preferred := &options[0]
+		hasUsable := false
+		for i := range options {
+			option := &options[i]
+			exact := option.target.ID == row.ID
+			isDefault := string(option.target.ID) == defaultID
+			if exact || isDefault && preferred.target.ID != row.ID {
+				preferred = option
 			}
-			step.target = preferred.target
-			if usable && !hasUsable && len(step.repairs) == 0 {
-				step.repairs = append(step.repairs, preferred.target)
-				preferred.usable = true
+			hasUsable = hasUsable || option.usable
+			if step.SourceUsable && !option.usable && (exact || isDefault) {
+				step.Repairs = append(step.Repairs, option.target)
+				option.usable = true
 			}
-			plan.summary.Restored += int32(len(step.repairs))
-			if len(step.repairs) == 0 {
-				plan.summary.Skipped++
-			}
+		}
+		step.Target = preferred.target
+		if step.SourceUsable && !hasUsable && len(step.Repairs) == 0 {
+			step.Repairs = append(step.Repairs, preferred.target)
+			preferred.usable = true
+		}
+		plan.summary.Restored += int32(len(step.Repairs))
+		if len(step.Repairs) == 0 {
+			plan.summary.Skipped++
 		}
 		plan.steps = append(plan.steps, step)
 	}
@@ -118,18 +125,19 @@ func planVersionMerge(incoming, current []model.SkillVersionSnapshot, defaultID 
 
 func (p versionMergePlan) details(source model.SkillSnapshot) VersionMergeSummary {
 	summary := p.summary
+	sourceLocation := mergeEntry(source, nil).Source
 	for _, step := range p.steps {
-		change := VersionMergeChange{Version: step.source, Action: "skip"}
-		change.Source = cmp.Or(step.source.UpstreamRepository, mergeEntry(source, nil).Source)
-		if step.source.UpstreamPath != "" {
-			change.Source += " · " + step.source.UpstreamPath
+		change := VersionMergeChange{Version: step.Source, Action: "skip"}
+		change.Source = cmp.Or(step.Source.UpstreamRepository, sourceLocation)
+		if step.Source.UpstreamPath != "" {
+			change.Source += " · " + step.Source.UpstreamPath
 		}
-		if step.add {
+		if step.Add {
 			change.Action = "add"
-		} else if len(step.repairs) > 0 {
+		} else if len(step.Repairs) > 0 {
 			change.Action = "restore"
-			for _, repair := range step.repairs {
-				change.Restored = append(change.Restored, string(repair.id))
+			for _, repair := range step.Repairs {
+				change.Restored = append(change.Restored, string(repair.ID))
 			}
 		}
 		summary.Changes = append(summary.Changes, change)
@@ -143,30 +151,30 @@ func applyVersionMerge(plan versionMergePlan, source, target model.SkillSnapshot
 ) error {
 	ids := make(map[model.SkillVersionID]model.SkillVersionID, len(plan.steps))
 	resolve := func(target mergeTarget) model.SkillVersionID {
-		if target.imported {
-			return ids[target.id]
+		if target.Imported {
+			return ids[target.ID]
 		}
-		return target.id
+		return target.ID
 	}
 	for _, step := range plan.steps {
-		id := resolve(step.target)
-		if step.add {
-			version := step.source
+		id := resolve(step.Target)
+		if step.Add {
+			version := step.Source
 			version.SkillId = string(target.ID)
 			preserveVersionOrigin(&version, source)
 			created, err := add(version)
 			if err != nil {
 				return err
 			}
-			ids[step.source.ID] = created.ID
+			ids[step.Source.ID] = created.ID
 			id = created.ID
 		}
-		for _, repaired := range step.repairs {
-			if err := restore(step.source, resolve(repaired)); err != nil {
+		for _, repaired := range step.Repairs {
+			if err := restore(step.Source, resolve(repaired)); err != nil {
 				return err
 			}
 		}
-		if target.DefaultVersionId == "" && source.DefaultVersionId == string(step.source.ID) {
+		if target.DefaultVersionId == "" && source.DefaultVersionId == string(step.Source.ID) {
 			target.DefaultVersionId = string(id)
 			if err := tx.UpdateSkill(target, "defaultVersionId"); err != nil {
 				return err
@@ -184,13 +192,17 @@ func preserveVersionOrigin(version *model.SkillVersionSnapshot, source model.Ski
 	}
 }
 
-func mergeRevision(source, target model.SkillSnapshot, incoming, current []model.SkillVersionSnapshot, summary VersionMergeSummary) (string, error) {
+func (p versionMergePlan) revision(source, target model.SkillSnapshot, current []model.SkillVersionSnapshot) (string, error) {
 	hash := sha256.New()
 	input := struct {
-		Source, Target    model.SkillSnapshot
-		Incoming, Current []model.SkillVersionSnapshot
-		Summary           VersionMergeSummary
-	}{source, target, incoming, current, summary}
+		Source, Target  model.SkillSnapshot
+		CurrentVersions []model.SkillVersionSnapshot
+		TargetSnapshots map[model.SkillVersionID]bool
+		Steps           []versionMergeStep
+	}{
+		Source: source, Target: target, CurrentVersions: current,
+		TargetSnapshots: p.targetSnapshots, Steps: p.steps,
+	}
 	if err := json.NewEncoder(hash).Encode(input); err != nil {
 		return "", err
 	}
@@ -226,13 +238,17 @@ func (s *Library) MergeSkills(ctx context.Context, sourceID, targetID, revision 
 		}
 		usable := s.snapshotChecks()
 		plan := planVersionMerge(incoming, current, target.DefaultVersionId, usable, usable)
-		summary = plan.details(source)
-		summary.Revision, err = mergeRevision(source, target, incoming, current, summary)
-		if err != nil || revision == "" {
+		currentRevision, err := plan.revision(source, target, current)
+		if err != nil {
 			return err
 		}
-		if revision != summary.Revision {
+		if revision != "" && revision != currentRevision {
 			return fmt.Errorf("%w: Skill 已变化，请重新预览合并", ErrConflict)
+		}
+		summary = plan.details(source)
+		summary.Revision = currentRevision
+		if revision == "" {
+			return nil
 		}
 		if err := applyVersionMerge(plan, source, target, tx,
 			func(version model.SkillVersionSnapshot) (model.SkillVersionSnapshot, error) {
