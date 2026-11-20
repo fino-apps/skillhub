@@ -2,11 +2,11 @@ import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "rea
 import { Link, useSearchParams } from "react-router-dom";
 import { batchDeleteSkills, listFacets, listSkills, repairVersion } from "@/generated/api-client";
 import GitHubIntake from "./github-intake";
-import LibraryBackup from "./library-backup";
+import LibraryBackup, { downloadLibraryBackup } from "./library-backup";
 import LocalIntake, { ZipIntake } from "./local-intake";
 import { BatchMetadata } from "./skill-metadata";
 import { libraryNavigation, message, sourceNames, sourceURL, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
-import { Dialog, Failure, OperationFeedback, Popover, useSkillOperation } from "./skill-ui";
+import { Dialog, Failure, Menu, OperationFeedback, Popover, useSkillOperation } from "./skill-ui";
 
 import "./skillhub.css";
 
@@ -214,6 +214,13 @@ export default function HomePage() {
     operation.setNotice(`新增 ${result.addedCount ?? 0} 项，已有 ${result.existingCount ?? 0} 项。`);
   }
 
+  function exportBackup() {
+    void operation.run("backup-export", async () => {
+      await downloadLibraryBackup();
+      operation.setNotice("已发起备份下载。");
+    });
+  }
+
   function removeSelected() {
     if (!window.confirm(`删除选中的 ${selected.length} 项 Skill 及其已保存版本？`)) return;
     void operation.run("batch-delete", async () => {
@@ -240,7 +247,12 @@ export default function HomePage() {
       <div className="library-actions library-import-actions">
         <button type="button" onClick={() => setPanel({ kind: "file" })}>导入文件</button>
         <button type="button" className="secondary" onClick={() => setPanel({ kind: "github" })}>导入 GitHub</button>
-        <button type="button" className="secondary" onClick={() => setPanel({ kind: "backup" })}>备份与恢复</button>
+        <Menu label="备份与恢复">
+          <button type="button" disabled={!!operation.busy} onClick={exportBackup}>
+            {operation.busy === "backup-export" ? "正在导出…" : "导出全部数据"}
+          </button>
+          <button type="button" onClick={() => setPanel({ kind: "backup" })}>导入备份</button>
+        </Menu>
       </div>
     </LibraryToolbar>
     <div className="library-overlays">
@@ -326,7 +338,7 @@ export default function HomePage() {
     {panel?.kind === "github" && <Dialog title="导入 GitHub" compact onClose={() => setPanel(null)}>
       <GitHubIntake categories={facets.categories ?? []} onComplete={imported} />
     </Dialog>}
-    {panel?.kind === "backup" && <Dialog title="备份与恢复" compact onClose={() => setPanel(null)}>
+    {panel?.kind === "backup" && <Dialog title="导入备份" compact onClose={() => setPanel(null)}>
       <LibraryBackup onImported={(result) => {
         setPanel((current) => current?.kind === "backup" ? null : current);
         libraryNavigation.revision += 1;
