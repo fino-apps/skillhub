@@ -140,8 +140,8 @@ function Detail({ skillId }: { skillId: string }) {
         </div>
         <div className="library-actions">
           {view && (view.available
-            ? <button type="button" disabled={busy} onClick={() => void operation.save(skillId, view.id)}>
-              {busy ? "处理中…" : "导出到服务端默认目录"}
+            ? <button type="button" disabled={busy} title="保存到服务端默认目录" onClick={() => void operation.save(skillId, view.id)}>
+              {busy ? "处理中…" : "导出文件夹"}
             </button>
             : <button type="button" disabled={busy} onClick={() => repair(view)}>补齐版本</button>)}
           <Menu label="Skill 更多操作">
