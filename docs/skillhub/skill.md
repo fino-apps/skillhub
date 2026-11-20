@@ -54,3 +54,14 @@ SkillVersion 指向本机快照或 GitHub 的固定 commit。
 | `upstreamPath` | `string` |  | 否 | '' | 归档声明的仓库内路径 |
 | `createTime` | `string` | `Timestamp` | 否 |  | 创建时间 |
 | `updateTime` | `string` | `Timestamp` | 否 |  | 最后更新时间 |
+
+
+## `skillhub.SkillSourceAlias`
+
+SkillSourceAlias 将合并前的来源指向保留的 Skill。
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `id` | `string` |  | 否 |  | 主键 |
+| `skillId` | `string` |  | 否 |  | 保留的 Skill ID |
+| `sourceKey` | `string` |  | 否 |  | 原收录来源键 |

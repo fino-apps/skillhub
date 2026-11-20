@@ -3,10 +3,51 @@ import { mergeSkill, previewSkillMerge } from "@/generated/api-client";
 import { fetchAllSkills, message, sourceLabel, type Skill } from "./library-api";
 import { Failure, useSkillOperation } from "./skill-ui";
 
-export type VersionMergeSummary = { addedVersions?: number; restoredSnapshots?: number; skippedVersions?: number };
+type VersionMergeChange = {
+  versionId: string;
+  commitSha?: string;
+  contentDigest?: string;
+  notes?: string;
+  source?: string;
+  action: "add" | "restore" | "skip";
+  restoredVersionIds?: string[];
+};
+
+export type VersionMergeSummary = {
+  addedVersions?: number;
+  restoredSnapshots?: number;
+  skippedVersions?: number;
+  revision?: string;
+  changes?: VersionMergeChange[];
+};
 
 export function mergeSummaryText(summary: VersionMergeSummary) {
   return `新增 ${summary.addedVersions ?? 0} 个版本，补齐 ${summary.restoredSnapshots ?? 0} 个快照，跳过 ${summary.skippedVersions ?? 0} 个重复版本。`;
+}
+
+const changeLabels = {
+  add: "加入历史",
+  restore: "补齐快照，跳过来源版本",
+  skip: "跳过重复版本",
+};
+
+export function MergeVersionDetails({ changes }: { changes?: VersionMergeChange[] }) {
+  if (!changes?.length) return null;
+
+  return <details className="merge-version-details" open>
+    <summary>版本变动明细（{changes.length}）</summary>
+    <ul>
+      {changes.map((change) => {
+        const version = change.commitSha || change.contentDigest || change.versionId;
+        return <li key={change.versionId}>
+          <span>{changeLabels[change.action]} · <code title={version}>{version.slice(0, 12)}</code></span>
+          {change.source && <small>{change.source}</small>}
+          {change.notes && <small>版本备注 · {change.notes}</small>}
+          {!!change.restoredVersionIds?.length && <small>补齐版本 · {change.restoredVersionIds.map((id) => id.slice(-8)).join("、")}</small>}
+        </li>;
+      })}
+    </ul>
+  </details>;
 }
 
 export default function SkillMerge({ skill, onMerged }: {
@@ -56,8 +97,23 @@ export default function SkillMerge({ skill, onMerged }: {
     event.preventDefault();
     if (!target) return;
     const input = { skillId: skill.id, targetSkillId: target.id };
-    if (summary) {
-      void operation.run("merge", async () => onMerged(target.id, await mergeSkill<VersionMergeSummary>(input)));
+    if (summary?.revision) {
+      const revision = summary.revision;
+      void operation.run("merge", async () => {
+        let stale = false;
+        try {
+          const result = await mergeSkill<VersionMergeSummary>({ ...input, revision }, {
+            onResponseMeta: ({ status }) => { stale = status === 409; },
+          });
+          onMerged(target.id, result);
+        } catch (error) {
+          if (stale) {
+            setSummary(undefined);
+            throw new Error("Skill 已变化，请重新预览合并。");
+          }
+          throw error;
+        }
+      });
     } else {
       void operation.run("preview", async () => setSummary(await previewSkillMerge<VersionMergeSummary>(input)));
     }
@@ -76,6 +132,7 @@ export default function SkillMerge({ skill, onMerged }: {
     {summary && target && <section className="skill-merge-preview">
       <p role="status">{mergeSummaryText(summary)}</p>
       <p>合并后将移除当前条目「{skill.name}」，保留所选主条目的来源、默认版本和整理信息。</p>
+      <MergeVersionDetails changes={summary.changes} />
     </section>}
     <button type="submit" disabled={!target || !!operation.busy}>
       {operation.busy === "preview" ? "正在预览…" : operation.busy === "merge" ? "正在合并…" : summary ? "确认合并" : "预览合并"}

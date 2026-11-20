@@ -7,4 +7,5 @@ direction: TB
 exclude_fields: []
 # 完整来源字段路径 → 完整目标字段路径。
 # 示例：demo.Post.created_by: demo.User.id
-relations: {}
+relations:
+  skillhub.SkillSourceAlias.skill_id: skillhub.Skill.id

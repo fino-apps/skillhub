@@ -52,6 +52,10 @@
 .backup-import-item p, .skill-merge-preview p { margin: 0; overflow-wrap: anywhere; }
 .backup-import-item select, .github-form > label > select { min-inline-size: 0; max-inline-size: 100%; }
 .skill-merge-preview { display: grid; gap: 8px; }
+.merge-version-details > summary { cursor: pointer; }
+.merge-version-details > ul { margin: 8px 0 0; padding-inline-start: 20px; }
+.merge-version-details li { margin-block: 6px; overflow-wrap: anywhere; }
+.merge-version-details small { display: block; color: var(--muted); white-space: pre-wrap; }
 .github-form .github-checkbox, .github-checkbox { display: flex; align-items: start; gap: 8px; font-size: 13px; }
 .github-checkbox input { width: 16px; height: 16px; margin: 2px 0 0; flex: none; }
 .github-candidates { list-style: none; margin: 12px 0; padding: 0; max-height: 280px; overflow: auto; }

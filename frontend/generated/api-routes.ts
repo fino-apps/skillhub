@@ -474,6 +474,7 @@ export const apiRoutes = {
     defaultPayload: {
       skillId: "",
       targetSkillId: "",
+      revision: "",
     },
   },
 } as const satisfies Record<string, ApiRoute>;

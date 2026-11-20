@@ -835,6 +835,8 @@ POST /skillhub/v1/skills/{skill_id}:previewMerge
 | `addedVersions` | `integer` | `Int32` | 否 |  |  |
 | `restoredSnapshots` | `integer` | `Int32` | 否 |  |  |
 | `skippedVersions` | `integer` | `Int32` | 否 |  |  |
+| `revision` | `string` |  | 否 |  |  |
+| `changes` | `Array<skillhub.v1.VersionMergeChange>` |  | 否 |  |  |
 
 
 ## Merge Skill
@@ -858,6 +860,7 @@ POST /skillhub/v1/skills/{skill_id}:merge
 | 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
 |---|---|---|---|---|---|
 | `targetSkillId` | `string` |  | 是 |  | UUID |
+| `revision` | `string` |  | 是 |  | 最小长度为 64；最大长度为 64 |
 
 ### 返回值
 
@@ -868,6 +871,8 @@ POST /skillhub/v1/skills/{skill_id}:merge
 | `addedVersions` | `integer` | `Int32` | 否 |  |  |
 | `restoredSnapshots` | `integer` | `Int32` | 否 |  |  |
 | `skippedVersions` | `integer` | `Int32` | 否 |  |  |
+| `revision` | `string` |  | 否 |  |  |
+| `changes` | `Array<skillhub.v1.VersionMergeChange>` |  | 否 |  |  |
 
 
 ## 数据模型
@@ -1011,6 +1016,20 @@ POST /skillhub/v1/skills/{skill_id}:merge
 | `addedVersions` | `integer` | `Int32` | 否 |  |  |
 | `restoredSnapshots` | `integer` | `Int32` | 否 |  |  |
 | `skippedVersions` | `integer` | `Int32` | 否 |  |  |
+| `revision` | `string` |  | 否 |  |  |
+| `changes` | `Array<skillhub.v1.VersionMergeChange>` |  | 否 |  |  |
+
+### `skillhub.v1.VersionMergeChange`
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `versionId` | `string` |  | 否 |  |  |
+| `commitSha` | `string` |  | 否 |  |  |
+| `contentDigest` | `string` |  | 否 |  |  |
+| `notes` | `string` |  | 否 |  |  |
+| `source` | `string` |  | 否 |  |  |
+| `action` | `string` |  | 否 |  |  |
+| `restoredVersionIds` | `Array<string>` |  | 否 |  |  |
 
 ### `skillhub.v1.BackupImportChoice`
 

@@ -167,6 +167,12 @@ func (m backupManifest) validate(files map[string]*zip.File) error {
 		skills[id] = true
 		sources[skill.SourceKey] = true
 	}
+	for _, alias := range m.Aliases {
+		if alias.SourceKey == "" || sources[alias.SourceKey] || !skills[alias.SkillID] {
+			return errors.New("技能库备份包含无效或重复的合并来源")
+		}
+		sources[alias.SourceKey] = true
+	}
 	tags := make(map[string]bool, len(m.Tags))
 	for _, tag := range m.Tags {
 		id := string(tag.ID)
@@ -215,7 +221,11 @@ func readBackupSnapshot(file *zip.File, version model.SkillVersionSnapshot) ([]b
 }
 
 func validateBackupSnapshot(data []byte, expectedDigest string) error {
-	archive, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	return validateSnapshotArchive(bytes.NewReader(data), int64(len(data)), expectedDigest)
+}
+
+func validateSnapshotArchive(reader io.ReaderAt, size int64, expectedDigest string) error {
+	archive, err := zip.NewReader(reader, size)
 	if err != nil {
 		return err
 	}

@@ -688,7 +688,7 @@ func (s skillhubServer) PreviewSkillMerge(ctx context.Context, in *pb.PreviewSki
 		return versionMergeSummary(result), nil
 	}
 
-	result, err := s.library.MergeSkills(ctx, in.GetSkillId(), in.GetTargetSkillId(), true)
+	result, err := s.library.MergeSkills(ctx, in.GetSkillId(), in.GetTargetSkillId(), "")
 	if err != nil {
 		return nil, rpcError(ctx, "PreviewSkillMerge", err)
 	}
@@ -696,7 +696,7 @@ func (s skillhubServer) PreviewSkillMerge(ctx context.Context, in *pb.PreviewSki
 	return versionMergeSummary(result), nil
 }
 
-// MergeSkill implements Interface. fino:req-fields 1=SkillId,2=TargetSkillId
+// MergeSkill implements Interface. fino:req-fields 1=SkillId,2=TargetSkillId,3=Revision
 func (s skillhubServer) MergeSkill(ctx context.Context, in *pb.SkillMergeRequest) (*pb.VersionMergeSummary, error) {
 	logs.Ctx(ctx).Debugw("MergeSkill")
 	if in == nil {
@@ -704,7 +704,10 @@ func (s skillhubServer) MergeSkill(ctx context.Context, in *pb.SkillMergeRequest
 		return nil, errcode.NewSkillhubRequestMissing()
 	}
 
-	result, err := s.library.MergeSkills(ctx, in.GetSkillId(), in.GetTargetSkillId(), false)
+	if in.GetRevision() == "" {
+		return nil, rpcError(ctx, "MergeSkill", service.ErrInvalid)
+	}
+	result, err := s.library.MergeSkills(ctx, in.GetSkillId(), in.GetTargetSkillId(), in.GetRevision())
 	if err != nil {
 		return nil, rpcError(ctx, "MergeSkill", err)
 	}
@@ -720,5 +723,16 @@ func mergeSkillEntry(entry service.MergeSkillEntry) *pb.MergeSkillEntry {
 }
 
 func versionMergeSummary(summary service.VersionMergeSummary) *pb.VersionMergeSummary {
-	return &pb.VersionMergeSummary{AddedVersions: summary.Added, RestoredSnapshots: summary.Restored, SkippedVersions: summary.Skipped}
+	response := &pb.VersionMergeSummary{
+		AddedVersions: summary.Added, RestoredSnapshots: summary.Restored, SkippedVersions: summary.Skipped,
+		Revision: summary.Revision,
+	}
+	for _, change := range summary.Changes {
+		response.Changes = append(response.Changes, &pb.VersionMergeChange{
+			VersionId: string(change.Version.ID), CommitSha: change.Version.CommitSha,
+			ContentDigest: change.Version.ContentDigest, Notes: change.Version.Notes, Source: change.Source,
+			Action: change.Action, RestoredVersionIds: change.Restored,
+		})
+	}
+	return response
 }

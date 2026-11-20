@@ -180,6 +180,10 @@ func (tx libraryTx) Skill(id string) (domain.SkillSnapshot, error) {
 func (tx libraryTx) SkillBySource(key string) (domain.SkillSnapshot, error) {
 	var row model.Skill
 	err := tx.db.Take(&row, "source_key = ?", key).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) && key != "" {
+		aliases := tx.db.Model(&model.SkillSourceAlias{}).Select("skill_id").Where("source_key = ?", key)
+		err = tx.db.Take(&row, "id IN (?)", aliases).Error
+	}
 	return domain.SkillSnapshot(row), notFound(err)
 }
 
@@ -220,11 +224,22 @@ func (tx libraryTx) MoveVersion(version domain.SkillVersionSnapshot) error {
 	}).Error
 }
 
+func (tx libraryTx) CreateSourceAlias(alias port.SourceAlias) error {
+	return tx.db.Create(&model.SkillSourceAlias{
+		ID: domain.SkillSourceAliasID(uuid.NewString()), SkillId: alias.SkillID, SourceKey: alias.SourceKey,
+	}).Error
+}
+
+func (tx libraryTx) MoveSourceAliases(source, target string) error {
+	return tx.db.Model(&model.SkillSourceAlias{}).Where("skill_id = ?", source).Update("skill_id", target).Error
+}
+
 func (tx libraryTx) BackupData() (port.LibraryData, error) {
 	var data port.LibraryData
 	var skills []model.Skill
 	var tags []model.SkillTag
 	var versions []model.SkillVersion
+	var aliases []model.SkillSourceAlias
 	if err := tx.db.Order("id").Find(&skills).Error; err != nil {
 		return data, err
 	}
@@ -234,6 +249,9 @@ func (tx libraryTx) BackupData() (port.LibraryData, error) {
 	if err := tx.db.Order("id").Find(&versions).Error; err != nil {
 		return data, err
 	}
+	if err := tx.db.Order("source_key").Find(&aliases).Error; err != nil {
+		return data, err
+	}
 	for _, skill := range skills {
 		data.Skills = append(data.Skills, domain.SkillSnapshot(skill))
 	}
@@ -241,6 +259,9 @@ func (tx libraryTx) BackupData() (port.LibraryData, error) {
 		data.Tags = append(data.Tags, domain.SkillTagSnapshot(tag))
 	}
 	data.Versions = versionSnapshots(versions)
+	for _, alias := range aliases {
+		data.Aliases = append(data.Aliases, port.SourceAlias{SkillID: alias.SkillId, SourceKey: alias.SourceKey})
+	}
 	return data, nil
 }
 
@@ -302,6 +323,10 @@ func (tx libraryTx) DeleteSkill(skill domain.SkillSnapshot) ([]string, error) {
 		return nil, err
 	}
 	if err := tx.db.Where("skill_id = ?", id).Delete(&model.SkillTag{}).Error; err != nil {
+		return nil, err
+	}
+
+	if err := tx.db.Where("skill_id = ?", id).Delete(&model.SkillSourceAlias{}).Error; err != nil {
 		return nil, err
 	}
 

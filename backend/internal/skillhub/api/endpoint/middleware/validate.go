@@ -488,5 +488,9 @@ func validateMergeSkillRequest(req *pb.SkillMergeRequest) error {
 		return newRequestValidationError("target_skill_id", err)
 	}
 
+	if err := requestValidator.Var(req.GetRevision(), "required,min=64,max=64"); err != nil {
+		return newRequestValidationError("revision", err)
+	}
+
 	return nil
 }

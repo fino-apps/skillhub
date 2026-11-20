@@ -64,3 +64,12 @@ message SkillVersion {
   fino.core.Timestamp create_time = 98 [(fino.db) = {comment: "创建时间"}];
   fino.core.Timestamp update_time = 99 [(fino.db) = {comment: "最后更新时间"}];
 }
+
+// SkillSourceAlias 将合并前的来源指向保留的 Skill。
+message SkillSourceAlias {
+  option (fino.model) = {generate: true services: "SkillhubService"};
+
+  string id = 1 [(fino.db) = {len: 36 comment: "主键"}];
+  string skill_id = 2 [(fino.db) = {len: 36 index: "" comment: "保留的 Skill ID"}];
+  string source_key = 3 [(fino.db) = {len: 64 unique_index: "skillhub_source_alias" comment: "原收录来源键"}];
+}

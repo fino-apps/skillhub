@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { commitLibraryImport, exportLibrary, previewLibraryImport, previewSkillMerge } from "@/generated/api-client";
 import { sourceNames } from "./library-api";
-import { mergeSummaryText, type VersionMergeSummary } from "./skill-merge";
+import { MergeVersionDetails, mergeSummaryText, type VersionMergeSummary } from "./skill-merge";
 import { Failure, useSkillOperation } from "./skill-ui";
 
 type MergeEntry = { id: string; name: string; source?: string; versionCount?: number; defaultVersion?: string };
@@ -62,8 +62,8 @@ export default function LibraryBackup({ onImported }: { onImported: (result: Bac
   const selection = (item: ImportItem) => choices[item.skill.id] ?? defaultChoice(item);
   const estimateKey = (skillId: string, targetId: string) => `${skillId}/${targetId}`;
   const estimateFor = (item: ImportItem, targetId: string) =>
-    item.candidates?.find(({ targetSkillId }) => targetSkillId === targetId)?.summary ??
-    estimates[estimateKey(item.skill.id, targetId)];
+    estimates[estimateKey(item.skill.id, targetId)] ??
+    item.candidates?.find(({ targetSkillId }) => targetSkillId === targetId)?.summary;
   const unresolved = items.filter((item) => {
     const choice = selection(item);
     return !choice.action || (choice.action === "merge" && (!choice.targetSkillId || !estimateFor(item, choice.targetSkillId)));
@@ -75,7 +75,7 @@ export default function LibraryBackup({ onImported }: { onImported: (result: Bac
   }
 
   function estimateMerge(item: ImportItem, targetId: string) {
-    if (!targetId || estimateFor(item, targetId) || !preview) return;
+    if (!targetId || estimates[estimateKey(item.skill.id, targetId)] || !preview) return;
     const skillId = item.skill.id;
     void operation.run("estimate", async () => {
       const summary = await previewSkillMerge<VersionMergeSummary>({ skillId, targetSkillId: targetId, backupUploadId: preview.uploadId });
@@ -89,6 +89,7 @@ export default function LibraryBackup({ onImported }: { onImported: (result: Bac
     const similar = new Set(candidates.map(({ targetSkillId }) => targetSkillId));
     const selected = targets.find(({ id }) => id === choice.targetSkillId);
     const estimate = selected && estimateFor(item, selected.id);
+    const detailsLoaded = selected && !!estimates[estimateKey(skill.id, selected.id)];
     const options = (entries: MergeEntry[]) => entries.map((entry) => (
       <option key={entry.id} value={entry.id}>{entry.name} · {entryDetails(entry)} · {entry.id.slice(-8)}</option>
     ));
@@ -114,7 +115,7 @@ export default function LibraryBackup({ onImported }: { onImported: (result: Bac
         <select value={choice.targetSkillId ?? ""} onChange={(event) => {
           const targetId = event.target.value;
           setChoice(skill.id, { action: "merge", targetSkillId: targetId });
-          estimateMerge(item, targetId);
+          if (!estimateFor(item, targetId)) estimateMerge(item, targetId);
         }}>
           <option value="">选择要保留的 Skill</option>
           {candidates.length > 0 && <optgroup label="可能重复">{options(targets.filter(({ id }) => similar.has(id)))}</optgroup>}
@@ -123,9 +124,10 @@ export default function LibraryBackup({ onImported }: { onImported: (result: Bac
       </label>}
       {selected && <p className="skillhub-hint">{entryDetails(selected)}</p>}
       {estimate && <p className="skillhub-hint">预计{mergeSummaryText(estimate)}</p>}
-      {selected && !estimate && <button type="button" className="secondary" onClick={() => estimateMerge(item, selected.id)}>
-        {busy ? "正在计算…" : "预览版本变动"}
+      {selected && !detailsLoaded && !!skill.versionCount && <button type="button" className="secondary" onClick={() => estimateMerge(item, selected.id)}>
+        {busy ? "正在计算…" : "查看版本明细"}
       </button>}
+      <MergeVersionDetails changes={estimate?.changes} />
     </fieldset>;
   }
 

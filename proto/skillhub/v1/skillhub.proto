@@ -496,6 +496,18 @@ message VersionMergeSummary {
   int32 added_versions = 1;
   int32 restored_snapshots = 2;
   int32 skipped_versions = 3;
+  string revision = 4;
+  repeated VersionMergeChange changes = 5;
+}
+
+message VersionMergeChange {
+  string version_id = 1;
+  string commit_sha = 2;
+  string content_digest = 3;
+  string notes = 4;
+  string source = 5;
+  string action = 6;
+  repeated string restored_version_ids = 7;
 }
 
 message BackupMergeCandidate {
@@ -544,4 +556,5 @@ message PreviewSkillMergeRequest {
 message SkillMergeRequest {
   string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
   string target_skill_id = 2 [(fino.validate) = {required: true uuid: true}];
+  string revision = 3 [(fino.validate) = {required: true min: 64 max: 64}];
 }

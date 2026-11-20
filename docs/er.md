@@ -16,6 +16,10 @@ erDiagram
     "skillhub.Skill"["Skill"] {
         id string PK "主键"
     }
+    "skillhub.SkillSourceAlias"["SkillSourceAlias"] {
+        id string PK "主键"
+        skill_id string "IDX · 保留的 Skill ID"
+    }
     "skillhub.SkillTag"["SkillTag"] {
         id string PK "主键"
         skill_id string "Skill ID"
@@ -24,12 +28,14 @@ erDiagram
         id string PK "IDX · 主键"
         skill_id string "IDX · Skill ID"
     }
+    "skillhub.SkillSourceAlias" }o..o| "skillhub.Skill" : "skill_id"
     "skillhub.SkillTag" }o..o| "skillhub.Skill" : "skill_id"
     "skillhub.SkillVersion" }o..o| "skillhub.Skill" : "skill_id"
 ```
 
 | 来源字段 | 目标字段 | 形式 | 来源 |
 |---|---|---|---|
+| `skillhub.SkillSourceAlias.skill_id` | `skillhub.Skill.id` | 字段引用 | 显式声明 |
 | `skillhub.SkillTag.skill_id` | `skillhub.Skill.id` | 字段引用 | 命名推断（候选） |
 | `skillhub.SkillVersion.skill_id` | `skillhub.Skill.id` | 字段引用 | 命名推断（候选） |
 
@@ -61,6 +67,16 @@ erDiagram
 | `default_version_id` | `string` | 长度 36；默认值 `''` | 默认导出版本 |
 | `create_time` | `timestamp` |  | 创建时间 |
 | `update_time` | `timestamp` |  | 最后更新时间 |
+
+### `skillhub.SkillSourceAlias`
+
+来源：[skillhub/skill.proto](../proto/skillhub/skill.proto)
+
+| 字段 | 模型类型 | DB 标注 | 说明 |
+|---|---|---|---|
+| `id` | `string` | PK（默认约定）；长度 36 | 主键 |
+| `skill_id` | `string` | 长度 36；索引 （自动命名） | 保留的 Skill ID |
+| `source_key` | `string` | 长度 64；唯一索引 `skillhub_source_alias` | 原收录来源键 |
 
 ### `skillhub.SkillTag`
 

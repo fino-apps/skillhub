@@ -85,10 +85,13 @@ func mergeEntry(skill model.SkillSnapshot, versions []model.SkillVersionSnapshot
 	return entry
 }
 
-func matchSkillKeys(skill model.SkillSnapshot, versions []model.SkillVersionSnapshot) []string {
+func matchSkillKeys(skill model.SkillSnapshot, versions []model.SkillVersionSnapshot, aliases []string) []string {
 	keys := []string{"id:" + string(skill.ID)}
 	if skill.SourceKey != "" {
 		keys = append(keys, "source:"+skill.SourceKey)
+	}
+	for _, alias := range aliases {
+		keys = append(keys, "source:"+alias)
 	}
 	if name := strings.ToLower(strings.TrimSpace(skill.Name)); name != "" {
 		keys = append(keys, "name:"+name)
@@ -146,12 +149,16 @@ func (s *Library) previewBackup(ctx context.Context, manifest backupManifest, fi
 	}
 	var result BackupPreview
 	currentVersions, incomingVersions := versionsBySkill(current.Versions), versionsBySkill(manifest.Versions)
+	currentAliases, incomingAliases := sourceAliasesBySkill(current.Aliases), sourceAliasesBySkill(manifest.Aliases)
+	defaults := make(map[string]string, len(current.Skills))
+	currentUsable := s.snapshotChecks()
 	index := make(map[string]map[string]bool)
 	for _, skill := range current.Skills {
 		id := string(skill.ID)
 		versions := currentVersions[id]
 		result.Targets = append(result.Targets, mergeEntry(skill, versions))
-		for _, key := range matchSkillKeys(skill, versions) {
+		defaults[id] = skill.DefaultVersionId
+		for _, key := range matchSkillKeys(skill, versions, currentAliases[id]) {
 			if index[key] == nil {
 				index[key] = make(map[string]bool)
 			}
@@ -165,7 +172,7 @@ func (s *Library) previewBackup(ctx context.Context, manifest backupManifest, fi
 		versions := incomingVersions[string(skill.ID)]
 		item := BackupImportItem{Skill: mergeEntry(skill, versions)}
 		all, exact := make(map[string]bool), make(map[string]bool)
-		for _, key := range matchSkillKeys(skill, versions) {
+		for _, key := range matchSkillKeys(skill, versions, incomingAliases[string(skill.ID)]) {
 			for id := range index[key] {
 				all[id] = true
 				if strings.HasPrefix(key, "id:") || strings.HasPrefix(key, "source:") {
@@ -184,7 +191,7 @@ func (s *Library) previewBackup(ctx context.Context, manifest backupManifest, fi
 		}
 		sort.Strings(candidates)
 		for _, id := range candidates {
-			plan := s.planVersionMerge(versions, currentVersions[id], incomingAvailable)
+			plan := planVersionMerge(versions, currentVersions[id], defaults[id], incomingAvailable, currentUsable)
 			item.Candidates = append(item.Candidates, BackupMergeCandidate{TargetID: id, Summary: plan.summary})
 		}
 		result.Items = append(result.Items, item)
@@ -220,9 +227,11 @@ func (s *Library) PreviewBackupMerge(ctx context.Context, uploadID, sourceID, ta
 	if err != nil {
 		return summary, err
 	}
-	if !slices.ContainsFunc(manifest.Skills, func(skill model.SkillSnapshot) bool { return string(skill.ID) == sourceID }) {
+	sourceIndex := slices.IndexFunc(manifest.Skills, func(skill model.SkillSnapshot) bool { return string(skill.ID) == sourceID })
+	if sourceIndex < 0 {
 		return summary, repo.ErrNotFound
 	}
+	source := manifest.Skills[sourceIndex]
 	var incoming []model.SkillVersionSnapshot
 	for _, version := range manifest.Versions {
 		if version.SkillId == sourceID {
@@ -232,16 +241,18 @@ func (s *Library) PreviewBackupMerge(ctx context.Context, uploadID, sourceID, ta
 	s.writes.Lock()
 	defer s.writes.Unlock()
 	err = s.store.Transaction(ctx, func(tx repo.LibraryTx) error {
-		if _, err := tx.Skill(targetID); err != nil {
+		target, err := tx.Skill(targetID)
+		if err != nil {
 			return err
 		}
 		current, err := tx.SkillVersions(targetID)
 		if err != nil {
 			return err
 		}
-		summary = s.planVersionMerge(incoming, current, func(row model.SkillVersionSnapshot) bool {
+		plan := planVersionMerge(incoming, current, target.DefaultVersionId, func(row model.SkillVersionSnapshot) bool {
 			return files[backupSnapshotName(row.ID)] != nil
-		}).summary
+		}, s.snapshotChecks())
+		summary = plan.details(source)
 		return nil
 	})
 	return summary, err
@@ -287,11 +298,12 @@ func (s *Library) applyBackup(ctx context.Context, data []byte, choices []Backup
 	s.writes.Lock()
 	defer s.writes.Unlock()
 	bySkill := versionsBySkill(manifest.Versions)
+	aliases := sourceAliasesBySkill(manifest.Aliases)
 	tags := make(map[string][]model.SkillTagSnapshot)
 	for _, tag := range manifest.Tags {
 		tags[tag.SkillId] = append(tags[tag.SkillId], tag)
 	}
-	var saved []string
+	changes := snapshotChanges{library: s}
 	restore := func(version model.SkillVersionSnapshot, target model.SkillVersionID) error {
 		if err := ctx.Err(); err != nil {
 			return err
@@ -304,11 +316,7 @@ func (s *Library) applyBackup(ctx context.Context, data []byte, choices []Backup
 		if err != nil {
 			return err
 		}
-		if err := s.writeSnapshot(string(target), data); err != nil {
-			return err
-		}
-		saved = append(saved, string(target))
-		return nil
+		return changes.write(target, data)
 	}
 	err = s.store.Transaction(ctx, func(tx repo.LibraryTx) error {
 		for _, skill := range manifest.Skills {
@@ -327,9 +335,9 @@ func (s *Library) applyBackup(ctx context.Context, data []byte, choices []Backup
 				if err != nil {
 					return err
 				}
-				plan := s.planVersionMerge(versions, current, func(row model.SkillVersionSnapshot) bool {
+				plan := planVersionMerge(versions, current, target.DefaultVersionId, func(row model.SkillVersionSnapshot) bool {
 					return files[backupSnapshotName(row.ID)] != nil
-				})
+				}, s.snapshotChecks())
 				if err := applyVersionMerge(plan, skill, target, tx,
 					func(version model.SkillVersionSnapshot) (model.SkillVersionSnapshot, error) {
 						created, err := createImportedVersion(tx, version)
@@ -340,10 +348,18 @@ func (s *Library) applyBackup(ctx context.Context, data []byte, choices []Backup
 					}, restore); err != nil {
 					return err
 				}
+				if err := rememberSource(tx, decision.TargetID, skill.SourceKey, true); err != nil {
+					return err
+				}
+				for _, key := range aliases[id] {
+					if err := rememberSource(tx, decision.TargetID, key, true); err != nil {
+						return err
+					}
+				}
 				result.Merged++
 				result.Versions.add(plan.summary)
 			default:
-				err := importIndependentSkill(tx, skill, versions, tags[id], decision.Action == "add", restore)
+				err := importIndependentSkill(tx, skill, versions, tags[id], aliases[id], decision.Action == "add", restore)
 				switch {
 				case err == nil:
 					result.Added++
@@ -356,8 +372,7 @@ func (s *Library) applyBackup(ctx context.Context, data []byte, choices []Backup
 		}
 		return nil
 	})
-	if err != nil {
-		s.removeSnapshots(saved)
+	if err = changes.finish(err); err != nil {
 		return BackupCommitResult{}, err
 	}
 	return result, nil
@@ -391,7 +406,7 @@ func backupDecisions(manifest backupManifest, choices []BackupChoice) (map[strin
 }
 
 func importIndependentSkill(tx repo.LibraryTx, skill model.SkillSnapshot, versions []model.SkillVersionSnapshot,
-	tags []model.SkillTagSnapshot, explicit bool, restore func(model.SkillVersionSnapshot, model.SkillVersionID) error,
+	tags []model.SkillTagSnapshot, aliases []string, explicit bool, restore func(model.SkillVersionSnapshot, model.SkillVersionID) error,
 ) error {
 	_, err := tx.Skill(string(skill.ID))
 	duplicateID := err == nil
@@ -410,6 +425,15 @@ func importIndependentSkill(tx repo.LibraryTx, skill model.SkillSnapshot, versio
 			return err
 		}
 	}
+	if !explicit {
+		for _, key := range aliases {
+			if _, err := tx.SkillBySource(key); err == nil {
+				return ErrConflict
+			} else if !errors.Is(err, repo.ErrNotFound) {
+				return err
+			}
+		}
+	}
 	if duplicateID {
 		if !explicit {
 			return ErrConflict
@@ -419,6 +443,11 @@ func importIndependentSkill(tx repo.LibraryTx, skill model.SkillSnapshot, versio
 
 	if err := tx.CreateSkill(skill); err != nil {
 		return err
+	}
+	for _, key := range aliases {
+		if err := rememberSource(tx, string(skill.ID), key, explicit); err != nil {
+			return err
+		}
 	}
 	for _, tag := range tags {
 		if duplicateID {

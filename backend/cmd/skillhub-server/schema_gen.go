@@ -19,6 +19,9 @@ func migrateSchema(provider db.Provider) error {
 	if err := dao.AutoMigrateSkill(provider); err != nil {
 		return fmt.Errorf("migrate skill schema: %w", err)
 	}
+	if err := dao.AutoMigrateSkillSourceAlias(provider); err != nil {
+		return fmt.Errorf("migrate skill_source_alias schema: %w", err)
+	}
 	if err := dao.AutoMigrateSkillTag(provider); err != nil {
 		return fmt.Errorf("migrate skill_tag schema: %w", err)
 	}

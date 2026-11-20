@@ -33,16 +33,23 @@ type Library interface {
 	Facets(context.Context) (Facets, error)
 }
 
+type SourceAlias struct {
+	SkillID, SourceKey string
+}
+
 type LibraryData struct {
 	Skills   []model.SkillSnapshot
 	Tags     []model.SkillTagSnapshot
 	Versions []model.SkillVersionSnapshot
+	Aliases  []SourceAlias `json:",omitempty"`
 }
 
 type LibraryTx interface {
 	BackupData() (LibraryData, error)
 	SkillVersions(skill string) ([]model.SkillVersionSnapshot, error)
 	MoveVersion(model.SkillVersionSnapshot) error
+	MoveSourceAliases(source, target string) error
+	CreateSourceAlias(SourceAlias) error
 	CreateTag(model.SkillTagSnapshot) error
 	Skill(id string) (model.SkillSnapshot, error)
 	SkillBySource(key string) (model.SkillSnapshot, error)

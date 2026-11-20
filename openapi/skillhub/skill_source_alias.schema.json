@@ -1,0 +1,16 @@
+{
+  "title": "skillhub.SkillSourceAlias",
+  "description": "SkillSourceAlias 将合并前的来源指向保留的 Skill。",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "skillId": {
+      "type": "string"
+    },
+    "sourceKey": {
+      "type": "string"
+    }
+  }
+}

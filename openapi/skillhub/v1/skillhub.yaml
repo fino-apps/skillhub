@@ -1302,6 +1302,10 @@ components:
       title: skillhub.v1.SkillMergeRequest
       type: object
       properties:
+        revision:
+          type: string
+          minLength: 64
+          maxLength: 64
         skillId:
           type: string
           format: uuid
@@ -1311,6 +1315,7 @@ components:
       required:
         - skillId
         - targetSkillId
+        - revision
     skillhub.v1.SkillMetadataChange:
       title: skillhub.v1.SkillMetadataChange
       type: object
@@ -1456,6 +1461,26 @@ components:
         sourceRef:
           type: string
           maxLength: 200
+    skillhub.v1.VersionMergeChange:
+      title: skillhub.v1.VersionMergeChange
+      type: object
+      properties:
+        action:
+          type: string
+        commitSha:
+          type: string
+        contentDigest:
+          type: string
+        notes:
+          type: string
+        restoredVersionIds:
+          type: array
+          items:
+            type: string
+        source:
+          type: string
+        versionId:
+          type: string
     skillhub.v1.VersionMergeSummary:
       title: skillhub.v1.VersionMergeSummary
       type: object
@@ -1463,9 +1488,15 @@ components:
         addedVersions:
           type: integer
           format: int32
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/skillhub.v1.VersionMergeChange'
         restoredSnapshots:
           type: integer
           format: int32
+        revision:
+          type: string
         skippedVersions:
           type: integer
           format: int32

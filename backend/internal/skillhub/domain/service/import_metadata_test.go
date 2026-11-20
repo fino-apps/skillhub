@@ -12,14 +12,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestImportMetadataAppliesOnlyToNewSkill(t *testing.T) {
+func testSQLiteLibrary(t *testing.T) *Library {
+	t.Helper()
 	ctx := context.Background()
 	provider, err := db.NewWithConfig(&db.Config{Driver: db.SqliteDriver, DSN: filepath.Join(t.TempDir(), "library.db")})
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, provider.Close()) })
-	require.NoError(t, provider.NewSession(ctx).AutoMigrate(&sqlite.Skill{}, &sqlite.SkillTag{}, &sqlite.SkillVersion{}))
+	require.NoError(t, provider.NewSession(ctx).AutoMigrate(&sqlite.Skill{}, &sqlite.SkillTag{}, &sqlite.SkillVersion{}, &sqlite.SkillSourceAlias{}))
 	store := repo.NewLibrary(repo.LibraryDeps{DB: provider})
-	library := NewLibrary(LibraryDeps{Store: store, SnapshotDir: t.TempDir()})
+	return NewLibrary(LibraryDeps{Store: store, SnapshotDir: t.TempDir(), UploadDir: t.TempDir()})
+}
+
+func TestImportMetadataAppliesOnlyToNewSkill(t *testing.T) {
+	ctx := context.Background()
+	library := testSQLiteLibrary(t)
 
 	dir := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "SKILL.md"), []byte("---\nname: sample\ndescription: Sample\n---\n"), 0600))
