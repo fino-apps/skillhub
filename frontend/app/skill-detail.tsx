@@ -6,6 +6,7 @@ import InstallCommand from "./install-command";
 import { ZipIntake } from "./local-intake";
 import SkillContent from "./skill-content";
 import SkillMetadata from "./skill-metadata";
+import SkillMerge, { mergeSummaryText } from "./skill-merge";
 import { archiveURL, fetchAllVersions, libraryNavigation, message, sourceLabel, sourceNames, sourceURL, type Facets, type Skill } from "./library-api";
 import { Dialog, ExportLocation, Failure, Menu, OperationFeedback, useSkillOperation } from "./skill-ui";
 import { shortVersion, versionDigest, versionLabel, type SkillVersion } from "./skill-version";
@@ -15,7 +16,7 @@ import "./skillhub.css";
 const VersionPanel = lazy(() => import("./version-panel"));
 
 type Panel =
-  | { kind: "metadata" | "compare" | "zip" }
+  | { kind: "metadata" | "compare" | "zip" | "merge" }
   | { kind: "export" | "install"; version: SkillVersion }
   | { kind: "update"; source: "github" | "folder" };
 
@@ -36,6 +37,12 @@ function Detail({ skillId }: { skillId: string }) {
   const [error, setError] = useState("");
   const [panel, setPanel] = useState<Panel | null>(null);
   const operation = useSkillOperation();
+  const mergeNotice = typeof location.state?.mergeNotice === "string" ? location.state.mergeNotice : "";
+  const setNotice = operation.setNotice;
+
+  useEffect(() => {
+    if (mergeNotice) setNotice(mergeNotice);
+  }, [mergeNotice, setNotice]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -137,6 +144,7 @@ function Detail({ skillId }: { skillId: string }) {
               <a href={archiveURL(skillId, view.id)}>下载 ZIP</a>
               <button type="button" onClick={() => setPanel({ kind: "install", version: view })}>复制安装命令</button>
             </>}
+            <button type="button" disabled={busy} onClick={() => setPanel({ kind: "merge" })}>合并到其他 Skill</button>
             <button type="button" className="skill-danger" disabled={busy} onClick={() => removeSkill(skill.name)}>删除 Skill</button>
           </Menu>
         </div>
@@ -197,6 +205,12 @@ function Detail({ skillId }: { skillId: string }) {
       </section>}
       {panel?.kind === "metadata" && <Dialog title="编辑整理信息" compact onClose={() => setPanel(null)}>
         <SkillMetadata skill={skill} categories={categories} onSaved={saved} />
+      </Dialog>}
+      {panel?.kind === "merge" && <Dialog title="合并到其他 Skill" compact onClose={() => setPanel(null)}>
+        <SkillMerge skill={skill} onMerged={(targetId, summary) => {
+          libraryNavigation.revision += 1;
+          navigate(`/skills/${targetId}`, { replace: true, state: { library: back, mergeNotice: `已合并 Skill。${mergeSummaryText(summary)}` } });
+        }} />
       </Dialog>}
       {panel?.kind === "install" && <Dialog title="Codex 安装命令" compact onClose={() => setPanel(null)}>
         <InstallCommand skillId={skillId} versionId={panel.version.id} />

@@ -614,3 +614,111 @@ func (s skillhubServer) ImportLibrary(ctx context.Context, in *pb.ImportLibraryR
 		ExistingCount: result.Existing,
 	}, nil
 }
+
+// PreviewLibraryImport implements Interface. fino:req-fields 1=File
+func (s skillhubServer) PreviewLibraryImport(ctx context.Context, in *pb.PreviewLibraryImportRequest) (*pb.PreviewLibraryImportResponse, error) {
+	logs.Ctx(ctx).Debugw("PreviewLibraryImport")
+	if in == nil {
+		logs.Ctx(ctx).Warnw("invalid preview_library_import request", "reason", "request_missing")
+		return nil, errcode.NewSkillhubRequestMissing()
+	}
+
+	result, err := s.library.PreviewBackupImport(ctx, in.GetFile())
+	if err != nil {
+		return nil, rpcError(ctx, "PreviewLibraryImport", err)
+	}
+
+	response := &pb.PreviewLibraryImportResponse{UploadId: result.UploadID}
+	for _, target := range result.Targets {
+		response.Targets = append(response.Targets, mergeSkillEntry(target))
+	}
+
+	for _, item := range result.Items {
+		view := &pb.BackupImportItem{Skill: mergeSkillEntry(item.Skill), ExactTargetId: item.ExactTargetID}
+		for _, candidate := range item.Candidates {
+			view.Candidates = append(view.Candidates, &pb.BackupMergeCandidate{
+				TargetSkillId: candidate.TargetID, Summary: versionMergeSummary(candidate.Summary),
+			})
+		}
+		response.Items = append(response.Items, view)
+	}
+
+	return response, nil
+}
+
+// CommitLibraryImport implements Interface. fino:req-fields 1=UploadId,2=Choices
+func (s skillhubServer) CommitLibraryImport(ctx context.Context, in *pb.CommitLibraryImportRequest) (*pb.CommitLibraryImportResponse, error) {
+	logs.Ctx(ctx).Debugw("CommitLibraryImport")
+	if in == nil {
+		logs.Ctx(ctx).Warnw("invalid commit_library_import request", "reason", "request_missing")
+		return nil, errcode.NewSkillhubRequestMissing()
+	}
+
+	choices := make([]service.BackupChoice, 0, len(in.GetChoices()))
+	for _, choice := range in.GetChoices() {
+		choices = append(choices, service.BackupChoice{
+			SkillID: choice.GetSkillId(), Action: choice.GetAction(), TargetID: choice.GetTargetSkillId(),
+		})
+	}
+
+	result, err := s.library.CommitBackupImport(ctx, in.GetUploadId(), choices)
+	if err != nil {
+		return nil, rpcError(ctx, "CommitLibraryImport", err)
+	}
+
+	return &pb.CommitLibraryImportResponse{
+		AddedCount: result.Added, MergedCount: result.Merged, SkippedCount: result.Skipped,
+		Versions: versionMergeSummary(result.Versions),
+	}, nil
+}
+
+// PreviewSkillMerge implements Interface. fino:req-fields 1=SkillId,2=TargetSkillId,3=BackupUploadId
+func (s skillhubServer) PreviewSkillMerge(ctx context.Context, in *pb.PreviewSkillMergeRequest) (*pb.VersionMergeSummary, error) {
+	logs.Ctx(ctx).Debugw("PreviewSkillMerge")
+	if in == nil {
+		logs.Ctx(ctx).Warnw("invalid preview_skill_merge request", "reason", "request_missing")
+		return nil, errcode.NewSkillhubRequestMissing()
+	}
+
+	if in.GetBackupUploadId() != "" {
+		result, err := s.library.PreviewBackupMerge(ctx, in.GetBackupUploadId(), in.GetSkillId(), in.GetTargetSkillId())
+		if err != nil {
+			return nil, rpcError(ctx, "PreviewSkillMerge", err)
+		}
+		return versionMergeSummary(result), nil
+	}
+
+	result, err := s.library.MergeSkills(ctx, in.GetSkillId(), in.GetTargetSkillId(), true)
+	if err != nil {
+		return nil, rpcError(ctx, "PreviewSkillMerge", err)
+	}
+
+	return versionMergeSummary(result), nil
+}
+
+// MergeSkill implements Interface. fino:req-fields 1=SkillId,2=TargetSkillId
+func (s skillhubServer) MergeSkill(ctx context.Context, in *pb.SkillMergeRequest) (*pb.VersionMergeSummary, error) {
+	logs.Ctx(ctx).Debugw("MergeSkill")
+	if in == nil {
+		logs.Ctx(ctx).Warnw("invalid merge_skill request", "reason", "request_missing")
+		return nil, errcode.NewSkillhubRequestMissing()
+	}
+
+	result, err := s.library.MergeSkills(ctx, in.GetSkillId(), in.GetTargetSkillId(), false)
+	if err != nil {
+		return nil, rpcError(ctx, "MergeSkill", err)
+	}
+
+	return versionMergeSummary(result), nil
+}
+
+func mergeSkillEntry(entry service.MergeSkillEntry) *pb.MergeSkillEntry {
+	return &pb.MergeSkillEntry{
+		Id: entry.ID, Name: entry.Name, Source: entry.Source,
+		VersionCount: entry.VersionCount, DefaultVersion: entry.DefaultVersion,
+	}
+}
+
+func versionMergeSummary(summary service.VersionMergeSummary) *pb.VersionMergeSummary {
+	return &pb.VersionMergeSummary{AddedVersions: summary.Added, RestoredSnapshots: summary.Restored, SkippedVersions: summary.Skipped}
+}

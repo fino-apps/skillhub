@@ -6,6 +6,7 @@ import LibraryBackup, { downloadLibraryBackup } from "./library-backup";
 import LocalIntake, { ZipIntake } from "./local-intake";
 import { BatchMetadata } from "./skill-metadata";
 import { libraryNavigation, message, sourceNames, sourceURL, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
+import { mergeSummaryText } from "./skill-merge";
 import { Dialog, Failure, Menu, OperationFeedback, Popover, useSkillOperation } from "./skill-ui";
 
 import "./skillhub.css";
@@ -343,7 +344,8 @@ export default function HomePage() {
         setPanel((current) => current?.kind === "backup" ? null : current);
         libraryNavigation.revision += 1;
         reload();
-        operation.setNotice(`已导入 ${result.addedCount ?? 0} 项，跳过已有 ${result.existingCount ?? 0} 项。`);
+        const stats = `新增 ${result.addedCount ?? 0} 项，合并 ${result.mergedCount ?? 0} 项，跳过 ${result.skippedCount ?? 0} 项。`;
+        operation.setNotice((result.mergedCount ?? 0) > 0 && result.versions ? `${stats}${mergeSummaryText(result.versions)}` : stats);
       }} />
     </Dialog>}
     {panel?.kind === "new-version" && <Dialog title="保存新版本" className="skill-workflow-dialog" onClose={() => setPanel(null)}>

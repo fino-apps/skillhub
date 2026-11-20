@@ -199,12 +199,25 @@ func (tx libraryTx) MatchingVersion(skill, commit, digest string) (domain.SkillV
 	if commit == "" {
 		db = db.Where("commit_sha = '' AND content_digest = ?", digest)
 	} else {
-		db = db.Where("commit_sha = ?", commit)
+		db = db.Where("commit_sha = ? AND (content_digest = ? OR content_digest = '')", commit, digest)
 	}
 
 	var row model.SkillVersion
 	err := db.Take(&row).Error
 	return domain.SkillVersionSnapshot(row), notFound(err)
+}
+
+func (tx libraryTx) SkillVersions(skill string) ([]domain.SkillVersionSnapshot, error) {
+	var rows []model.SkillVersion
+	err := tx.db.Where("skill_id = ?", skill).Order("id").Find(&rows).Error
+	return versionSnapshots(rows), err
+}
+
+func (tx libraryTx) MoveVersion(version domain.SkillVersionSnapshot) error {
+	return tx.db.Model(&model.SkillVersion{}).Where("id = ?", version.ID).Updates(map[string]any{
+		"skill_id": version.SkillId, "upstream_commit": version.UpstreamCommit,
+		"upstream_repository": version.UpstreamRepository, "upstream_path": version.UpstreamPath,
+	}).Error
 }
 
 func (tx libraryTx) BackupData() (port.LibraryData, error) {

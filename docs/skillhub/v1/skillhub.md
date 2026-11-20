@@ -747,6 +747,129 @@ POST /skillhub/v1/library/backup
 | `existingCount` | `integer` | `Int32` | 否 |  |  |
 
 
+## Preview Library Import
+
+### 请求路径
+
+```http
+POST /skillhub/v1/library/backup:preview
+```
+
+### 请求参数
+
+#### Body 请求对象
+
+| type | description |
+|---|---|
+| `string` |  |
+
+### 返回值
+
+#### 返回对象
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `uploadId` | `string` |  | 否 |  |  |
+| `items` | `Array<skillhub.v1.BackupImportItem>` |  | 否 |  |  |
+| `targets` | `Array<skillhub.v1.MergeSkillEntry>` |  | 否 |  |  |
+
+
+## Commit Library Import
+
+### 请求路径
+
+```http
+POST /skillhub/v1/library/backup:commit
+```
+
+### 请求参数
+
+#### Body 请求对象
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `uploadId` | `string` |  | 是 |  | UUID |
+| `choices` | `Array<skillhub.v1.BackupImportChoice>` |  | 否 |  |  |
+
+### 返回值
+
+#### 返回对象
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `addedCount` | `integer` | `Int32` | 否 |  |  |
+| `mergedCount` | `integer` | `Int32` | 否 |  |  |
+| `skippedCount` | `integer` | `Int32` | 否 |  |  |
+| `versions` | `skillhub.v1.VersionMergeSummary` |  | 否 |  |  |
+
+
+## Preview Skill Merge
+
+### 请求路径
+
+```http
+POST /skillhub/v1/skills/{skill_id}:previewMerge
+```
+
+### 请求参数
+
+#### Path 参数
+
+| 参数名 | 参数类型 | 格式类型 | 说明 |
+|---|---|---|---|
+| `skill_id` | `string` |  | UUID |
+
+#### Body 请求对象
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `targetSkillId` | `string` |  | 是 |  | UUID |
+| `backupUploadId` | `string` |  | 否 |  | 指定暂存备份时，skill_id 为备份中的条目。；UUID |
+
+### 返回值
+
+#### 返回对象
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `addedVersions` | `integer` | `Int32` | 否 |  |  |
+| `restoredSnapshots` | `integer` | `Int32` | 否 |  |  |
+| `skippedVersions` | `integer` | `Int32` | 否 |  |  |
+
+
+## Merge Skill
+
+### 请求路径
+
+```http
+POST /skillhub/v1/skills/{skill_id}:merge
+```
+
+### 请求参数
+
+#### Path 参数
+
+| 参数名 | 参数类型 | 格式类型 | 说明 |
+|---|---|---|---|
+| `skill_id` | `string` |  | UUID |
+
+#### Body 请求对象
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `targetSkillId` | `string` |  | 是 |  | UUID |
+
+### 返回值
+
+#### 返回对象
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `addedVersions` | `integer` | `Int32` | 否 |  |  |
+| `restoredSnapshots` | `integer` | `Int32` | 否 |  |  |
+| `skippedVersions` | `integer` | `Int32` | 否 |  |  |
+
+
 ## 数据模型
 
 ### `skillhub.v1.SkillView`
@@ -855,6 +978,47 @@ POST /skillhub/v1/library/backup
 | `leftText` | `string` |  | 否 |  |  |
 | `rightText` | `string` |  | 否 |  |  |
 | `detail` | `string` |  | 否 |  |  |
+
+### `skillhub.v1.BackupImportItem`
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `skill` | `skillhub.v1.MergeSkillEntry` |  | 否 |  |  |
+| `candidates` | `Array<skillhub.v1.BackupMergeCandidate>` |  | 否 |  |  |
+| `exactTargetId` | `string` |  | 否 |  |  |
+
+### `skillhub.v1.MergeSkillEntry`
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `id` | `string` |  | 否 |  |  |
+| `name` | `string` |  | 否 |  |  |
+| `source` | `string` |  | 否 |  |  |
+| `versionCount` | `integer` | `Int32` | 否 |  |  |
+| `defaultVersion` | `string` |  | 否 |  |  |
+
+### `skillhub.v1.BackupMergeCandidate`
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `targetSkillId` | `string` |  | 否 |  |  |
+| `summary` | `skillhub.v1.VersionMergeSummary` |  | 否 |  |  |
+
+### `skillhub.v1.VersionMergeSummary`
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `addedVersions` | `integer` | `Int32` | 否 |  |  |
+| `restoredSnapshots` | `integer` | `Int32` | 否 |  |  |
+| `skippedVersions` | `integer` | `Int32` | 否 |  |  |
+
+### `skillhub.v1.BackupImportChoice`
+
+| 字段 | 类型 | 格式 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|---|
+| `skillId` | `string` |  | 否 |  |  |
+| `action` | `string` |  | 否 |  | add、merge 或 skip。未指定的条目按新增处理。 |
+| `targetSkillId` | `string` |  | 否 |  |  |
 
 
 ## 枚举

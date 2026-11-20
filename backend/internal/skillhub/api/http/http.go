@@ -606,6 +606,86 @@ func RegisterHttpHandler(router *mux.Router, endpoints endpoint.Endpoints, cfg *
 			),
 		)
 	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "PreviewLibraryImport",
+			BindingName: "PreviewLibraryImport",
+			Method:      "POST",
+			Path:        "/skillhub/v1/library/backup:preview",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.PreviewLibraryImportEndpoint,
+					DecodeHTTPPreviewLibraryImportRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "CommitLibraryImport",
+			BindingName: "CommitLibraryImport",
+			Method:      "POST",
+			Path:        "/skillhub/v1/library/backup:commit",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.CommitLibraryImportEndpoint,
+					DecodeHTTPCommitLibraryImportRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "PreviewSkillMerge",
+			BindingName: "PreviewSkillMerge",
+			Method:      "POST",
+			Path:        "/skillhub/v1/skills/{skill_id}:previewMerge",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.PreviewSkillMergeEndpoint,
+					DecodeHTTPPreviewSkillMergeRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
+
+	{
+		route := httpmw.Route{
+			MethodName:  "MergeSkill",
+			BindingName: "MergeSkill",
+			Method:      "POST",
+			Path:        "/skillhub/v1/skills/{skill_id}:merge",
+		}
+		router.Methods(route.Method).Path(route.Path).Handler(
+			httpmw.WrapRoute(
+				route,
+				httptransport.NewServer(
+					endpoints.MergeSkillEndpoint,
+					DecodeHTTPMergeSkillRequest,
+					encodeResponse,
+					serverOptions...,
+				),
+			),
+		)
+	}
 }
 
 // newErrorEncoder adapts the configured HTTP error encoder to the transport callback.
@@ -1456,6 +1536,123 @@ func DecodeHTTPImportLibraryRequest(_ context.Context, r *http.Request) (interfa
 
 	queryParams := core.NewUrlQueryFrom(r.URL.Query())
 	_ = queryParams
+
+	return &req, nil
+}
+
+// DecodeHTTPPreviewLibraryImportRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded previewlibraryimport request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPPreviewLibraryImportRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.PreviewLibraryImportRequest
+	file, err := readMultipartHTTPFile(r, "file", 268435456)
+	if err != nil {
+		return nil, err
+	}
+	req.File = file
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	return &req, nil
+}
+
+// DecodeHTTPCommitLibraryImportRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded commitlibraryimport request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPCommitLibraryImportRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.CommitLibraryImportRequest
+
+	buf, err := readHTTPBody(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(buf) > 0 {
+		if err = protojson.Unmarshal(buf, &req); err != nil {
+			return nil, nhttp.WrapError(err,
+				http.StatusBadRequest,
+				"cannot parse request body as JSON",
+			)
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	return &req, nil
+}
+
+// DecodeHTTPPreviewSkillMergeRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded previewskillmerge request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPPreviewSkillMergeRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.PreviewSkillMergeRequest
+
+	buf, err := readHTTPBody(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(buf) > 0 {
+		if err = protojson.Unmarshal(buf, &req); err != nil {
+			return nil, nhttp.WrapError(err,
+				http.StatusBadRequest,
+				"cannot parse request body as JSON",
+			)
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	err = unmarshalPathParam(pathParams, &req.SkillId, "skill_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
+	}
+
+	return &req, nil
+}
+
+// DecodeHTTPMergeSkillRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded mergeskill request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPMergeSkillRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.SkillMergeRequest
+
+	buf, err := readHTTPBody(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(buf) > 0 {
+		if err = protojson.Unmarshal(buf, &req); err != nil {
+			return nil, nhttp.WrapError(err,
+				http.StatusBadRequest,
+				"cannot parse request body as JSON",
+			)
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := core.NewUrlQueryFrom(r.URL.Query())
+	_ = queryParams
+
+	err = unmarshalPathParam(pathParams, &req.SkillId, "skill_id")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the skill_id path parameter")
+	}
 
 	return &req, nil
 }

@@ -41,6 +41,8 @@ type LibraryData struct {
 
 type LibraryTx interface {
 	BackupData() (LibraryData, error)
+	SkillVersions(skill string) ([]model.SkillVersionSnapshot, error)
+	MoveVersion(model.SkillVersionSnapshot) error
 	CreateTag(model.SkillTagSnapshot) error
 	Skill(id string) (model.SkillSnapshot, error)
 	SkillBySource(key string) (model.SkillSnapshot, error)

@@ -206,6 +206,30 @@ func MakeGRPCServer(endpoints endpoint.Endpoints) pb.SkillhubServiceServer {
 			EncodeGRPCImportLibraryResponse,
 			serverOptions...,
 		),
+		previewLibraryImport: grpctransport.NewServer(
+			endpoints.PreviewLibraryImportEndpoint,
+			DecodeGRPCPreviewLibraryImportRequest,
+			EncodeGRPCPreviewLibraryImportResponse,
+			serverOptions...,
+		),
+		commitLibraryImport: grpctransport.NewServer(
+			endpoints.CommitLibraryImportEndpoint,
+			DecodeGRPCCommitLibraryImportRequest,
+			EncodeGRPCCommitLibraryImportResponse,
+			serverOptions...,
+		),
+		previewSkillMerge: grpctransport.NewServer(
+			endpoints.PreviewSkillMergeEndpoint,
+			DecodeGRPCPreviewSkillMergeRequest,
+			EncodeGRPCPreviewSkillMergeResponse,
+			serverOptions...,
+		),
+		mergeSkill: grpctransport.NewServer(
+			endpoints.MergeSkillEndpoint,
+			DecodeGRPCMergeSkillRequest,
+			EncodeGRPCMergeSkillResponse,
+			serverOptions...,
+		),
 	}
 }
 
@@ -239,6 +263,10 @@ type grpcServer struct {
 	getInstallCommand        grpctransport.Handler
 	exportLibrary            grpctransport.Handler
 	importLibrary            grpctransport.Handler
+	previewLibraryImport     grpctransport.Handler
+	commitLibraryImport      grpctransport.Handler
+	previewSkillMerge        grpctransport.Handler
+	mergeSkill               grpctransport.Handler
 }
 
 // Methods for grpcServer to implement SkillhubServiceServer interface
@@ -451,6 +479,38 @@ func (s *grpcServer) ImportLibrary(ctx context.Context, req *pb.ImportLibraryReq
 	return rep.(*pb.ImportLibraryResponse), nil
 }
 
+func (s *grpcServer) PreviewLibraryImport(ctx context.Context, req *pb.PreviewLibraryImportRequest) (*pb.PreviewLibraryImportResponse, error) {
+	_, rep, err := s.previewLibraryImport.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.PreviewLibraryImportResponse), nil
+}
+
+func (s *grpcServer) CommitLibraryImport(ctx context.Context, req *pb.CommitLibraryImportRequest) (*pb.CommitLibraryImportResponse, error) {
+	_, rep, err := s.commitLibraryImport.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.CommitLibraryImportResponse), nil
+}
+
+func (s *grpcServer) PreviewSkillMerge(ctx context.Context, req *pb.PreviewSkillMergeRequest) (*pb.VersionMergeSummary, error) {
+	_, rep, err := s.previewSkillMerge.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.VersionMergeSummary), nil
+}
+
+func (s *grpcServer) MergeSkill(ctx context.Context, req *pb.SkillMergeRequest) (*pb.VersionMergeSummary, error) {
+	_, rep, err := s.mergeSkill.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.VersionMergeSummary), nil
+}
+
 // Server Decode
 
 // DecodeGRPCListSkillsRequest is a transport/grpc.DecodeRequestFunc that converts a
@@ -635,6 +695,34 @@ func DecodeGRPCImportLibraryRequest(_ context.Context, grpcReq interface{}) (int
 	return req, nil
 }
 
+// DecodeGRPCPreviewLibraryImportRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC PreviewLibraryImport request to a user-domain PreviewLibraryImport request. Primarily useful in a server.
+func DecodeGRPCPreviewLibraryImportRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.PreviewLibraryImportRequest)
+	return req, nil
+}
+
+// DecodeGRPCCommitLibraryImportRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC CommitLibraryImport request to a user-domain CommitLibraryImport request. Primarily useful in a server.
+func DecodeGRPCCommitLibraryImportRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.CommitLibraryImportRequest)
+	return req, nil
+}
+
+// DecodeGRPCPreviewSkillMergeRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC PreviewSkillMerge request to a user-domain PreviewSkillMerge request. Primarily useful in a server.
+func DecodeGRPCPreviewSkillMergeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.PreviewSkillMergeRequest)
+	return req, nil
+}
+
+// DecodeGRPCMergeSkillRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC MergeSkill request to a user-domain MergeSkill request. Primarily useful in a server.
+func DecodeGRPCMergeSkillRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.SkillMergeRequest)
+	return req, nil
+}
+
 // Server Encode
 
 // EncodeGRPCListSkillsResponse is a transport/grpc.EncodeResponseFunc that converts a
@@ -816,6 +904,34 @@ func EncodeGRPCExportLibraryResponse(_ context.Context, response interface{}) (i
 // user-domain ImportLibrary response to a gRPC ImportLibrary reply. Primarily useful in a server.
 func EncodeGRPCImportLibraryResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(*pb.ImportLibraryResponse)
+	return resp, nil
+}
+
+// EncodeGRPCPreviewLibraryImportResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain PreviewLibraryImport response to a gRPC PreviewLibraryImport reply. Primarily useful in a server.
+func EncodeGRPCPreviewLibraryImportResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.PreviewLibraryImportResponse)
+	return resp, nil
+}
+
+// EncodeGRPCCommitLibraryImportResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain CommitLibraryImport response to a gRPC CommitLibraryImport reply. Primarily useful in a server.
+func EncodeGRPCCommitLibraryImportResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.CommitLibraryImportResponse)
+	return resp, nil
+}
+
+// EncodeGRPCPreviewSkillMergeResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain PreviewSkillMerge response to a gRPC PreviewSkillMerge reply. Primarily useful in a server.
+func EncodeGRPCPreviewSkillMergeResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.VersionMergeSummary)
+	return resp, nil
+}
+
+// EncodeGRPCMergeSkillResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain MergeSkill response to a gRPC MergeSkill reply. Primarily useful in a server.
+func EncodeGRPCMergeSkillResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.VersionMergeSummary)
 	return resp, nil
 }
 

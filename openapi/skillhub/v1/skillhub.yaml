@@ -114,6 +114,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/skillhub.v1.ImportLibraryResponse'
+  /skillhub/v1/library/backup:commit:
+    post:
+      operationId: CommitLibraryImport
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.CommitLibraryImportRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.CommitLibraryImportResponse'
+  /skillhub/v1/library/backup:preview:
+    post:
+      operationId: PreviewLibraryImport
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+                - file
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.PreviewLibraryImportResponse'
   /skillhub/v1/projects:scan:
     post:
       operationId: ScanProject
@@ -454,6 +492,52 @@ paths:
       responses:
         "200":
           description: OK
+  /skillhub/v1/skills/{skill_id}:merge:
+    post:
+      operationId: MergeSkill
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.SkillMergeRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.VersionMergeSummary'
+  /skillhub/v1/skills/{skill_id}:previewMerge:
+    post:
+      operationId: PreviewSkillMerge
+      parameters:
+        - name: skill_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/skillhub.v1.PreviewSkillMergeRequest'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/skillhub.v1.VersionMergeSummary'
   /skillhub/v1/skills:batchDelete:
     post:
       operationId: BatchDeleteSkills
@@ -554,6 +638,37 @@ components:
           type: array
           items:
             type: object
+    skillhub.v1.BackupImportChoice:
+      title: skillhub.v1.BackupImportChoice
+      type: object
+      properties:
+        action:
+          description: add、merge 或 skip。未指定的条目按新增处理。
+          type: string
+        skillId:
+          type: string
+        targetSkillId:
+          type: string
+    skillhub.v1.BackupImportItem:
+      title: skillhub.v1.BackupImportItem
+      type: object
+      properties:
+        candidates:
+          type: array
+          items:
+            $ref: '#/components/schemas/skillhub.v1.BackupMergeCandidate'
+        exactTargetId:
+          type: string
+        skill:
+          $ref: '#/components/schemas/skillhub.v1.MergeSkillEntry'
+    skillhub.v1.BackupMergeCandidate:
+      title: skillhub.v1.BackupMergeCandidate
+      type: object
+      properties:
+        summary:
+          $ref: '#/components/schemas/skillhub.v1.VersionMergeSummary'
+        targetSkillId:
+          type: string
     skillhub.v1.BatchDeleteSkillsRequest:
       title: skillhub.v1.BatchDeleteSkillsRequest
       type: object
@@ -577,6 +692,34 @@ components:
           maxItems: 100
       required:
         - changes
+    skillhub.v1.CommitLibraryImportRequest:
+      title: skillhub.v1.CommitLibraryImportRequest
+      type: object
+      properties:
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/skillhub.v1.BackupImportChoice'
+        uploadId:
+          type: string
+          format: uuid
+      required:
+        - uploadId
+    skillhub.v1.CommitLibraryImportResponse:
+      title: skillhub.v1.CommitLibraryImportResponse
+      type: object
+      properties:
+        addedCount:
+          type: integer
+          format: int32
+        mergedCount:
+          type: integer
+          format: int32
+        skippedCount:
+          type: integer
+          format: int32
+        versions:
+          $ref: '#/components/schemas/skillhub.v1.VersionMergeSummary'
     skillhub.v1.CommitUploadRequest:
       title: skillhub.v1.CommitUploadRequest
       type: object
@@ -1005,6 +1148,21 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/skillhub.v1.VersionView'
+    skillhub.v1.MergeSkillEntry:
+      title: skillhub.v1.MergeSkillEntry
+      type: object
+      properties:
+        defaultVersion:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        source:
+          type: string
+        versionCount:
+          type: integer
+          format: int32
     skillhub.v1.PreviewImportRequest:
       title: skillhub.v1.PreviewImportRequest
       type: object
@@ -1026,6 +1184,44 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/skillhub.v1.SkillCandidate'
+    skillhub.v1.PreviewLibraryImportRequest:
+      title: skillhub.v1.PreviewLibraryImportRequest
+      type: object
+      properties:
+        file:
+          type: string
+          format: byte
+    skillhub.v1.PreviewLibraryImportResponse:
+      title: skillhub.v1.PreviewLibraryImportResponse
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/skillhub.v1.BackupImportItem'
+        targets:
+          type: array
+          items:
+            $ref: '#/components/schemas/skillhub.v1.MergeSkillEntry'
+        uploadId:
+          type: string
+    skillhub.v1.PreviewSkillMergeRequest:
+      title: skillhub.v1.PreviewSkillMergeRequest
+      type: object
+      properties:
+        backupUploadId:
+          description: 指定暂存备份时，skill_id 为备份中的条目。
+          type: string
+          format: uuid
+        skillId:
+          type: string
+          format: uuid
+        targetSkillId:
+          type: string
+          format: uuid
+      required:
+        - skillId
+        - targetSkillId
     skillhub.v1.RepairVersionRequest:
       title: skillhub.v1.RepairVersionRequest
       type: object
@@ -1102,6 +1298,19 @@ components:
           type: string
         versionId:
           type: string
+    skillhub.v1.SkillMergeRequest:
+      title: skillhub.v1.SkillMergeRequest
+      type: object
+      properties:
+        skillId:
+          type: string
+          format: uuid
+        targetSkillId:
+          type: string
+          format: uuid
+      required:
+        - skillId
+        - targetSkillId
     skillhub.v1.SkillMetadataChange:
       title: skillhub.v1.SkillMetadataChange
       type: object
@@ -1247,6 +1456,19 @@ components:
         sourceRef:
           type: string
           maxLength: 200
+    skillhub.v1.VersionMergeSummary:
+      title: skillhub.v1.VersionMergeSummary
+      type: object
+      properties:
+        addedVersions:
+          type: integer
+          format: int32
+        restoredSnapshots:
+          type: integer
+          format: int32
+        skippedVersions:
+          type: integer
+          format: int32
     skillhub.v1.VersionView:
       title: skillhub.v1.VersionView
       type: object

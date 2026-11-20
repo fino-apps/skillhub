@@ -419,6 +419,63 @@ export const apiRoutes = {
       file: "",
     },
   },
+  previewLibraryImport: {
+    service: "SkillhubService",
+    rpc: "PreviewLibraryImport",
+    binding: "PreviewLibraryImport",
+    method: "POST",
+    path: "/skillhub/v1/library/backup:preview",
+    pathParams: [],
+    queryParams: [],
+    body: "file",
+    requestFormat: "multipart",
+    defaultPayload: {
+      file: "",
+    },
+  },
+  commitLibraryImport: {
+    service: "SkillhubService",
+    rpc: "CommitLibraryImport",
+    binding: "CommitLibraryImport",
+    method: "POST",
+    path: "/skillhub/v1/library/backup:commit",
+    pathParams: [],
+    queryParams: [],
+    body: "*",
+    defaultPayload: {
+      uploadId: "",
+      choices: [],
+    },
+  },
+  previewSkillMerge: {
+    service: "SkillhubService",
+    rpc: "PreviewSkillMerge",
+    binding: "PreviewSkillMerge",
+    method: "POST",
+    path: "/skillhub/v1/skills/{skill_id}:previewMerge",
+    pathParams: ["skill_id"],
+    queryParams: [],
+    body: "*",
+    defaultPayload: {
+      skillId: "",
+      targetSkillId: "",
+      backupUploadId: "",
+    },
+  },
+  mergeSkill: {
+    service: "SkillhubService",
+    rpc: "MergeSkill",
+    binding: "MergeSkill",
+    method: "POST",
+    path: "/skillhub/v1/skills/{skill_id}:merge",
+    pathParams: ["skill_id"],
+    queryParams: [],
+    body: "*",
+    defaultPayload: {
+      skillId: "",
+      targetSkillId: "",
+    },
+  },
 } as const satisfies Record<string, ApiRoute>;
 
 export type ApiRouteName = keyof typeof apiRoutes;

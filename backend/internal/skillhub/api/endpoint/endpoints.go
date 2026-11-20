@@ -60,6 +60,10 @@ type Endpoints struct {
 	GetInstallCommandEndpoint        endpoint.Endpoint
 	ExportLibraryEndpoint            endpoint.Endpoint
 	ImportLibraryEndpoint            endpoint.Endpoint
+	PreviewLibraryImportEndpoint     endpoint.Endpoint
+	CommitLibraryImportEndpoint      endpoint.Endpoint
+	PreviewSkillMergeEndpoint        endpoint.Endpoint
+	MergeSkillEndpoint               endpoint.Endpoint
 }
 
 // NewEndpoints adapts each service method to an endpoint.
@@ -91,6 +95,10 @@ func NewEndpoints(service pb.SkillhubServiceServer) Endpoints {
 		GetInstallCommandEndpoint:        MakeGetInstallCommandEndpoint(service),
 		ExportLibraryEndpoint:            MakeExportLibraryEndpoint(service),
 		ImportLibraryEndpoint:            MakeImportLibraryEndpoint(service),
+		PreviewLibraryImportEndpoint:     MakePreviewLibraryImportEndpoint(service),
+		CommitLibraryImportEndpoint:      MakeCommitLibraryImportEndpoint(service),
+		PreviewSkillMergeEndpoint:        MakePreviewSkillMergeEndpoint(service),
+		MergeSkillEndpoint:               MakeMergeSkillEndpoint(service),
 	}
 }
 
@@ -538,6 +546,74 @@ func MakeImportLibraryEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
 	}
 }
 
+func MakePreviewLibraryImportEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint PreviewLibraryImport")
+		}
+		req, ok := request.(*pb.PreviewLibraryImportRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected PreviewLibraryImport request type %T", request)
+		}
+		v, err := s.PreviewLibraryImport(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeCommitLibraryImportEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint CommitLibraryImport")
+		}
+		req, ok := request.(*pb.CommitLibraryImportRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected CommitLibraryImport request type %T", request)
+		}
+		v, err := s.CommitLibraryImport(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakePreviewSkillMergeEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint PreviewSkillMerge")
+		}
+		req, ok := request.(*pb.PreviewSkillMergeRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected PreviewSkillMerge request type %T", request)
+		}
+		v, err := s.PreviewSkillMerge(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeMergeSkillEndpoint(s pb.SkillhubServiceServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		if s == nil {
+			return nil, fmt.Errorf("nil service for endpoint MergeSkill")
+		}
+		req, ok := request.(*pb.SkillMergeRequest)
+		if !ok {
+			return nil, fmt.Errorf("unexpected MergeSkill request type %T", request)
+		}
+		v, err := s.MergeSkill(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
 // WrapAll applies middleware to every endpoint.
 func (e *Endpoints) WrapAll(middleware endpoint.Middleware) {
 	if e == nil || middleware == nil {
@@ -569,6 +645,10 @@ func (e *Endpoints) WrapAll(middleware endpoint.Middleware) {
 	e.GetInstallCommandEndpoint = middleware(e.GetInstallCommandEndpoint)
 	e.ExportLibraryEndpoint = middleware(e.ExportLibraryEndpoint)
 	e.ImportLibraryEndpoint = middleware(e.ImportLibraryEndpoint)
+	e.PreviewLibraryImportEndpoint = middleware(e.PreviewLibraryImportEndpoint)
+	e.CommitLibraryImportEndpoint = middleware(e.CommitLibraryImportEndpoint)
+	e.PreviewSkillMergeEndpoint = middleware(e.PreviewSkillMergeEndpoint)
+	e.MergeSkillEndpoint = middleware(e.MergeSkillEndpoint)
 }
 
 // LabeledMiddleware receives the endpoint name.
@@ -605,4 +685,8 @@ func (e *Endpoints) WrapAllLabeled(middleware LabeledMiddleware) {
 	e.GetInstallCommandEndpoint = middleware("GetInstallCommand", e.GetInstallCommandEndpoint)
 	e.ExportLibraryEndpoint = middleware("ExportLibrary", e.ExportLibraryEndpoint)
 	e.ImportLibraryEndpoint = middleware("ImportLibrary", e.ImportLibraryEndpoint)
+	e.PreviewLibraryImportEndpoint = middleware("PreviewLibraryImport", e.PreviewLibraryImportEndpoint)
+	e.CommitLibraryImportEndpoint = middleware("CommitLibraryImport", e.CommitLibraryImportEndpoint)
+	e.PreviewSkillMergeEndpoint = middleware("PreviewSkillMerge", e.PreviewSkillMergeEndpoint)
+	e.MergeSkillEndpoint = middleware("MergeSkill", e.MergeSkillEndpoint)
 }

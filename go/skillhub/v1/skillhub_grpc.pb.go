@@ -46,6 +46,10 @@ const (
 	SkillhubService_GetInstallCommand_FullMethodName        = "/skillhub.v1.SkillhubService/GetInstallCommand"
 	SkillhubService_ExportLibrary_FullMethodName            = "/skillhub.v1.SkillhubService/ExportLibrary"
 	SkillhubService_ImportLibrary_FullMethodName            = "/skillhub.v1.SkillhubService/ImportLibrary"
+	SkillhubService_PreviewLibraryImport_FullMethodName     = "/skillhub.v1.SkillhubService/PreviewLibraryImport"
+	SkillhubService_CommitLibraryImport_FullMethodName      = "/skillhub.v1.SkillhubService/CommitLibraryImport"
+	SkillhubService_PreviewSkillMerge_FullMethodName        = "/skillhub.v1.SkillhubService/PreviewSkillMerge"
+	SkillhubService_MergeSkill_FullMethodName               = "/skillhub.v1.SkillhubService/MergeSkill"
 )
 
 // SkillhubServiceClient is the client API for SkillhubService service.
@@ -78,6 +82,10 @@ type SkillhubServiceClient interface {
 	GetInstallCommand(ctx context.Context, in *GetInstallCommandRequest, opts ...grpc.CallOption) (*GetInstallCommandResponse, error)
 	ExportLibrary(ctx context.Context, in *ExportLibraryRequest, opts ...grpc.CallOption) (*ExportLibraryResponse, error)
 	ImportLibrary(ctx context.Context, in *ImportLibraryRequest, opts ...grpc.CallOption) (*ImportLibraryResponse, error)
+	PreviewLibraryImport(ctx context.Context, in *PreviewLibraryImportRequest, opts ...grpc.CallOption) (*PreviewLibraryImportResponse, error)
+	CommitLibraryImport(ctx context.Context, in *CommitLibraryImportRequest, opts ...grpc.CallOption) (*CommitLibraryImportResponse, error)
+	PreviewSkillMerge(ctx context.Context, in *PreviewSkillMergeRequest, opts ...grpc.CallOption) (*VersionMergeSummary, error)
+	MergeSkill(ctx context.Context, in *SkillMergeRequest, opts ...grpc.CallOption) (*VersionMergeSummary, error)
 }
 
 type skillhubServiceClient struct {
@@ -322,6 +330,42 @@ func (c *skillhubServiceClient) ImportLibrary(ctx context.Context, in *ImportLib
 	return out, nil
 }
 
+func (c *skillhubServiceClient) PreviewLibraryImport(ctx context.Context, in *PreviewLibraryImportRequest, opts ...grpc.CallOption) (*PreviewLibraryImportResponse, error) {
+	out := new(PreviewLibraryImportResponse)
+	err := c.cc.Invoke(ctx, SkillhubService_PreviewLibraryImport_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *skillhubServiceClient) CommitLibraryImport(ctx context.Context, in *CommitLibraryImportRequest, opts ...grpc.CallOption) (*CommitLibraryImportResponse, error) {
+	out := new(CommitLibraryImportResponse)
+	err := c.cc.Invoke(ctx, SkillhubService_CommitLibraryImport_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *skillhubServiceClient) PreviewSkillMerge(ctx context.Context, in *PreviewSkillMergeRequest, opts ...grpc.CallOption) (*VersionMergeSummary, error) {
+	out := new(VersionMergeSummary)
+	err := c.cc.Invoke(ctx, SkillhubService_PreviewSkillMerge_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *skillhubServiceClient) MergeSkill(ctx context.Context, in *SkillMergeRequest, opts ...grpc.CallOption) (*VersionMergeSummary, error) {
+	out := new(VersionMergeSummary)
+	err := c.cc.Invoke(ctx, SkillhubService_MergeSkill_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SkillhubServiceServer is the server API for SkillhubService service.
 // All implementations must embed UnimplementedSkillhubServiceServer
 // for forward compatibility
@@ -352,6 +396,10 @@ type SkillhubServiceServer interface {
 	GetInstallCommand(context.Context, *GetInstallCommandRequest) (*GetInstallCommandResponse, error)
 	ExportLibrary(context.Context, *ExportLibraryRequest) (*ExportLibraryResponse, error)
 	ImportLibrary(context.Context, *ImportLibraryRequest) (*ImportLibraryResponse, error)
+	PreviewLibraryImport(context.Context, *PreviewLibraryImportRequest) (*PreviewLibraryImportResponse, error)
+	CommitLibraryImport(context.Context, *CommitLibraryImportRequest) (*CommitLibraryImportResponse, error)
+	PreviewSkillMerge(context.Context, *PreviewSkillMergeRequest) (*VersionMergeSummary, error)
+	MergeSkill(context.Context, *SkillMergeRequest) (*VersionMergeSummary, error)
 	mustEmbedUnimplementedSkillhubServiceServer()
 }
 
@@ -436,6 +484,18 @@ func (UnimplementedSkillhubServiceServer) ExportLibrary(context.Context, *Export
 }
 func (UnimplementedSkillhubServiceServer) ImportLibrary(context.Context, *ImportLibraryRequest) (*ImportLibraryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ImportLibrary not implemented")
+}
+func (UnimplementedSkillhubServiceServer) PreviewLibraryImport(context.Context, *PreviewLibraryImportRequest) (*PreviewLibraryImportResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PreviewLibraryImport not implemented")
+}
+func (UnimplementedSkillhubServiceServer) CommitLibraryImport(context.Context, *CommitLibraryImportRequest) (*CommitLibraryImportResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CommitLibraryImport not implemented")
+}
+func (UnimplementedSkillhubServiceServer) PreviewSkillMerge(context.Context, *PreviewSkillMergeRequest) (*VersionMergeSummary, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PreviewSkillMerge not implemented")
+}
+func (UnimplementedSkillhubServiceServer) MergeSkill(context.Context, *SkillMergeRequest) (*VersionMergeSummary, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MergeSkill not implemented")
 }
 func (UnimplementedSkillhubServiceServer) mustEmbedUnimplementedSkillhubServiceServer() {}
 
@@ -918,6 +978,78 @@ func _SkillhubService_ImportLibrary_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SkillhubService_PreviewLibraryImport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PreviewLibraryImportRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SkillhubServiceServer).PreviewLibraryImport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SkillhubService_PreviewLibraryImport_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SkillhubServiceServer).PreviewLibraryImport(ctx, req.(*PreviewLibraryImportRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SkillhubService_CommitLibraryImport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommitLibraryImportRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SkillhubServiceServer).CommitLibraryImport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SkillhubService_CommitLibraryImport_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SkillhubServiceServer).CommitLibraryImport(ctx, req.(*CommitLibraryImportRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SkillhubService_PreviewSkillMerge_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PreviewSkillMergeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SkillhubServiceServer).PreviewSkillMerge(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SkillhubService_PreviewSkillMerge_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SkillhubServiceServer).PreviewSkillMerge(ctx, req.(*PreviewSkillMergeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SkillhubService_MergeSkill_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SkillMergeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SkillhubServiceServer).MergeSkill(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SkillhubService_MergeSkill_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SkillhubServiceServer).MergeSkill(ctx, req.(*SkillMergeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SkillhubService_ServiceDesc is the grpc.ServiceDesc for SkillhubService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1028,6 +1160,22 @@ var SkillhubService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ImportLibrary",
 			Handler:    _SkillhubService_ImportLibrary_Handler,
+		},
+		{
+			MethodName: "PreviewLibraryImport",
+			Handler:    _SkillhubService_PreviewLibraryImport_Handler,
+		},
+		{
+			MethodName: "CommitLibraryImport",
+			Handler:    _SkillhubService_CommitLibraryImport_Handler,
+		},
+		{
+			MethodName: "PreviewSkillMerge",
+			Handler:    _SkillhubService_PreviewSkillMerge_Handler,
+		},
+		{
+			MethodName: "MergeSkill",
+			Handler:    _SkillhubService_MergeSkill_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

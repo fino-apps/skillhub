@@ -174,16 +174,20 @@ func (s *Library) Repair(ctx context.Context, skillID, versionID string) error {
 	if s.Available(row) {
 		return nil
 	}
-	if skill.RepositoryUrl == "" || !CommitPattern.MatchString(row.CommitSha) {
+	repository, path := skill.RepositoryUrl, skill.RepositoryPath
+	if row.UpstreamRepository != "" && row.UpstreamCommit == row.CommitSha {
+		repository, path = row.UpstreamRepository, row.UpstreamPath
+	}
+	if repository == "" || !CommitPattern.MatchString(row.CommitSha) {
 		return ErrConflict
 	}
 
-	root, _, cleanup, err := Checkout(ctx, skill.RepositoryUrl, row.CommitSha)
+	root, _, cleanup, err := Checkout(ctx, repository, row.CommitSha)
 	if err != nil {
 		return invalid(err)
 	}
 	defer cleanup()
-	dir, err := Within(root, skill.RepositoryPath)
+	dir, err := Within(root, path)
 	if err != nil {
 		return invalid(err)
 	}

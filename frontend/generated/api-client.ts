@@ -309,3 +309,19 @@ export function exportLibrary(payload: ApiRequest = {}, options: ApiRequestOptio
 export function importLibrary<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
   return requestApi<TResponse>(apiRoutes.importLibrary, payload, options);
 }
+
+export function previewLibraryImport<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.previewLibraryImport, payload, options);
+}
+
+export function commitLibraryImport<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.commitLibraryImport, payload, options);
+}
+
+export function previewSkillMerge<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.previewSkillMerge, payload, options);
+}
+
+export function mergeSkill<TResponse = unknown>(payload: ApiRequest = {}, options: ApiRequestOptions = {}): Promise<TResponse> {
+  return requestApi<TResponse>(apiRoutes.mergeSkill, payload, options);
+}

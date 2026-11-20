@@ -124,6 +124,12 @@ func validateRequest(request interface{}) error {
 		return validateCompareSkillsRequest(request)
 	case *pb.GetInstallCommandRequest:
 		return validateGetInstallCommandRequest(request)
+	case *pb.CommitLibraryImportRequest:
+		return validateCommitLibraryImportRequest(request)
+	case *pb.PreviewSkillMergeRequest:
+		return validatePreviewSkillMergeRequest(request)
+	case *pb.SkillMergeRequest:
+		return validateMergeSkillRequest(request)
 	default:
 		return nil
 	}
@@ -444,6 +450,42 @@ func validateGetInstallCommandRequest(req *pb.GetInstallCommandRequest) error {
 
 	if err := requestValidator.Var(req.GetVersionId(), "required,max=36,uuid"); err != nil {
 		return newRequestValidationError("version_id", err)
+	}
+
+	return nil
+}
+
+func validateCommitLibraryImportRequest(req *pb.CommitLibraryImportRequest) error {
+	if err := requestValidator.Var(req.GetUploadId(), "required,uuid"); err != nil {
+		return newRequestValidationError("upload_id", err)
+	}
+
+	return nil
+}
+
+func validatePreviewSkillMergeRequest(req *pb.PreviewSkillMergeRequest) error {
+	if err := requestValidator.Var(req.GetSkillId(), "required,uuid"); err != nil {
+		return newRequestValidationError("skill_id", err)
+	}
+
+	if err := requestValidator.Var(req.GetTargetSkillId(), "required,uuid"); err != nil {
+		return newRequestValidationError("target_skill_id", err)
+	}
+
+	if err := requestValidator.Var(req.GetBackupUploadId(), "omitempty,uuid"); err != nil {
+		return newRequestValidationError("backup_upload_id", err)
+	}
+
+	return nil
+}
+
+func validateMergeSkillRequest(req *pb.SkillMergeRequest) error {
+	if err := requestValidator.Var(req.GetSkillId(), "required,uuid"); err != nil {
+		return newRequestValidationError("skill_id", err)
+	}
+
+	if err := requestValidator.Var(req.GetTargetSkillId(), "required,uuid"); err != nil {
+		return newRequestValidationError("target_skill_id", err)
 	}
 
 	return nil

@@ -124,6 +124,23 @@ service SkillhubService {
     option (google.api.http) = {post: "/skillhub/v1/library/backup" body: "file"};
     option (fino.http) = {multipart: {max_file_bytes: 268435456}};
   }
+
+  rpc PreviewLibraryImport(PreviewLibraryImportRequest) returns (PreviewLibraryImportResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/library/backup:preview" body: "file"};
+    option (fino.http) = {multipart: {max_file_bytes: 268435456}};
+  }
+
+  rpc CommitLibraryImport(CommitLibraryImportRequest) returns (CommitLibraryImportResponse) {
+    option (google.api.http) = {post: "/skillhub/v1/library/backup:commit" body: "*"};
+  }
+
+  rpc PreviewSkillMerge(PreviewSkillMergeRequest) returns (VersionMergeSummary) {
+    option (google.api.http) = {post: "/skillhub/v1/skills/{skill_id}:previewMerge" body: "*"};
+  }
+
+  rpc MergeSkill(SkillMergeRequest) returns (VersionMergeSummary) {
+    option (google.api.http) = {post: "/skillhub/v1/skills/{skill_id}:merge" body: "*"};
+  }
 }
 
 message ListSkillsRequest {
@@ -461,4 +478,70 @@ message ImportLibraryRequest {
 message ImportLibraryResponse {
   int32 added_count = 1;
   int32 existing_count = 2;
+}
+
+message PreviewLibraryImportRequest {
+  bytes file = 1;
+}
+
+message MergeSkillEntry {
+  string id = 1;
+  string name = 2;
+  string source = 3;
+  int32 version_count = 4;
+  string default_version = 5;
+}
+
+message VersionMergeSummary {
+  int32 added_versions = 1;
+  int32 restored_snapshots = 2;
+  int32 skipped_versions = 3;
+}
+
+message BackupMergeCandidate {
+  string target_skill_id = 1;
+  VersionMergeSummary summary = 2;
+}
+
+message BackupImportItem {
+  MergeSkillEntry skill = 1;
+  repeated BackupMergeCandidate candidates = 2;
+  string exact_target_id = 3;
+}
+
+message PreviewLibraryImportResponse {
+  string upload_id = 1;
+  repeated BackupImportItem items = 2;
+  repeated MergeSkillEntry targets = 3;
+}
+
+message BackupImportChoice {
+  string skill_id = 1;
+  // add、merge 或 skip。未指定的条目按新增处理。
+  string action = 2;
+  string target_skill_id = 3;
+}
+
+message CommitLibraryImportRequest {
+  string upload_id = 1 [(fino.validate) = {required: true uuid: true}];
+  repeated BackupImportChoice choices = 2;
+}
+
+message CommitLibraryImportResponse {
+  int32 added_count = 1;
+  int32 merged_count = 2;
+  int32 skipped_count = 3;
+  VersionMergeSummary versions = 4;
+}
+
+message PreviewSkillMergeRequest {
+  string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
+  string target_skill_id = 2 [(fino.validate) = {required: true uuid: true}];
+  // 指定暂存备份时，skill_id 为备份中的条目。
+  string backup_upload_id = 3 [(fino.validate) = {omitempty: true uuid: true}];
+}
+
+message SkillMergeRequest {
+  string skill_id = 1 [(fino.validate) = {required: true uuid: true}];
+  string target_skill_id = 2 [(fino.validate) = {required: true uuid: true}];
 }
