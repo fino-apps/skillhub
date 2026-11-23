@@ -30,12 +30,12 @@ export default function SkillMetadata({ skill, categories, onSaved }: { skill: S
   return <form className="github-form" onSubmit={save}>
     <fieldset disabled={busy} className="skill-fields">
       <label>短用途<input name="purpose" defaultValue={skill.purpose} maxLength={240} /></label>
-      <label>分类<input name="category" defaultValue={skill.category} maxLength={128} list="existing-categories" /></label>
-      <datalist id="existing-categories">{categories.map((name) => <option key={name} value={name} />)}</datalist>
-      <label>标签<input name="tags" defaultValue={skill.tags?.join(", ")} placeholder="用逗号分隔" /></label>
       <label>来源名称<input name="upstreamName" defaultValue={skill.upstreamName}
         placeholder={importSourceName(skill.importKind)} maxLength={120} /></label>
       <label>来源链接<input name="upstreamUrl" defaultValue={skill.upstreamUrl} type="url" maxLength={2048} /></label>
+      <label>分类<input name="category" defaultValue={skill.category} maxLength={128} list="existing-categories" /></label>
+      <datalist id="existing-categories">{categories.map((name) => <option key={name} value={name} />)}</datalist>
+      <label>标签<input name="tags" defaultValue={skill.tags?.join(", ")} placeholder="用逗号分隔" /></label>
       <label>备注<textarea name="notes" defaultValue={skill.notes} rows={3} maxLength={4096} /></label>
     </fieldset>
     <Failure error={error} />

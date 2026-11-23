@@ -67,13 +67,13 @@ export function ImportMetadataFields({ categories, existingTags, defaultSource, 
       <legend className="sr-only">整理信息</legend>
       <span className="skillhub-hint" id={hintId}>应用到本批新收录的 Skill</span>
       <label>短用途<input name="purpose" maxLength={240} /></label>
+      <label>来源名称<input name="upstreamName" maxLength={120} placeholder={defaultSource} /></label>
+      <label>来源链接<input name="upstreamUrl" type="url" maxLength={2048} /></label>
       <label>分类<input name="category" maxLength={128} list={categoriesId} /></label>
       <datalist id={categoriesId}>{categories.map((name) => <option key={name} value={name} />)}</datalist>
       <label>标签<input name="tags" list={tagsId} placeholder="选择或输入标签，用逗号分隔"
         onChange={(event) => setTagPrefix(event.target.value.match(/^.*[,，]\s*/)?.[0] ?? "")} /></label>
       <datalist id={tagsId}>{suggestedTags.map((tag) => <option key={tag} value={tagPrefix + tag} />)}</datalist>
-      <label>来源名称<input name="upstreamName" maxLength={120} placeholder={defaultSource} /></label>
-      <label>来源链接<input name="upstreamUrl" type="url" maxLength={2048} /></label>
       <label>备注<textarea name="notes" rows={3} maxLength={4096} /></label>
     </fieldset>
   </details>;
