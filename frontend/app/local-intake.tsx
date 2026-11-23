@@ -213,8 +213,36 @@ export default function LocalIntake({ categories, onComplete, onVersion, childre
   </div>;
 }
 
-export function ZipIntake({ skillId, onComplete, onBack }: {
-  skillId?: string; onComplete: (result: ImportResult, pending?: boolean) => void; onBack?: () => void;
+function directoryInput(input: HTMLInputElement | null) {
+  input?.setAttribute("webkitdirectory", "");
+}
+
+async function archiveDirectory(files: FileList) {
+  const entries = Array.from(files).filter((file) => !file.webkitRelativePath.split("/").slice(1).includes(".git"));
+  if (!entries.some((file) => file.name === "SKILL.md")) {
+    throw new Error("所选目录中没有找到 SKILL.md");
+  }
+  const sizeLimit = 64 * 1024 * 1024;
+  if (entries.length > 10000 || entries.reduce((total, file) => total + file.size, 0) > sizeLimit) {
+    throw new Error("所选目录最多支持 10000 个文件，文件总大小不能超过 64 MiB");
+  }
+
+  const { zip } = await import("fflate");
+  const contents = Object.fromEntries(await Promise.all(entries.map(async (file) =>
+    [file.webkitRelativePath, new Uint8Array(await file.arrayBuffer())] as const,
+  )));
+  const archive = await new Promise<Uint8Array>((resolve, reject) => {
+    zip(contents, (error, data) => error ? reject(error) : resolve(data));
+  });
+  if (archive.byteLength > sizeLimit) {
+    throw new Error("打包后超过 64 MiB，请选择更小的目录");
+  }
+  const root = entries[0].webkitRelativePath.split("/")[0];
+  return new File([archive], `${root}.zip`, { type: "application/zip" });
+}
+
+export function UploadIntake({ skillId, directory = false, onComplete, children }: {
+  skillId?: string; directory?: boolean; onComplete: (result: ImportResult, pending?: boolean) => void; children?: ReactNode;
 }) {
   const [uploadId, setUploadId] = useState("");
   const [items, setItems] = useState<Candidate[]>([]);
@@ -223,14 +251,16 @@ export function ZipIntake({ skillId, onComplete, onBack }: {
   const [error, setError] = useState("");
   const [result, setResult] = useState<ImportResult | null>(null);
 
-  async function read(file?: File) {
-    if (!file) return;
+  async function read(input: HTMLInputElement) {
+    const files = input.files;
+    if (!files?.length) return;
     setBusy(true);
     setError("");
     setResult(null);
     setItems([]);
     setUploadId("");
     try {
+      const file = directory ? await archiveDirectory(files) : files[0];
       const reply = await stageZip(file);
       const candidates = reply.skills ?? [];
       setUploadId(reply.uploadId);
@@ -238,6 +268,7 @@ export function ZipIntake({ skillId, onComplete, onBack }: {
       setSelected(candidates.slice(0, skillId ? 1 : importLimit).map((item) => item.path ?? ""));
     } catch (err) {
       setError(message(err));
+      input.value = "";
     } finally {
       setBusy(false);
     }
@@ -267,12 +298,15 @@ export function ZipIntake({ skillId, onComplete, onBack }: {
   }
 
   return <div className="skill-fields">
-    <label>ZIP 文件<input type="file" accept=".zip,application/zip" autoFocus={!!onBack} disabled={busy} onChange={(event) => void read(event.target.files?.[0])} /></label>
+    <label>{directory ? "选择此设备上的 Skill 目录" : "ZIP 文件"}
+      <input type="file" accept={directory ? undefined : ".zip,application/zip"} disabled={busy}
+        ref={directory ? directoryInput : undefined} onChange={(event) => void read(event.currentTarget)} />
+    </label>
     {items.length > 0 && <CandidatePicker items={items} selected={selected} disabled={busy} single={!!skillId} onChange={setSelected} />}
     <Failure error={error} />
     <ImportFeedback result={result} />
     {busy && <p role="status">处理中…</p>}
     {uploadId && <button type="button" disabled={busy || !selected.length} onClick={() => void commit()}>确认收录</button>}
-    {onBack && <button type="button" className="skillhub-text-button" disabled={busy} onClick={onBack}>返回文件夹导入</button>}
+    {!busy && children && <div className="file-import-options">{children}</div>}
   </div>;
 }

@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { batchDeleteSkills, listFacets, listSkills, repairVersion } from "@/generated/api-client";
 import GitHubIntake from "./github-intake";
 import LibraryBackup, { downloadLibraryBackup } from "./library-backup";
-import LocalIntake, { ZipIntake } from "./local-intake";
+import LocalIntake, { UploadIntake } from "./local-intake";
 import { BatchMetadata } from "./skill-metadata";
 import { libraryNavigation, message, sourceNames, sourceURL, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
 import { mergeSummaryText } from "./skill-merge";
@@ -17,7 +17,7 @@ type Panel =
   | { kind: "github" }
   | { kind: "backup" }
   | { kind: "batch"; skills: Skill[] }
-  | { kind: "file"; zip?: boolean }
+  | { kind: "file"; source?: "zip" | "server" }
   | { kind: "new-version"; skill: Skill; path: string };
 
 function LibraryToolbar({ params, facets, onChange, status, children }: {
@@ -330,11 +330,15 @@ export default function HomePage() {
     </button>}
 
     {panel?.kind === "file" && <Dialog title="导入文件" compact onClose={() => setPanel(null)}>
-      {panel.zip ? <ZipIntake onComplete={imported} onBack={() => setPanel({ kind: "file" })} />
-        : <LocalIntake categories={facets.categories ?? []} onComplete={imported}
+      {panel.source === "server" ? <LocalIntake categories={facets.categories ?? []} onComplete={imported}
         onVersion={(skill, path) => setPanel({ kind: "new-version", skill, path })}>
-        <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file", zip: true })}>改用 ZIP 文件</button>
-      </LocalIntake>}
+        <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file" })}>从此设备上传目录</button>
+      </LocalIntake> : <UploadIntake key={panel.source ?? "directory"} directory={!panel.source} onComplete={imported}>
+        {panel.source === "zip"
+          ? <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file" })}>从此设备上传目录</button>
+          : <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file", source: "zip" })}>改用 ZIP 文件</button>}
+        <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file", source: "server" })}>从服务端目录导入</button>
+      </UploadIntake>}
     </Dialog>}
     {panel?.kind === "github" && <Dialog title="导入 GitHub" compact onClose={() => setPanel(null)}>
       <GitHubIntake categories={facets.categories ?? []} onComplete={imported} />

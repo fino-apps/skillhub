@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useParams, useSearchParams } from "reac
 import { deleteSkill, deleteVersion, getSkill, listFacets, repairVersion, setDefaultVersion } from "@/generated/api-client";
 import ComparePanel from "./compare-panel";
 import InstallCommand from "./install-command";
-import { ZipIntake } from "./local-intake";
+import { UploadIntake } from "./local-intake";
 import SkillContent from "./skill-content";
 import SkillMetadata from "./skill-metadata";
 import SkillMerge, { mergeSummaryText } from "./skill-merge";
@@ -236,7 +236,7 @@ function Detail({ skillId }: { skillId: string }) {
         <OperationFeedback {...operation} />
       </Dialog>}
       {panel?.kind === "zip" && <Dialog title="从 ZIP 保存版本" compact onClose={() => setPanel(null)}>
-        <ZipIntake skillId={skillId} onComplete={(result, pending) => { if (!pending && !result.failures?.length) saved(); else reload(); }} />
+        <UploadIntake skillId={skillId} onComplete={(result, pending) => { if (!pending && !result.failures?.length) saved(); else reload(); }} />
       </Dialog>}
       {panel?.kind === "update" && <Dialog title={panel.source === "github" ? "检查更新" : "保存新版本"}
         className="skill-workflow-dialog" onClose={() => setPanel(null)}>
