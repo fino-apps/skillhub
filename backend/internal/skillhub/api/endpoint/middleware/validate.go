@@ -148,6 +148,10 @@ func validateListSkillsRequest(req *pb.ListSkillsRequest) error {
 		return newRequestValidationError("tags", err)
 	}
 
+	if err := requestValidator.Var(req.GetSourceName(), "omitempty,max=120"); err != nil {
+		return newRequestValidationError("source_name", err)
+	}
+
 	if err := requestValidator.Var(req.GetCategory(), "omitempty,max=128"); err != nil {
 		return newRequestValidationError("category", err)
 	}
@@ -324,6 +328,10 @@ func validateImportSkillRequest(req *pb.ImportSkillRequest) error {
 		return newRequestValidationError("upstream_url", err)
 	}
 
+	if err := requestValidator.Var(req.GetUpstreamName(), "omitempty,max=120"); err != nil {
+		return newRequestValidationError("upstream_name", err)
+	}
+
 	return nil
 }
 
@@ -458,6 +466,10 @@ func validateCommitUploadRequest(req *pb.CommitUploadRequest) error {
 
 	if err := requestValidator.Var(req.GetUpstreamUrl(), "omitempty,max=2048"); err != nil {
 		return newRequestValidationError("upstream_url", err)
+	}
+
+	if err := requestValidator.Var(req.GetUpstreamName(), "omitempty,max=120"); err != nil {
+		return newRequestValidationError("upstream_name", err)
 	}
 
 	return nil

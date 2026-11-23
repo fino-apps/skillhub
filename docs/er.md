@@ -60,7 +60,7 @@ erDiagram
 | `repository_path` | `string` | 长度 1024 | 仓库内 Skill 路径 |
 | `local_path` | `string` | 长度 2048；默认值 `''` | 本机原始 Skill 目录；GitHub 来源留空 |
 | `source_key` | `string` | 长度 64；唯一索引 `skillhub_source,where:source_key <> ''`；默认值 `''` | 收录来源标识 |
-| `import_kind` | `string` | 长度 16；默认值 `''` | folder、github 或 zip |
+| `import_kind` | `string` | 长度 16；默认值 `''` | folder、directory_upload、github 或 zip |
 | `purpose` | `string` | 长度 240；默认值 `''` | 用户整理的一行用途 |
 | `upstream_name` | `string` | 长度 120；默认值 `''` | 展示的上游名称 |
 | `upstream_url` | `string` | 长度 2048；默认值 `''` | 展示的上游链接 |

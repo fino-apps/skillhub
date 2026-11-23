@@ -844,6 +844,11 @@ func DecodeHTTPListSkillsRequest(_ context.Context, r *http.Request) (interface{
 		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the uncategorized query parameter")
 	}
 
+	err = unmarshalQueryParam(queryParams, &req.SourceName, "sourceName")
+	if err != nil && !core.IsNotFoundError(err) {
+		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the sourceName query parameter")
+	}
+
 	err = unmarshalQueryParam(queryParams, &req.Category, "category")
 	if err != nil && !core.IsNotFoundError(err) {
 		return nil, nhttp.WrapError(err, http.StatusBadRequest, "cannot unmarshal the category query parameter")

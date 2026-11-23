@@ -47,6 +47,7 @@ GET /skillhub/v1/skills
 | `source` | `string` |  | 否 |  | 最大长度为 120 |
 | `tags` | `Array<string>` |  | 否 |  | 最大长度为 30 |
 | `uncategorized` | `boolean` |  | 否 |  |  |
+| `sourceName` | `string` |  | 否 |  | 按列表显示的来源名称精确筛选，优先于 source。；最大长度为 120 |
 | `category` | `string` |  | 否 |  | 最大长度为 128 |
 | `pageSize` | `integer` | `Int32` | 否 |  | 最小值为 1；最大值为 100 |
 | `pageToken` | `string` |  | 否 |  | 最大长度为 512 |
@@ -312,6 +313,7 @@ POST /skillhub/v1/imports
 | `purpose` | `string` |  | 否 |  | 最大长度为 240 |
 | `notes` | `string` |  | 否 |  | 最大长度为 4096 |
 | `upstreamUrl` | `string` |  | 否 |  | 最大长度为 2048 |
+| `upstreamName` | `string` |  | 否 |  | 最大长度为 120 |
 
 ### 返回值
 
@@ -567,6 +569,7 @@ GET /skillhub/v1/facets
 | `categories` | `Array<string>` |  | 否 |  |  |
 | `sources` | `Array<string>` |  | 否 |  |  |
 | `tags` | `Array<string>` |  | 否 |  |  |
+| `sourceNames` | `Array<string>` |  | 否 |  |  |
 
 
 ## Batch Update Skill Metadata
@@ -646,6 +649,8 @@ POST /skillhub/v1/uploads/{upload_id}:commit
 | `purpose` | `string` |  | 否 |  | 最大长度为 240 |
 | `notes` | `string` |  | 否 |  | 最大长度为 4096 |
 | `upstreamUrl` | `string` |  | 否 |  | 最大长度为 2048 |
+| `directoryUpload` | `boolean` |  | 否 |  | 浏览器选择目录后打包上传时为 true。 |
+| `upstreamName` | `string` |  | 否 |  | 最大长度为 120 |
 
 ### 返回值
 

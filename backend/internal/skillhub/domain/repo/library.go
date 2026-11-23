@@ -16,10 +16,11 @@ type SkillFilter struct {
 	Keyword, Category, Source string
 	Tags                      []string
 	Uncategorized             bool
+	SourceName                string `json:",omitempty"`
 }
 
 type Facets struct {
-	Categories, Sources, Tags []string
+	Categories, Sources, Tags, SourceNames []string
 }
 
 type Library interface {

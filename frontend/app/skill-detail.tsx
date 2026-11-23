@@ -7,7 +7,7 @@ import { UploadIntake } from "./local-intake";
 import SkillContent from "./skill-content";
 import SkillMetadata from "./skill-metadata";
 import SkillMerge, { mergeSummaryText } from "./skill-merge";
-import { archiveURL, fetchAllVersions, libraryNavigation, message, sourceLabel, sourceNames, sourceURL, type Facets, type Skill } from "./library-api";
+import { archiveURL, fetchAllVersions, importSourceName, libraryNavigation, message, sourceLabel, sourceURL, type Facets, type Skill } from "./library-api";
 import { Dialog, ExportLocation, Failure, Menu, OperationFeedback, useSkillOperation } from "./skill-ui";
 import { shortVersion, versionDigest, versionLabel, type SkillVersion } from "./skill-version";
 
@@ -165,8 +165,9 @@ function Detail({ skillId }: { skillId: string }) {
             ? `快照来源 ${view.upstreamRepository.replace(/^https?:\/\/(?:github\.com\/)?/i, "")}`
             : `收录来源 ${sourceLabel(skill)}`}</summary>
           <dl>
-            <dt>导入方式</dt><dd>{sourceNames[skill.importKind ?? ""] || "未知"}</dd>
-            {url && <><dt>来源</dt><dd><a href={url} target="_blank" rel="noreferrer">{url}</a></dd></>}
+            <dt>导入方式</dt><dd>{importSourceName(skill.importKind)}</dd>
+            {skill.upstreamName && <><dt>来源名称</dt><dd>{skill.upstreamName}</dd></>}
+            {url && <><dt>来源链接</dt><dd><a href={url} target="_blank" rel="noreferrer">{url}</a></dd></>}
             {skill.repositoryUrl && <><dt>绑定仓库</dt><dd>{skill.repositoryUrl}</dd></>}
             {skill.repositoryPath && <><dt>仓库内目录</dt><dd><code>{skill.repositoryPath}</code></dd></>}
             {skill.localPath && <><dt>绑定目录</dt><dd><code>{skill.localPath}</code></dd></>}

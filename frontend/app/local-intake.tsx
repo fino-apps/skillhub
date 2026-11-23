@@ -1,6 +1,6 @@
 import { useId, useState, type FormEvent, type ReactNode } from "react";
-import { commitUpload, importSkill, listSkills, scanProject } from "@/generated/api-client";
-import { backendDirectoryLabel, canPickDirectory, localCandidate, message, pickDirectory, stageZip, tagsFrom, type Candidate, type ImportResult, type LibraryPage, type Skill } from "./library-api";
+import { commitUpload } from "@/generated/api-client";
+import { importSourceName, message, stageZip, tagsFrom, type Candidate, type ImportResult } from "./library-api";
 import { Failure } from "./skill-ui";
 
 const importLimit = 100;
@@ -44,7 +44,9 @@ export function ImportFeedback({ result }: { result: ImportResult | null }) {
   </div>;
 }
 
-export function ImportMetadataFields({ categories, existingTags, disabled }: { categories: string[]; existingTags: string[]; disabled: boolean }) {
+export function ImportMetadataFields({ categories, existingTags, defaultSource, disabled }: {
+  categories: string[]; existingTags: string[]; defaultSource: string; disabled: boolean;
+}) {
   const hintId = useId();
   const categoriesId = useId();
   const tagsId = useId();
@@ -56,9 +58,9 @@ export function ImportMetadataFields({ categories, existingTags, disabled }: { c
   return <details className="skill-disclosure file-import-metadata" onChange={(event) => {
     const form = event.currentTarget.closest("form");
     if (!form) return;
-    const { category, tags, purpose, upstreamUrl, notes } = importMetadataValues(form);
+    const { category, tags, purpose, upstreamName, upstreamUrl, notes } = importMetadataValues(form);
     const classification = [category, tags.length ? `${tags.length} 个标签` : ""].filter(Boolean).join(" · ");
-    setSummary(classification || (purpose || upstreamUrl || notes ? "已填写" : ""));
+    setSummary(classification || (purpose || upstreamName || upstreamUrl || notes ? "已填写" : ""));
   }}>
     <summary>整理信息{summary ? <span title={summary}>{summary}</span> : "（选填）"}</summary>
     <fieldset className="skill-fields" disabled={disabled} aria-describedby={hintId}>
@@ -70,6 +72,7 @@ export function ImportMetadataFields({ categories, existingTags, disabled }: { c
       <label>标签<input name="tags" list={tagsId} placeholder="选择或输入标签，用逗号分隔"
         onChange={(event) => setTagPrefix(event.target.value.match(/^.*[,，]\s*/)?.[0] ?? "")} /></label>
       <datalist id={tagsId}>{suggestedTags.map((tag) => <option key={tag} value={tagPrefix + tag} />)}</datalist>
+      <label>来源名称<input name="upstreamName" maxLength={120} placeholder={defaultSource} /></label>
       <label>来源链接<input name="upstreamUrl" type="url" maxLength={2048} /></label>
       <label>备注<textarea name="notes" rows={3} maxLength={4096} /></label>
     </fieldset>
@@ -82,6 +85,7 @@ function importMetadataValues(form: HTMLFormElement) {
     category: String(values.get("category") ?? "").trim(),
     tags: tagsFrom(String(values.get("tags") ?? "")),
     purpose: String(values.get("purpose") ?? "").trim(),
+    upstreamName: String(values.get("upstreamName") ?? "").trim(),
     upstreamUrl: String(values.get("upstreamUrl") ?? "").trim(),
     notes: String(values.get("notes") ?? ""),
   };
@@ -102,135 +106,6 @@ export function readImportMetadata(form: HTMLFormElement) {
     throw new Error(error);
   }
   return metadata;
-}
-
-export default function LocalIntake({ categories, existingTags, onComplete, onVersion, children }: {
-  categories: string[];
-  existingTags: string[];
-  children?: ReactNode;
-  onComplete: (result: ImportResult) => void; onVersion: (skill: Skill, path: string) => void;
-}) {
-  const [directory, setDirectory] = useState("");
-  const [items, setItems] = useState<Candidate[]>([]);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [matching, setMatching] = useState<Skill[]>([]);
-  const [result, setResult] = useState<ImportResult | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [manual, setManual] = useState(false);
-  const pathId = useId();
-
-  async function choose() {
-    await run(async () => {
-      const path = await pickDirectory();
-      if (!path) return;
-      setDirectory(path);
-      await inspect(path);
-    });
-  }
-
-  function resetPreview() {
-    setItems([]);
-    setSelected([]);
-    setMatching([]);
-    setResult(null);
-  }
-
-  async function inspect(path: string) {
-    resetPreview();
-    const reply = await scanProject<{ skills?: Candidate[] }>({ projectPath: path });
-    const found = (reply.skills ?? []).map((item) => ({ ...item, path: localCandidate(path, item.path) }));
-    setItems(found);
-    if (!found.length) {
-      setError("此目录没有找到 Skill");
-      return;
-    }
-    setSelected(found.slice(0, importLimit).map((item) => item.path));
-    if (found.length === 1) {
-      const listed = await listSkills<LibraryPage>({ keyword: found[0].name, pageSize: 100 });
-      setMatching((listed.skills ?? []).filter((item) => item.name === found[0].name));
-    }
-  }
-
-  async function run(action: () => Promise<void>) {
-    setBusy(true);
-    setError("");
-    try {
-      await action();
-    } catch (err) {
-      setError(message(err));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    void run(() => inspect(directory.trim()));
-  }
-
-  function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!selected.length || busy) return;
-    const form = event.currentTarget;
-    void run(async () => {
-      const metadata = readImportMetadata(form);
-      const reply = await importSkill<ImportResult>({ skillPaths: selected, ...metadata });
-      if (reply.failures?.length) {
-        setResult(reply);
-        setSelected(reply.failures.map(({ path }) => path ?? ""));
-      }
-      onComplete(reply);
-    });
-  }
-
-  const directoryForm = <form id={pathId} className="github-form" onSubmit={submit}>
-    <label>{backendDirectoryLabel}<input value={directory} onChange={(event) => setDirectory(event.target.value)}
-      autoFocus={canPickDirectory && manual} required /></label>
-    <button type="submit" className={canPickDirectory ? "secondary" : undefined}>扫描目录</button>
-  </form>;
-
-  return <div className="skill-fields local-intake">
-    {busy && !items.length && <p role="status">正在读取文件夹…</p>}
-    <Failure error={error} />
-    <ImportFeedback result={result} />
-    {!busy && !items.length && <>
-      {canPickDirectory && <button type="button" className="file-import-pick" onClick={() => void choose()}>选择文件夹</button>}
-      {!canPickDirectory && directoryForm}
-      <div className="file-import-options">
-        {canPickDirectory && <button type="button" className="skillhub-text-button" aria-expanded={manual}
-          aria-controls={manual ? pathId : undefined} onClick={() => setManual(!manual)}>手动输入路径</button>}
-        {children}
-      </div>
-      {canPickDirectory && manual && directoryForm}
-    </>}
-    {items.length > 0 && <div className="file-import-source">
-      <span title={directory}>{directory.trim().split(/[/\\]/).filter(Boolean).pop() || directory}</span>
-      <button type="button" className="skillhub-text-button" disabled={busy} onClick={() => {
-        setError("");
-        resetPreview();
-      }}>更换目录</button>
-    </div>}
-    {items.length === 1 && <p className="local-intake-candidate">
-      <strong>{items[0].name}</strong>
-      {items[0].description && <span className="candidate-description">{items[0].description}</span>}
-    </p>}
-    {matching.length > 0 && <div className="skill-fields">
-      <p className="skillhub-hint">可保存为同名 Skill 的新版本，或在下方作为独立条目收录。</p>
-      {matching.map((skill) => <div className="skill-fields" key={skill.id}>
-        <button type="button" className="secondary" disabled={busy}
-          onClick={() => onVersion(skill, selected[0])}>为 {skill.name} 保存新版本</button>
-        <small>已有条目来源 {skill.upstreamUrl || skill.localPath || "当前库"}</small>
-      </div>)}
-    </div>}
-    {items.length > 0 && <form className="github-form" onSubmit={save}>
-      {items.length > 1 && <CandidatePicker items={items} selected={selected} onChange={setSelected} disabled={busy} />}
-      <ImportMetadataFields categories={categories} existingTags={existingTags} disabled={busy} />
-      <button type="submit" disabled={!selected.length || busy}>
-        {busy ? "处理中…" : matching.length ? "作为独立条目收录" : items.length === 1 ? "确认收录" : `收录 ${selected.length} 项`}
-      </button>
-    </form>}
-  </div>;
 }
 
 function directoryInput(input: HTMLInputElement | null) {
@@ -302,7 +177,7 @@ export function UploadIntake({ skillId, directory = false, categories = [], exis
     setError("");
     try {
       const metadata = skillId ? {} : readImportMetadata(form);
-      const reply = await commitUpload<ImportResult>({ uploadId, skillPaths: selected, targetSkillId: skillId, ...metadata });
+      const reply = await commitUpload<ImportResult>({ uploadId, skillPaths: selected, targetSkillId: skillId, directoryUpload: directory, ...metadata });
       const failed = new Set(reply.failures?.map(({ path }) => path ?? "") ?? []);
       const remaining = items.filter((item) => !selected.includes(item.path ?? "") || failed.has(item.path ?? ""));
       setItems(remaining);
@@ -322,7 +197,7 @@ export function UploadIntake({ skillId, directory = false, categories = [], exis
   }
 
   return <div className="skill-fields">
-    <label>{directory ? "选择此设备上的 Skill 目录" : "ZIP 文件"}
+    <label>{directory ? "选择本机 Skill 目录" : "ZIP 文件"}
       <input type="file" accept={directory ? undefined : ".zip,application/zip"} disabled={busy}
         ref={directory ? directoryInput : undefined} onChange={(event) => void read(event.currentTarget)} />
     </label>
@@ -331,7 +206,8 @@ export function UploadIntake({ skillId, directory = false, categories = [], exis
     {busy && !uploadId && <p role="status">正在读取{directory ? "目录" : "ZIP 文件"}…</p>}
     {items.length > 0 && <form key={uploadId} className="github-form" onSubmit={commit}>
       <CandidatePicker items={items} selected={selected} disabled={busy} single={!!skillId} onChange={setSelected} />
-      {!skillId && <ImportMetadataFields categories={categories} existingTags={existingTags} disabled={busy} />}
+      {!skillId && <ImportMetadataFields categories={categories} existingTags={existingTags}
+        defaultSource={importSourceName(directory ? "directory_upload" : "zip")} disabled={busy} />}
       <button type="submit" disabled={busy || !selected.length}>
         {busy ? "收录中…" : skillId ? "确认收录" : `收录 ${selected.length} 项`}
       </button>

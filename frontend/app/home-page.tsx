@@ -1,24 +1,26 @@
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { batchDeleteSkills, listFacets, listSkills, repairVersion } from "@/generated/api-client";
 import GitHubIntake from "./github-intake";
 import LibraryBackup, { downloadLibraryBackup } from "./library-backup";
-import LocalIntake, { UploadIntake } from "./local-intake";
+import { UploadIntake } from "./local-intake";
 import { BatchMetadata } from "./skill-metadata";
-import { libraryNavigation, message, sourceNames, sourceURL, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
+import { importSourceName, libraryNavigation, message, sourceURL, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
 import { mergeSummaryText } from "./skill-merge";
 import { Dialog, Failure, Menu, OperationFeedback, Popover, useSkillOperation } from "./skill-ui";
 
 import "./skillhub.css";
 
-const VersionPanel = lazy(() => import("./version-panel"));
-
 type Panel =
   | { kind: "github" }
   | { kind: "backup" }
   | { kind: "batch"; skills: Skill[] }
-  | { kind: "file"; source?: "zip" | "server" }
-  | { kind: "new-version"; skill: Skill; path: string };
+  | { kind: "file"; zip?: boolean };
+
+function selectedSource(params: URLSearchParams) {
+  const legacy = params.get("source");
+  return params.get("sourceName") || (legacy ? importSourceName(legacy) : "");
+}
 
 function LibraryToolbar({ params, facets, onChange, status, children }: {
   params: URLSearchParams; facets: Facets; onChange: (next: URLSearchParams) => void; status: ReactNode; children: ReactNode;
@@ -26,13 +28,14 @@ function LibraryToolbar({ params, facets, onChange, status, children }: {
   const [composition, setComposition] = useState<string | null>(null);
   const composing = useRef(false);
   const query = params.get("q") ?? "";
-  const source = params.get("source") ?? "";
+  const source = selectedSource(params);
   const tags = params.getAll("tag");
   const category = params.get("category") ?? "";
   const tagOptions = Array.from(new Set([...(facets.tags ?? []), ...tags]));
 
   function set(name: string, value: string) {
     const next = new URLSearchParams(params);
+    if (name === "sourceName") next.delete("source");
     if (value) next.set(name, value);
     else next.delete(name);
     onChange(next);
@@ -69,11 +72,11 @@ function LibraryToolbar({ params, facets, onChange, status, children }: {
       </label>
       <div className="library-facets" role="group" aria-label="筛选技能">
         <label className="library-facet" data-active={!!source || undefined}>
-          <span className="library-facet-text" aria-hidden="true">{source ? sourceNames[source] || source : "全部来源"}</span>
-          <select aria-label="来源" value={source} onChange={(event) => set("source", event.target.value)}>
+          <span className="library-facet-text" aria-hidden="true">{source || "全部来源"}</span>
+          <select aria-label="来源" value={source} onChange={(event) => set("sourceName", event.target.value)}>
             <option value="">全部来源</option>
-            {source && !facets.sources?.includes(source) && <option value={source}>{sourceNames[source] || source}</option>}
-            {facets.sources?.map((value) => <option key={value} value={value}>{sourceNames[value] || value}</option>)}
+            {source && !facets.sourceNames?.includes(source) && <option value={source}>{source}</option>}
+            {facets.sourceNames?.map((name) => <option key={name} value={name}>{name}</option>)}
           </select>
         </label>
         <label className="library-facet" data-active={!!category || undefined}>
@@ -160,9 +163,20 @@ export default function HomePage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    void listFacets<Facets>({}, { signal: controller.signal }).then(setFacets, () => {});
+    void listFacets<Facets>({}, { signal: controller.signal }).then((result) => {
+      if (!controller.signal.aborted) setFacets({ ...result, sourceNames: result.sourceNames ?? [] });
+    }, () => {});
     return () => controller.abort();
   }, [refresh]);
+
+  useEffect(() => {
+    const source = selectedSource(params);
+    if (!source || !facets.sourceNames || facets.sourceNames.includes(source)) return;
+    const next = new URLSearchParams(params);
+    next.delete("sourceName");
+    next.delete("source");
+    setParams(next, { replace: true });
+  }, [facets.sourceNames, params, setParams]);
 
   async function load(pageToken: string, controller = new AbortController(), restoreCount = 0) {
     if (request.current !== controller) {
@@ -174,7 +188,7 @@ export default function HomePage() {
     const category = params.get("category") ?? "";
     const filter = {
       keyword: params.get("q") ?? "", category: category === "~" ? "" : category,
-      source: params.get("source") ?? "", tags: params.getAll("tag"), uncategorized: category === "~", pageSize: 40,
+      sourceName: selectedSource(params), tags: params.getAll("tag"), uncategorized: category === "~", pageSize: 40,
     };
     try {
       const items: Skill[] = [];
@@ -283,7 +297,7 @@ export default function HomePage() {
       </tr></thead>
       <tbody>{skills.map((skill) => {
         const version = skill.defaultVersion;
-        const source = sourceNames[skill.importKind ?? ""] || skill.importKind || "未知";
+        const source = skill.upstreamName?.trim() || importSourceName(skill.importKind);
         const url = sourceURL(skill);
         const destination = url.replace(/^https?:\/\/(?:github\.com\/(?=.+))?/i, "");
         const sourceLink = url && (
@@ -330,15 +344,12 @@ export default function HomePage() {
     </button>}
 
     {panel?.kind === "file" && <Dialog title="导入文件" compact onClose={() => setPanel(null)}>
-      {panel.source === "server" ? <LocalIntake categories={facets.categories ?? []} existingTags={facets.tags ?? []} onComplete={imported}
-        onVersion={(skill, path) => setPanel({ kind: "new-version", skill, path })}>
-        <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file" })}>从此设备上传目录</button>
-      </LocalIntake> : <UploadIntake key={panel.source ?? "directory"} directory={!panel.source} categories={facets.categories ?? []} existingTags={facets.tags ?? []} onComplete={imported}>
-        {panel.source === "zip"
-          ? <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file" })}>从此设备上传目录</button>
-          : <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file", source: "zip" })}>改用 ZIP 文件</button>}
-        <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file", source: "server" })}>从服务端目录导入</button>
-      </UploadIntake>}
+      <UploadIntake key={panel.zip ? "zip" : "directory"} directory={!panel.zip}
+        categories={facets.categories ?? []} existingTags={facets.tags ?? []} onComplete={imported}>
+        <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file", zip: !panel.zip })}>
+          {panel.zip ? "改用本机目录" : "改用 ZIP 文件"}
+        </button>
+      </UploadIntake>
     </Dialog>}
     {panel?.kind === "github" && <Dialog title="导入 GitHub" compact onClose={() => setPanel(null)}>
       <GitHubIntake categories={facets.categories ?? []} existingTags={facets.tags ?? []} onComplete={imported} />
@@ -351,9 +362,6 @@ export default function HomePage() {
         const stats = `新增 ${result.addedCount ?? 0} 项，合并 ${result.mergedCount ?? 0} 项，跳过 ${result.skippedCount ?? 0} 项。`;
         operation.setNotice((result.mergedCount ?? 0) > 0 && result.versions ? `${stats}${mergeSummaryText(result.versions)}` : stats);
       }} />
-    </Dialog>}
-    {panel?.kind === "new-version" && <Dialog title="保存新版本" className="skill-workflow-dialog" onClose={() => setPanel(null)}>
-      <Suspense fallback={<p>加载中…</p>}><VersionPanel skill={panel.skill} from="folder" path={panel.path} onSaved={editComplete} /></Suspense>
     </Dialog>}
     {panel?.kind === "batch" && <Dialog title="批量编辑" compact onClose={() => setPanel(null)}>
       <BatchMetadata skills={panel.skills} categories={facets.categories ?? []} onSaved={() => {

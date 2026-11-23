@@ -38,15 +38,16 @@ func (s *Library) saveDirectory(ctx context.Context, dir, target string, source 
 		return model.SkillVersionSnapshot{}, false, ErrConflict
 	}
 
-	value := dir
+	keyKind, value := source.Kind, dir
 	switch source.Kind {
 	case "github":
 		value = source.Repository + "\x00" + source.Path
-	case "zip":
-		value = digest
+	case "zip", "directory_upload":
+		// Both upload modes share the archive's content identity.
+		keyKind, value = "zip", digest
 	}
 
-	key := fmt.Sprintf("%x", sha256.Sum256([]byte(source.Kind+"\x00"+value)))
+	key := fmt.Sprintf("%x", sha256.Sum256([]byte(keyKind+"\x00"+value)))
 	s.writes.Lock()
 	defer s.writes.Unlock()
 	now := core.Now()
@@ -86,7 +87,7 @@ func (s *Library) saveDirectory(ctx context.Context, dir, target string, source 
 			skill = model.SkillSnapshot{ID: model.SkillID(id.String()), Name: manifest.Name, Description: manifest.Description,
 				SourceKey: key, ImportKind: source.Kind, RepositoryUrl: source.Repository, RepositoryPath: source.Path,
 				Category: metadata.Category, Purpose: metadata.Purpose, Notes: metadata.Notes,
-				UpstreamUrl: cmp.Or(metadata.UpstreamURL, source.Repository), CreateTime: now, UpdateTime: now}
+				UpstreamName: metadata.UpstreamName, UpstreamUrl: cmp.Or(metadata.UpstreamURL, source.Repository), CreateTime: now, UpdateTime: now}
 			if source.Kind == "folder" {
 				skill.LocalPath = dir
 			}

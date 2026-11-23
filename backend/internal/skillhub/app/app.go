@@ -29,7 +29,7 @@ func NewService(deps ServiceDeps) pb.SkillhubServiceServer {
 	}
 }
 
-// ListSkills implements Interface. fino:req-fields 1=Keyword,2=Source,4=Tags,5=Uncategorized,3=Category,90=PageSize,91=PageToken
+// ListSkills implements Interface. fino:req-fields 1=Keyword,2=Source,4=Tags,5=Uncategorized,6=SourceName,3=Category,90=PageSize,91=PageToken
 func (s skillhubServer) ListSkills(ctx context.Context, in *pb.ListSkillsRequest) (*pb.ListSkillsResponse, error) {
 	logs.Ctx(ctx).Debugw("ListSkills")
 	if in == nil {
@@ -41,6 +41,7 @@ func (s skillhubServer) ListSkills(ctx context.Context, in *pb.ListSkillsRequest
 		Keyword:       strings.TrimSpace(in.GetKeyword()),
 		Category:      in.GetCategory(),
 		Source:        in.GetSource(),
+		SourceName:    in.GetSourceName(),
 		Tags:          in.GetTags(),
 		Uncategorized: in.GetUncategorized(),
 	}
@@ -244,7 +245,7 @@ func (s skillhubServer) PreviewImport(ctx context.Context, in *pb.PreviewImportR
 	}, nil
 }
 
-// ImportSkill implements Interface. fino:req-fields 1=RepositoryUrl,2=SourceRef,3=CommitSha,4=SkillPaths,5=Category,6=Tags,7=Purpose,8=Notes,9=UpstreamUrl
+// ImportSkill implements Interface. fino:req-fields 1=RepositoryUrl,2=SourceRef,3=CommitSha,4=SkillPaths,5=Category,6=Tags,7=Purpose,8=Notes,9=UpstreamUrl,10=UpstreamName
 func (s skillhubServer) ImportSkill(ctx context.Context, in *pb.ImportSkillRequest) (*pb.ImportSkillResponse, error) {
 	logs.Ctx(ctx).Debugw("ImportSkill")
 	if in == nil {
@@ -254,7 +255,7 @@ func (s skillhubServer) ImportSkill(ctx context.Context, in *pb.ImportSkillReque
 
 	metadata := service.Metadata{
 		Category: in.GetCategory(), Tags: in.GetTags(), Purpose: in.GetPurpose(),
-		Notes: in.GetNotes(), UpstreamURL: in.GetUpstreamUrl(),
+		Notes: in.GetNotes(), UpstreamName: in.GetUpstreamName(), UpstreamURL: in.GetUpstreamUrl(),
 	}
 	result, err := s.library.ImportDirectories(ctx, in.GetRepositoryUrl(), in.GetSourceRef(), in.GetCommitSha(), in.GetSkillPaths(), metadata)
 	if err != nil {
@@ -441,9 +442,10 @@ func (s skillhubServer) ListFacets(ctx context.Context, in *pb.ListFacetsRequest
 	logs.Ctx(ctx).Debugw("ListFacets succeeded")
 
 	return &pb.ListFacetsResponse{
-		Categories: result.Categories,
-		Sources:    result.Sources,
-		Tags:       result.Tags,
+		Categories:  result.Categories,
+		Sources:     result.Sources,
+		SourceNames: result.SourceNames,
+		Tags:        result.Tags,
 	}, nil
 }
 
@@ -496,7 +498,7 @@ func (s skillhubServer) UploadZip(ctx context.Context, in *pb.UploadZipRequest) 
 	}, nil
 }
 
-// CommitUpload implements Interface. fino:req-fields 1=UploadId,2=SkillPaths,3=TargetSkillId,4=MakeDefault,5=Category,6=Tags,7=Purpose,8=Notes,9=UpstreamUrl
+// CommitUpload implements Interface. fino:req-fields 1=UploadId,2=SkillPaths,3=TargetSkillId,4=MakeDefault,5=Category,6=Tags,7=Purpose,8=Notes,9=UpstreamUrl,10=DirectoryUpload,11=UpstreamName
 func (s skillhubServer) CommitUpload(ctx context.Context, in *pb.CommitUploadRequest) (*pb.ImportSkillResponse, error) {
 	logs.Ctx(ctx).Debugw("CommitUpload")
 	if in == nil {
@@ -506,9 +508,11 @@ func (s skillhubServer) CommitUpload(ctx context.Context, in *pb.CommitUploadReq
 
 	metadata := service.Metadata{
 		Category: in.GetCategory(), Tags: in.GetTags(), Purpose: in.GetPurpose(),
-		Notes: in.GetNotes(), UpstreamURL: in.GetUpstreamUrl(),
+		Notes: in.GetNotes(), UpstreamName: in.GetUpstreamName(), UpstreamURL: in.GetUpstreamUrl(),
 	}
-	result, err := s.library.ImportArchive(ctx, in.GetUploadId(), in.GetTargetSkillId(), in.GetSkillPaths(), in.GetMakeDefault(), metadata)
+	result, err := s.library.ImportArchive(ctx, in.GetUploadId(), in.GetTargetSkillId(), in.GetSkillPaths(), service.ArchiveImportOptions{
+		MakeDefault: in.GetMakeDefault(), DirectoryUpload: in.GetDirectoryUpload(), Metadata: metadata,
+	})
 	if err != nil {
 		return nil, rpcError(ctx, "CommitUpload", err)
 	}

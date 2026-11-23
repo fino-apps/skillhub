@@ -89,10 +89,6 @@
 .file-import-metadata summary { font-size: 13px; }
 .file-import-metadata[open] > fieldset { margin-top: 12px; }
 .file-import-metadata summary > span { display: inline-block; max-width: 55%; margin-inline-start: 8px; vertical-align: bottom; color: var(--muted); }
-.local-intake small { overflow-wrap: anywhere; }
-.local-intake p { margin: 0; overflow-wrap: anywhere; }
-.local-intake .skill-fields > button { max-width: 100%; overflow-wrap: anywhere; }
-.local-intake-candidate { font-size: 14px; }
 .version-notes { margin: 14px 0; }
 .compare-local { display: grid; gap: 8px; margin-top: 10px; }
 .compare-local button { justify-self: start; }

@@ -51,6 +51,21 @@ func TestImportMetadataAppliesOnlyToNewSkill(t *testing.T) {
 }
 
 func TestArchiveImportSavesMetadataOnCreation(t *testing.T) {
+	for _, tc := range []struct {
+		kind            string
+		directoryUpload bool
+	}{
+		{kind: "zip"},
+		{kind: "directory_upload", directoryUpload: true},
+	} {
+		t.Run(tc.kind, func(t *testing.T) {
+			testArchiveImport(t, tc.kind, tc.directoryUpload)
+		})
+	}
+}
+
+func testArchiveImport(t *testing.T, kind string, directoryUpload bool) {
+	t.Helper()
 	ctx := context.Background()
 	library := testSQLiteLibrary(t)
 	dir := t.TempDir()
@@ -64,23 +79,74 @@ func TestArchiveImportSavesMetadataOnCreation(t *testing.T) {
 
 	metadata := Metadata{
 		Category: " Docs ", Purpose: " Summarize ", Notes: "Notes",
-		UpstreamURL: "https://example.com/skill", Tags: []string{"docs", "docs"},
+		UpstreamName: " Team library ", UpstreamURL: "https://example.com/skill", Tags: []string{"docs", "docs"},
 	}
-	result, err := library.ImportArchive(ctx, upload.ID, "", paths, false, metadata)
+	result, err := library.ImportArchive(ctx, upload.ID, "", paths, ArchiveImportOptions{DirectoryUpload: directoryUpload, Metadata: metadata})
 	require.NoError(t, err)
 	require.Empty(t, result.Failures)
 	require.Equal(t, 1, result.Added)
 
-	retry, err := library.ImportArchive(ctx, upload.ID, "", paths, false, Metadata{Category: "Other"})
+	retry, err := library.ImportArchive(ctx, upload.ID, "", paths, ArchiveImportOptions{DirectoryUpload: !directoryUpload, Metadata: Metadata{Category: "Other", UpstreamName: "Other source"}})
 	require.NoError(t, err)
 	require.Equal(t, 1, retry.Existing)
 
 	skills, _, err := library.Skills(ctx, domainrepo.SkillFilter{}, 10, "")
 	require.NoError(t, err)
 	require.Len(t, skills, 1)
+	require.Equal(t, kind, skills[0].Skill.ImportKind)
 	require.Equal(t, "Docs", skills[0].Skill.Category)
 	require.Equal(t, "Summarize", skills[0].Skill.Purpose)
 	require.Equal(t, metadata.Notes, skills[0].Skill.Notes)
+	require.Equal(t, "Team library", skills[0].Skill.UpstreamName)
 	require.Equal(t, metadata.UpstreamURL, skills[0].Skill.UpstreamUrl)
 	require.Equal(t, []string{"docs"}, skills[0].Tags)
+}
+
+func TestDirectorySourcesShareLibraryFilter(t *testing.T) {
+	ctx := context.Background()
+	library := testSQLiteLibrary(t)
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "SKILL.md"), []byte("---\nname: sample\n---\n"), 0600))
+
+	ids := make(map[string]string)
+	for _, kind := range []string{"folder", "directory_upload", "github"} {
+		version, created, err := library.saveDirectory(ctx, dir, "", Source{Kind: kind}, VersionInput{})
+		require.NoError(t, err)
+		require.True(t, created)
+		ids[kind] = version.SkillId
+	}
+
+	facets, err := library.Facets(ctx)
+	require.NoError(t, err)
+	require.Equal(t, []string{"folder", "github"}, facets.Sources)
+	require.Equal(t, []string{"GitHub", "本机目录"}, facets.SourceNames)
+
+	for _, filter := range []string{"folder", "directory_upload"} {
+		skills, _, err := library.Skills(ctx, domainrepo.SkillFilter{Source: filter}, 10, "")
+		require.NoError(t, err)
+		require.Len(t, skills, 2)
+		require.ElementsMatch(t, []string{"folder", "directory_upload"}, []string{skills[0].Skill.ImportKind, skills[1].Skill.ImportKind})
+	}
+
+	_, err = library.ReplaceMetadata(ctx, ids["directory_upload"], Metadata{UpstreamName: "github"})
+	require.NoError(t, err)
+	facets, err = library.Facets(ctx)
+	require.NoError(t, err)
+	require.Equal(t, []string{"GitHub", "github", "本机目录"}, facets.SourceNames)
+
+	for name, kind := range map[string]string{"本机目录": "folder", "github": "directory_upload", "GitHub": "github"} {
+		skills, _, err := library.Skills(ctx, domainrepo.SkillFilter{SourceName: name}, 10, "")
+		require.NoError(t, err)
+		require.Len(t, skills, 1)
+		require.Equal(t, ids[kind], string(skills[0].Skill.ID))
+	}
+
+	_, err = library.ReplaceMetadata(ctx, ids["directory_upload"], Metadata{})
+	require.NoError(t, err)
+	facets, err = library.Facets(ctx)
+	require.NoError(t, err)
+	require.Equal(t, []string{"GitHub", "本机目录"}, facets.SourceNames)
+	skills, _, err := library.Skills(ctx, domainrepo.SkillFilter{SourceName: "本机目录"}, 10, "")
+	require.NoError(t, err)
+	require.Len(t, skills, 2)
 }

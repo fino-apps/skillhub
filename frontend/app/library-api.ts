@@ -20,12 +20,16 @@ export type Skill = {
   defaultVersion?: SkillVersion;
 };
 
-export type Facets = { categories?: string[]; sources?: string[]; tags?: string[] };
+export type Facets = { categories?: string[]; sources?: string[]; sourceNames?: string[]; tags?: string[] };
 export type LibraryPage = { skills?: Skill[]; nextPageToken?: string };
 export type Candidate = { path?: string; name: string; description?: string };
 export type ImportResult = { addedCount?: number; existingCount?: number; failures?: { path?: string; message: string }[] };
 
-export const sourceNames: Record<string, string> = { folder: "本机目录", github: "GitHub", zip: "ZIP" };
+export const sourceNames: Record<string, string> = { folder: "本机目录", directory_upload: "本机目录", github: "GitHub", zip: "ZIP" };
+
+export function importSourceName(kind = "") {
+  return Object.hasOwn(sourceNames, kind) ? sourceNames[kind] : kind || "未知";
+}
 
 export function sourceURL(skill: Skill) {
   const url = skill.upstreamUrl?.trim();
@@ -33,7 +37,7 @@ export function sourceURL(skill: Skill) {
 }
 
 export function sourceLabel(skill: Skill) {
-  return sourceURL(skill).replace(/^https?:\/\//i, "") || sourceNames[skill.importKind ?? ""] || "未知";
+  return skill.upstreamName?.trim() || sourceURL(skill).replace(/^https?:\/\//i, "") || importSourceName(skill.importKind);
 }
 
 export function message(error: unknown) {

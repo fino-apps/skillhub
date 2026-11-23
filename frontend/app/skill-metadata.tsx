@@ -1,6 +1,6 @@
 import { useId, useState, type FormEvent } from "react";
 import { batchUpdateSkillMetadata, updateSkill } from "@/generated/api-client";
-import { message, tagsFrom, type Skill } from "./library-api";
+import { importSourceName, message, tagsFrom, type Skill } from "./library-api";
 import { Failure } from "./skill-ui";
 
 export default function SkillMetadata({ skill, categories, onSaved }: { skill: Skill; categories: string[]; onSaved: () => void }) {
@@ -18,7 +18,7 @@ export default function SkillMetadata({ skill, categories, onSaved }: { skill: S
     setBusy(true);
     setError("");
     try {
-      await updateSkill({ skillId: skill.id, skill: { ...values, upstreamName: skill.upstreamName, tags: tagsFrom(String(values.tags ?? "")) } });
+      await updateSkill({ skillId: skill.id, skill: { ...values, tags: tagsFrom(String(values.tags ?? "")) } });
       onSaved();
     } catch (err) {
       setError(message(err));
@@ -33,6 +33,8 @@ export default function SkillMetadata({ skill, categories, onSaved }: { skill: S
       <label>分类<input name="category" defaultValue={skill.category} maxLength={128} list="existing-categories" /></label>
       <datalist id="existing-categories">{categories.map((name) => <option key={name} value={name} />)}</datalist>
       <label>标签<input name="tags" defaultValue={skill.tags?.join(", ")} placeholder="用逗号分隔" /></label>
+      <label>来源名称<input name="upstreamName" defaultValue={skill.upstreamName}
+        placeholder={importSourceName(skill.importKind)} maxLength={120} /></label>
       <label>来源链接<input name="upstreamUrl" defaultValue={skill.upstreamUrl} type="url" maxLength={2048} /></label>
       <label>备注<textarea name="notes" defaultValue={skill.notes} rows={3} maxLength={4096} /></label>
     </fieldset>

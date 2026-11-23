@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"errors"
+	"slices"
 
 	"github.com/fino-io/core/go/fino/core"
 	"github.com/fino-io/finokit/db"
@@ -37,6 +38,15 @@ func (r *Library) session(ctx context.Context) *gorm.DB {
 	return r.provider.NewSession(ctx)
 }
 
+const displayedSourceSQL = `COALESCE(NULLIF(TRIM(upstream_name), ''), CASE import_kind
+	WHEN 'folder' THEN '本机目录'
+	WHEN 'directory_upload' THEN '本机目录'
+	WHEN 'github' THEN 'GitHub'
+	WHEN 'zip' THEN 'ZIP'
+	WHEN '' THEN '未知'
+	ELSE import_kind
+END)`
+
 func (r *Library) Skills(ctx context.Context, filter port.SkillFilter, size int, token string) ([]domain.SkillSnapshot, string, error) {
 	query := r.session(ctx).Model(&model.Skill{})
 
@@ -53,8 +63,14 @@ func (r *Library) Skills(ctx context.Context, filter port.SkillFilter, size int,
 		query = query.Where("category = ?", category)
 	}
 
-	if filter.Source != "" {
-		query = query.Where("import_kind = ? OR upstream_name = ?", filter.Source, filter.Source)
+	if filter.SourceName != "" {
+		query = query.Where(displayedSourceSQL+" = ?", filter.SourceName)
+	} else if filter.Source != "" {
+		kinds := []string{filter.Source}
+		if filter.Source == "folder" || filter.Source == "directory_upload" {
+			kinds = []string{"folder", "directory_upload"}
+		}
+		query = query.Where("import_kind IN ? OR upstream_name = ?", kinds, filter.Source)
 	}
 
 	for _, tag := range filter.Tags {
@@ -160,6 +176,17 @@ func (r *Library) Facets(ctx context.Context) (port.Facets, error) {
 		if err := db.Model(field.model).Where(field.column+" <> ''").Distinct().Order(field.column).Pluck(field.column, field.output).Error; err != nil {
 			return result, err
 		}
+	}
+	for i, source := range result.Sources {
+		if source == "directory_upload" {
+			result.Sources[i] = "folder"
+		}
+	}
+	slices.Sort(result.Sources)
+	result.Sources = slices.Compact(result.Sources)
+	if err := db.Model(&model.Skill{}).Select(displayedSourceSQL+" AS source_name").
+		Distinct().Order("source_name").Pluck("source_name", &result.SourceNames).Error; err != nil {
+		return result, err
 	}
 	return result, nil
 }

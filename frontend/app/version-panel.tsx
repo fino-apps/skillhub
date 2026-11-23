@@ -7,11 +7,11 @@ import type { SkillVersion } from "./skill-version";
 
 type Preview = { commit?: string; digest?: string; changes?: Change[] };
 
-export default function VersionPanel({ skill, from, path: initialPath, onSaved }: {
-  skill: Skill; from: "github" | "folder"; path?: string; onSaved: (version: SkillVersion) => void;
+export default function VersionPanel({ skill, from, onSaved }: {
+  skill: Skill; from: "github" | "folder"; onSaved: (version: SkillVersion) => void;
 }) {
   const [ref, setRef] = useState(skill.defaultVersion?.sourceRef ?? "");
-  const [path, setPath] = useState(initialPath || skill.localPath || "");
+  const [path, setPath] = useState(skill.localPath || "");
   const [notes, setNotes] = useState("");
   const [makeDefault, setDefault] = useState(false);
   const [preview, setPreview] = useState<Preview | null>(null);

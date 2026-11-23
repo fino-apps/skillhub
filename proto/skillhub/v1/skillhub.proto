@@ -148,6 +148,8 @@ message ListSkillsRequest {
   string source = 2 [(fino.validate) = {omitempty: true max: 120}];
   repeated string tags = 4 [(fino.validate) = {omitempty: true max: 30}];
   bool uncategorized = 5;
+  // 按列表显示的来源名称精确筛选，优先于 source。
+  string source_name = 6 [(fino.validate) = {omitempty: true max: 120}];
   string category = 3 [(fino.validate) = {omitempty: true max: 128}];
 
   int32 page_size = 90 [(fino.validate) = {omitempty: true min: 1 max: 100}];
@@ -314,6 +316,7 @@ message ImportSkillRequest {
   string purpose = 7 [(fino.validate) = {omitempty: true max: 240}];
   string notes = 8 [(fino.validate) = {omitempty: true max: 4096}];
   string upstream_url = 9 [(fino.validate) = {omitempty: true max: 2048}];
+  string upstream_name = 10 [(fino.validate) = {omitempty: true max: 120}];
 }
 
 message ImportFailure {
@@ -426,6 +429,7 @@ message ListFacetsResponse {
   repeated string categories = 1;
   repeated string sources = 2;
   repeated string tags = 3;
+  repeated string source_names = 4;
 }
 
 message SkillMetadataChange {
@@ -472,6 +476,9 @@ message CommitUploadRequest {
   string purpose = 7 [(fino.validate) = {omitempty: true max: 240}];
   string notes = 8 [(fino.validate) = {omitempty: true max: 4096}];
   string upstream_url = 9 [(fino.validate) = {omitempty: true max: 2048}];
+  // 浏览器选择目录后打包上传时为 true。
+  bool directory_upload = 10;
+  string upstream_name = 11 [(fino.validate) = {omitempty: true max: 120}];
 }
 
 message ExportLibraryRequest {}

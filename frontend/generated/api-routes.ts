@@ -22,13 +22,14 @@ export const apiRoutes = {
     method: "GET",
     path: "/skillhub/v1/skills",
     pathParams: [],
-    queryParams: ["category", "keyword", "pageSize", "pageToken", "source", "tags", "uncategorized"],
+    queryParams: ["category", "keyword", "pageSize", "pageToken", "source", "sourceName", "tags", "uncategorized"],
     body: "",
     defaultPayload: {
       keyword: "",
       source: "",
       tags: [],
       uncategorized: false,
+      sourceName: "",
       category: "",
       pageSize: 0,
       pageToken: "",
@@ -180,6 +181,7 @@ export const apiRoutes = {
       purpose: "",
       notes: "",
       upstreamUrl: "",
+      upstreamName: "",
     },
   },
   setDefaultVersion: {
@@ -353,6 +355,8 @@ export const apiRoutes = {
       purpose: "",
       notes: "",
       upstreamUrl: "",
+      directoryUpload: false,
+      upstreamName: "",
     },
   },
   compareSkills: {

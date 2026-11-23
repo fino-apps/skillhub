@@ -13,7 +13,7 @@ Skill 保存来源和整理信息。
 | `repositoryPath` | `string` |  | 否 |  | 仓库内 Skill 路径 |
 | `localPath` | `string` |  | 否 | '' | 本机原始 Skill 目录；GitHub 来源留空 |
 | `sourceKey` | `string` |  | 否 | '' | 收录来源标识 |
-| `importKind` | `string` |  | 否 | '' | folder、github 或 zip |
+| `importKind` | `string` |  | 否 | '' | folder、directory_upload、github 或 zip |
 | `purpose` | `string` |  | 否 | '' | 用户整理的一行用途 |
 | `upstreamName` | `string` |  | 否 | '' | 展示的上游名称 |
 | `upstreamUrl` | `string` |  | 否 | '' | 展示的上游链接 |

@@ -74,6 +74,7 @@ func prepareImportMetadata(metadata Metadata) (Metadata, error) {
 	metadata.Tags = tags
 	metadata.Category = strings.TrimSpace(metadata.Category)
 	metadata.Purpose = strings.TrimSpace(metadata.Purpose)
+	metadata.UpstreamName = strings.TrimSpace(metadata.UpstreamName)
 	metadata.UpstreamURL = strings.TrimSpace(metadata.UpstreamURL)
 	if metadata.UpstreamURL != "" {
 		link, err := url.Parse(metadata.UpstreamURL)
@@ -205,7 +206,13 @@ func (s *Library) cleanUploads(now time.Time) error {
 	return nil
 }
 
-func (s *Library) ImportArchive(ctx context.Context, upload, target string, paths []string, makeDefault bool, metadata Metadata) (*ImportResult, error) {
+type ArchiveImportOptions struct {
+	MakeDefault     bool
+	DirectoryUpload bool
+	Metadata        Metadata
+}
+
+func (s *Library) ImportArchive(ctx context.Context, upload, target string, paths []string, options ArchiveImportOptions) (*ImportResult, error) {
 	id, err := uuid.Parse(upload)
 	if err != nil {
 		return nil, ErrInvalid
@@ -213,11 +220,14 @@ func (s *Library) ImportArchive(ctx context.Context, upload, target string, path
 	if target != "" && len(paths) != 1 {
 		return nil, ErrInvalid
 	}
-	metadata, err = prepareImportMetadata(metadata)
+	metadata, err := prepareImportMetadata(options.Metadata)
 	if err != nil {
 		return nil, err
 	}
 	source := Source{Kind: "zip", InitialMetadata: metadata}
+	if options.DirectoryUpload {
+		source.Kind = "directory_upload"
+	}
 	s.commits.Lock()
 	defer s.commits.Unlock()
 	if err := s.cleanUploads(time.Now()); err != nil {
@@ -234,7 +244,7 @@ func (s *Library) ImportArchive(ctx context.Context, upload, target string, path
 		dir, err := Within(root, path)
 		created := false
 		if err == nil {
-			_, created, err = s.saveDirectory(ctx, dir, target, source, VersionInput{MakeDefault: makeDefault})
+			_, created, err = s.saveDirectory(ctx, dir, target, source, VersionInput{MakeDefault: options.MakeDefault})
 		}
 		accountImport(&result, path, created, err)
 	}

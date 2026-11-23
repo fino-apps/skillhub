@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { importSkill, previewImport } from "@/generated/api-client";
-import { message, type Candidate, type ImportResult } from "./library-api";
+import { importSourceName, message, type Candidate, type ImportResult } from "./library-api";
 import { CandidatePicker, ImportFeedback, ImportMetadataFields, readImportMetadata } from "./local-intake";
 import { Failure } from "./skill-ui";
 
@@ -94,7 +94,7 @@ export default function GitHubIntake({ categories, existingTags, onComplete }: {
       {(preview.result.skills?.length ?? 0) > 0
         ? <form className="github-form" onSubmit={save}>
           <CandidatePicker items={preview.result.skills ?? []} selected={selected} onChange={setSelected} disabled={busy} />
-          <ImportMetadataFields categories={categories} existingTags={existingTags} disabled={busy} />
+          <ImportMetadataFields categories={categories} existingTags={existingTags} defaultSource={importSourceName("github")} disabled={busy} />
           <button type="submit" disabled={busy || !selected.length}>
             {busy ? "收录中…" : `收录 ${selected.length} 项`}
           </button>
