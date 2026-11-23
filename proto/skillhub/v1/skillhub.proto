@@ -308,9 +308,12 @@ message ImportSkillRequest {
   string source_ref = 2 [(fino.validate) = {omitempty: true max: 200}];
   string commit_sha = 3 [(fino.validate) = {omitempty: true min: 40 max: 40}];
   repeated string skill_paths = 4 [(fino.validate) = {required: true max: 100}];
-  // 分类和标签仅应用到本批新收录的 Skill。
+  // 整理信息仅应用到本批新收录的 Skill。
   string category = 5 [(fino.validate) = {omitempty: true max: 128}];
   repeated string tags = 6 [(fino.validate) = {omitempty: true max: 100}];
+  string purpose = 7 [(fino.validate) = {omitempty: true max: 240}];
+  string notes = 8 [(fino.validate) = {omitempty: true max: 4096}];
+  string upstream_url = 9 [(fino.validate) = {omitempty: true max: 2048}];
 }
 
 message ImportFailure {
@@ -463,6 +466,12 @@ message CommitUploadRequest {
   repeated string skill_paths = 2 [(fino.validate) = {required: true max: 100}];
   string target_skill_id = 3 [(fino.validate) = {omitempty: true uuid: true}];
   bool make_default = 4;
+  // 整理信息仅应用到本批新收录的 Skill。
+  string category = 5 [(fino.validate) = {omitempty: true max: 128}];
+  repeated string tags = 6 [(fino.validate) = {omitempty: true max: 100}];
+  string purpose = 7 [(fino.validate) = {omitempty: true max: 240}];
+  string notes = 8 [(fino.validate) = {omitempty: true max: 4096}];
+  string upstream_url = 9 [(fino.validate) = {omitempty: true max: 2048}];
 }
 
 message ExportLibraryRequest {}

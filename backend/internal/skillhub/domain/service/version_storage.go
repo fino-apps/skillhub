@@ -1,6 +1,7 @@
 package service
 
 import (
+	"cmp"
 	"context"
 	"crypto/sha256"
 	"errors"
@@ -15,7 +16,7 @@ import (
 
 type Source struct {
 	Kind, Repository, Path, Ref, Commit string
-	InitialMetadata                     ImportMetadata
+	InitialMetadata                     Metadata
 }
 
 type VersionInput struct {
@@ -81,19 +82,18 @@ func (s *Library) saveDirectory(ctx context.Context, dir, target string, source 
 			if err != nil {
 				return err
 			}
+			metadata := source.InitialMetadata
 			skill = model.SkillSnapshot{ID: model.SkillID(id.String()), Name: manifest.Name, Description: manifest.Description,
 				SourceKey: key, ImportKind: source.Kind, RepositoryUrl: source.Repository, RepositoryPath: source.Path,
-				Category: source.InitialMetadata.Category, CreateTime: now, UpdateTime: now}
+				Category: metadata.Category, Purpose: metadata.Purpose, Notes: metadata.Notes,
+				UpstreamUrl: cmp.Or(metadata.UpstreamURL, source.Repository), CreateTime: now, UpdateTime: now}
 			if source.Kind == "folder" {
 				skill.LocalPath = dir
-			}
-			if source.Kind == "github" {
-				skill.UpstreamUrl = source.Repository
 			}
 			if err := tx.CreateSkill(skill); err != nil {
 				return err
 			}
-			if tags := source.InitialMetadata.Tags; len(tags) > 0 {
+			if tags := metadata.Tags; len(tags) > 0 {
 				if err := tx.ChangeTags(string(skill.ID), false, tags, nil); err != nil {
 					return err
 				}

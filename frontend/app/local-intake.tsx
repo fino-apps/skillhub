@@ -53,16 +53,20 @@ export function ImportMetadataFields({ categories, disabled }: { categories: str
   return <details className="skill-disclosure file-import-metadata" onChange={(event) => {
     const form = event.currentTarget.closest("form");
     if (!form) return;
-    const { category, tags } = importMetadataValues(form);
-    setSummary([category, tags.length ? `${tags.length} 个标签` : ""].filter(Boolean).join(" · "));
+    const { category, tags, purpose, upstreamUrl, notes } = importMetadataValues(form);
+    const classification = [category, tags.length ? `${tags.length} 个标签` : ""].filter(Boolean).join(" · ");
+    setSummary(classification || (purpose || upstreamUrl || notes ? "已填写" : ""));
   }}>
-    <summary>分类和标签{summary ? <span title={summary}>{summary}</span> : "（选填）"}</summary>
+    <summary>整理信息{summary ? <span title={summary}>{summary}</span> : "（选填）"}</summary>
     <fieldset className="skill-fields" disabled={disabled} aria-describedby={hintId}>
-      <legend className="sr-only">批量分类和标签</legend>
+      <legend className="sr-only">整理信息</legend>
       <span className="skillhub-hint" id={hintId}>应用到本批新收录的 Skill</span>
+      <label>短用途<input name="purpose" maxLength={240} /></label>
       <label>分类<input name="category" maxLength={128} list={categoriesId} /></label>
       <datalist id={categoriesId}>{categories.map((name) => <option key={name} value={name} />)}</datalist>
       <label>标签<input name="tags" placeholder="用逗号分隔" /></label>
+      <label>来源链接<input name="upstreamUrl" type="url" maxLength={2048} /></label>
+      <label>备注<textarea name="notes" rows={3} maxLength={4096} /></label>
     </fieldset>
   </details>;
 }
@@ -72,17 +76,27 @@ function importMetadataValues(form: HTMLFormElement) {
   return {
     category: String(values.get("category") ?? "").trim(),
     tags: tagsFrom(String(values.get("tags") ?? "")),
+    purpose: String(values.get("purpose") ?? "").trim(),
+    upstreamUrl: String(values.get("upstreamUrl") ?? "").trim(),
+    notes: String(values.get("notes") ?? ""),
   };
 }
 
 export function readImportMetadata(form: HTMLFormElement) {
-  const { category, tags } = importMetadataValues(form);
+  const metadata = importMetadataValues(form);
+  const { tags, upstreamUrl } = metadata;
+  let error = "";
   if (tags.length > 100 || tags.some((tag) => [...tag].length > 128)) {
+    error = "最多填写 100 个标签，每个标签最多 128 个字符";
+  } else if (upstreamUrl && (!/^https?:\/\//i.test(upstreamUrl) || !URL.canParse(upstreamUrl))) {
+    error = "请输入以 http:// 或 https:// 开头的来源链接";
+  }
+  if (error) {
     const details = form.querySelector<HTMLDetailsElement>(".file-import-metadata");
     if (details) details.open = true;
-    throw new Error("最多填写 100 个标签，每个标签最多 128 个字符");
+    throw new Error(error);
   }
-  return { category, tags };
+  return metadata;
 }
 
 export default function LocalIntake({ categories, onComplete, onVersion, children }: {
@@ -241,8 +255,8 @@ async function archiveDirectory(files: FileList) {
   return new File([archive], `${root}.zip`, { type: "application/zip" });
 }
 
-export function UploadIntake({ skillId, directory = false, onComplete, children }: {
-  skillId?: string; directory?: boolean; onComplete: (result: ImportResult, pending?: boolean) => void; children?: ReactNode;
+export function UploadIntake({ skillId, directory = false, categories = [], onComplete, children }: {
+  skillId?: string; directory?: boolean; categories?: string[]; onComplete: (result: ImportResult, pending?: boolean) => void; children?: ReactNode;
 }) {
   const [uploadId, setUploadId] = useState("");
   const [items, setItems] = useState<Candidate[]>([]);
@@ -274,11 +288,15 @@ export function UploadIntake({ skillId, directory = false, onComplete, children 
     }
   }
 
-  async function commit() {
+  async function commit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy || !uploadId || !selected.length) return;
+    const form = event.currentTarget;
     setBusy(true);
     setError("");
     try {
-      const reply = await commitUpload<ImportResult>({ uploadId, skillPaths: selected, targetSkillId: skillId });
+      const metadata = skillId ? {} : readImportMetadata(form);
+      const reply = await commitUpload<ImportResult>({ uploadId, skillPaths: selected, targetSkillId: skillId, ...metadata });
       const failed = new Set(reply.failures?.map(({ path }) => path ?? "") ?? []);
       const remaining = items.filter((item) => !selected.includes(item.path ?? "") || failed.has(item.path ?? ""));
       setItems(remaining);
@@ -302,11 +320,16 @@ export function UploadIntake({ skillId, directory = false, onComplete, children 
       <input type="file" accept={directory ? undefined : ".zip,application/zip"} disabled={busy}
         ref={directory ? directoryInput : undefined} onChange={(event) => void read(event.currentTarget)} />
     </label>
-    {items.length > 0 && <CandidatePicker items={items} selected={selected} disabled={busy} single={!!skillId} onChange={setSelected} />}
     <Failure error={error} />
     <ImportFeedback result={result} />
-    {busy && <p role="status">处理中…</p>}
-    {uploadId && <button type="button" disabled={busy || !selected.length} onClick={() => void commit()}>确认收录</button>}
+    {busy && !uploadId && <p role="status">正在读取{directory ? "目录" : "ZIP 文件"}…</p>}
+    {items.length > 0 && <form key={uploadId} className="github-form" onSubmit={commit}>
+      <CandidatePicker items={items} selected={selected} disabled={busy} single={!!skillId} onChange={setSelected} />
+      {!skillId && <ImportMetadataFields categories={categories} disabled={busy} />}
+      <button type="submit" disabled={busy || !selected.length}>
+        {busy ? "收录中…" : skillId ? "确认收录" : `收录 ${selected.length} 项`}
+      </button>
+    </form>}
     {!busy && children && <div className="file-import-options">{children}</div>}
   </div>;
 }

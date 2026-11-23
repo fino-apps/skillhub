@@ -333,7 +333,7 @@ export default function HomePage() {
       {panel.source === "server" ? <LocalIntake categories={facets.categories ?? []} onComplete={imported}
         onVersion={(skill, path) => setPanel({ kind: "new-version", skill, path })}>
         <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file" })}>从此设备上传目录</button>
-      </LocalIntake> : <UploadIntake key={panel.source ?? "directory"} directory={!panel.source} onComplete={imported}>
+      </LocalIntake> : <UploadIntake key={panel.source ?? "directory"} directory={!panel.source} categories={facets.categories ?? []} onComplete={imported}>
         {panel.source === "zip"
           ? <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file" })}>从此设备上传目录</button>
           : <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file", source: "zip" })}>改用 ZIP 文件</button>}

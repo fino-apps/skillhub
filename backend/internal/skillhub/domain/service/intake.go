@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"errors"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -65,20 +66,30 @@ func PreviewGitHub(ctx context.Context, source Source, collection bool) (*Previe
 	return &Preview{Commit: commit, Items: items}, nil
 }
 
-type ImportMetadata struct {
-	Category string
-	Tags     []string
+func prepareImportMetadata(metadata Metadata) (Metadata, error) {
+	tags, err := normalizeTags(metadata.Tags)
+	if err != nil {
+		return Metadata{}, err
+	}
+	metadata.Tags = tags
+	metadata.Category = strings.TrimSpace(metadata.Category)
+	metadata.Purpose = strings.TrimSpace(metadata.Purpose)
+	metadata.UpstreamURL = strings.TrimSpace(metadata.UpstreamURL)
+	if metadata.UpstreamURL != "" {
+		link, err := url.Parse(metadata.UpstreamURL)
+		if err != nil || link.Hostname() == "" || (link.Scheme != "https" && link.Scheme != "http") {
+			return Metadata{}, invalid(errors.New("来源链接必须是有效的 HTTP 或 HTTPS 地址"))
+		}
+	}
+	return metadata, nil
 }
 
-func (s *Library) ImportDirectories(ctx context.Context, repositoryURL, ref, sha string, paths []string, metadata ImportMetadata) (*ImportResult, error) {
-	tags, err := normalizeTags(metadata.Tags)
+func (s *Library) ImportDirectories(ctx context.Context, repositoryURL, ref, sha string, paths []string, metadata Metadata) (*ImportResult, error) {
+	metadata, err := prepareImportMetadata(metadata)
 	if err != nil {
 		return nil, err
 	}
-	source := Source{
-		Kind:            "folder",
-		InitialMetadata: ImportMetadata{Category: strings.TrimSpace(metadata.Category), Tags: tags},
-	}
+	source := Source{Kind: "folder", InitialMetadata: metadata}
 	var root string
 	if repositoryURL != "" {
 		repository, err := GitHubURL(repositoryURL)
@@ -194,7 +205,7 @@ func (s *Library) cleanUploads(now time.Time) error {
 	return nil
 }
 
-func (s *Library) ImportArchive(ctx context.Context, upload, target string, paths []string, makeDefault bool) (*ImportResult, error) {
+func (s *Library) ImportArchive(ctx context.Context, upload, target string, paths []string, makeDefault bool, metadata Metadata) (*ImportResult, error) {
 	id, err := uuid.Parse(upload)
 	if err != nil {
 		return nil, ErrInvalid
@@ -202,6 +213,11 @@ func (s *Library) ImportArchive(ctx context.Context, upload, target string, path
 	if target != "" && len(paths) != 1 {
 		return nil, ErrInvalid
 	}
+	metadata, err = prepareImportMetadata(metadata)
+	if err != nil {
+		return nil, err
+	}
+	source := Source{Kind: "zip", InitialMetadata: metadata}
 	s.commits.Lock()
 	defer s.commits.Unlock()
 	if err := s.cleanUploads(time.Now()); err != nil {
@@ -218,7 +234,7 @@ func (s *Library) ImportArchive(ctx context.Context, upload, target string, path
 		dir, err := Within(root, path)
 		created := false
 		if err == nil {
-			_, created, err = s.saveDirectory(ctx, dir, target, Source{Kind: "zip"}, VersionInput{MakeDefault: makeDefault})
+			_, created, err = s.saveDirectory(ctx, dir, target, source, VersionInput{MakeDefault: makeDefault})
 		}
 		accountImport(&result, path, created, err)
 	}

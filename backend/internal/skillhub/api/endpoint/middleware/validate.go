@@ -312,6 +312,18 @@ func validateImportSkillRequest(req *pb.ImportSkillRequest) error {
 		return newRequestValidationError("tags", err)
 	}
 
+	if err := requestValidator.Var(req.GetPurpose(), "omitempty,max=240"); err != nil {
+		return newRequestValidationError("purpose", err)
+	}
+
+	if err := requestValidator.Var(req.GetNotes(), "omitempty,max=4096"); err != nil {
+		return newRequestValidationError("notes", err)
+	}
+
+	if err := requestValidator.Var(req.GetUpstreamUrl(), "omitempty,max=2048"); err != nil {
+		return newRequestValidationError("upstream_url", err)
+	}
+
 	return nil
 }
 
@@ -426,6 +438,26 @@ func validateCommitUploadRequest(req *pb.CommitUploadRequest) error {
 
 	if err := requestValidator.Var(req.GetTargetSkillId(), "omitempty,uuid"); err != nil {
 		return newRequestValidationError("target_skill_id", err)
+	}
+
+	if err := requestValidator.Var(req.GetCategory(), "omitempty,max=128"); err != nil {
+		return newRequestValidationError("category", err)
+	}
+
+	if err := requestValidator.Var(req.GetTags(), "omitempty,max=100"); err != nil {
+		return newRequestValidationError("tags", err)
+	}
+
+	if err := requestValidator.Var(req.GetPurpose(), "omitempty,max=240"); err != nil {
+		return newRequestValidationError("purpose", err)
+	}
+
+	if err := requestValidator.Var(req.GetNotes(), "omitempty,max=4096"); err != nil {
+		return newRequestValidationError("notes", err)
+	}
+
+	if err := requestValidator.Var(req.GetUpstreamUrl(), "omitempty,max=2048"); err != nil {
+		return newRequestValidationError("upstream_url", err)
 	}
 
 	return nil

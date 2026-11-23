@@ -244,7 +244,7 @@ func (s skillhubServer) PreviewImport(ctx context.Context, in *pb.PreviewImportR
 	}, nil
 }
 
-// ImportSkill implements Interface. fino:req-fields 1=RepositoryUrl,2=SourceRef,3=CommitSha,4=SkillPaths,5=Category,6=Tags
+// ImportSkill implements Interface. fino:req-fields 1=RepositoryUrl,2=SourceRef,3=CommitSha,4=SkillPaths,5=Category,6=Tags,7=Purpose,8=Notes,9=UpstreamUrl
 func (s skillhubServer) ImportSkill(ctx context.Context, in *pb.ImportSkillRequest) (*pb.ImportSkillResponse, error) {
 	logs.Ctx(ctx).Debugw("ImportSkill")
 	if in == nil {
@@ -252,7 +252,10 @@ func (s skillhubServer) ImportSkill(ctx context.Context, in *pb.ImportSkillReque
 		return nil, errcode.NewSkillhubRequestMissing()
 	}
 
-	metadata := service.ImportMetadata{Category: in.GetCategory(), Tags: in.GetTags()}
+	metadata := service.Metadata{
+		Category: in.GetCategory(), Tags: in.GetTags(), Purpose: in.GetPurpose(),
+		Notes: in.GetNotes(), UpstreamURL: in.GetUpstreamUrl(),
+	}
 	result, err := s.library.ImportDirectories(ctx, in.GetRepositoryUrl(), in.GetSourceRef(), in.GetCommitSha(), in.GetSkillPaths(), metadata)
 	if err != nil {
 		return nil, rpcError(ctx, "ImportSkill", err)
@@ -493,7 +496,7 @@ func (s skillhubServer) UploadZip(ctx context.Context, in *pb.UploadZipRequest) 
 	}, nil
 }
 
-// CommitUpload implements Interface. fino:req-fields 1=UploadId,2=SkillPaths,3=TargetSkillId,4=MakeDefault
+// CommitUpload implements Interface. fino:req-fields 1=UploadId,2=SkillPaths,3=TargetSkillId,4=MakeDefault,5=Category,6=Tags,7=Purpose,8=Notes,9=UpstreamUrl
 func (s skillhubServer) CommitUpload(ctx context.Context, in *pb.CommitUploadRequest) (*pb.ImportSkillResponse, error) {
 	logs.Ctx(ctx).Debugw("CommitUpload")
 	if in == nil {
@@ -501,7 +504,11 @@ func (s skillhubServer) CommitUpload(ctx context.Context, in *pb.CommitUploadReq
 		return nil, errcode.NewSkillhubRequestMissing()
 	}
 
-	result, err := s.library.ImportArchive(ctx, in.GetUploadId(), in.GetTargetSkillId(), in.GetSkillPaths(), in.GetMakeDefault())
+	metadata := service.Metadata{
+		Category: in.GetCategory(), Tags: in.GetTags(), Purpose: in.GetPurpose(),
+		Notes: in.GetNotes(), UpstreamURL: in.GetUpstreamUrl(),
+	}
+	result, err := s.library.ImportArchive(ctx, in.GetUploadId(), in.GetTargetSkillId(), in.GetSkillPaths(), in.GetMakeDefault(), metadata)
 	if err != nil {
 		return nil, rpcError(ctx, "CommitUpload", err)
 	}

@@ -177,6 +177,9 @@ export const apiRoutes = {
       skillPaths: [],
       category: "",
       tags: [],
+      purpose: "",
+      notes: "",
+      upstreamUrl: "",
     },
   },
   setDefaultVersion: {
@@ -345,6 +348,11 @@ export const apiRoutes = {
       skillPaths: [],
       targetSkillId: "",
       makeDefault: false,
+      category: "",
+      tags: [],
+      purpose: "",
+      notes: "",
+      upstreamUrl: "",
     },
   },
   compareSkills: {

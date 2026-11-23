@@ -728,9 +728,24 @@ components:
       title: skillhub.v1.CommitUploadRequest
       type: object
       properties:
+        category:
+          description: 整理信息仅应用到本批新收录的 Skill。
+          type: string
+          maxLength: 128
         makeDefault:
           type: boolean
+        notes:
+          type: string
+          maxLength: 4096
+        purpose:
+          type: string
+          maxLength: 240
         skillPaths:
+          type: array
+          items:
+            type: string
+          maxItems: 100
+        tags:
           type: array
           items:
             type: string
@@ -741,6 +756,9 @@ components:
         uploadId:
           type: string
           format: uuid
+        upstreamUrl:
+          type: string
+          maxLength: 2048
       required:
         - uploadId
         - skillPaths
@@ -1029,13 +1047,19 @@ components:
       type: object
       properties:
         category:
-          description: 分类和标签仅应用到本批新收录的 Skill。
+          description: 整理信息仅应用到本批新收录的 Skill。
           type: string
           maxLength: 128
         commitSha:
           type: string
           minLength: 40
           maxLength: 40
+        notes:
+          type: string
+          maxLength: 4096
+        purpose:
+          type: string
+          maxLength: 240
         repositoryUrl:
           description: 本地收录时仓库字段留空，skill_paths 为本机绝对路径。
           type: string
@@ -1053,6 +1077,9 @@ components:
           items:
             type: string
           maxItems: 100
+        upstreamUrl:
+          type: string
+          maxLength: 2048
       required:
         - skillPaths
     skillhub.v1.ImportSkillResponse:

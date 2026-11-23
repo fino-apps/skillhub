@@ -307,8 +307,11 @@ POST /skillhub/v1/imports
 | `sourceRef` | `string` |  | 否 |  | 最大长度为 200 |
 | `commitSha` | `string` |  | 否 |  | 最小长度为 40；最大长度为 40 |
 | `skillPaths` | `Array<string>` |  | 是 |  | 最大长度为 100 |
-| `category` | `string` |  | 否 |  | 分类和标签仅应用到本批新收录的 Skill。；最大长度为 128 |
+| `category` | `string` |  | 否 |  | 整理信息仅应用到本批新收录的 Skill。；最大长度为 128 |
 | `tags` | `Array<string>` |  | 否 |  | 最大长度为 100 |
+| `purpose` | `string` |  | 否 |  | 最大长度为 240 |
+| `notes` | `string` |  | 否 |  | 最大长度为 4096 |
+| `upstreamUrl` | `string` |  | 否 |  | 最大长度为 2048 |
 
 ### 返回值
 
@@ -638,6 +641,11 @@ POST /skillhub/v1/uploads/{upload_id}:commit
 | `skillPaths` | `Array<string>` |  | 是 |  | 最大长度为 100 |
 | `targetSkillId` | `string` |  | 否 |  | UUID |
 | `makeDefault` | `boolean` |  | 否 |  |  |
+| `category` | `string` |  | 否 |  | 整理信息仅应用到本批新收录的 Skill。；最大长度为 128 |
+| `tags` | `Array<string>` |  | 否 |  | 最大长度为 100 |
+| `purpose` | `string` |  | 否 |  | 最大长度为 240 |
+| `notes` | `string` |  | 否 |  | 最大长度为 4096 |
+| `upstreamUrl` | `string` |  | 否 |  | 最大长度为 2048 |
 
 ### 返回值
 
