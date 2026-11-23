@@ -330,10 +330,10 @@ export default function HomePage() {
     </button>}
 
     {panel?.kind === "file" && <Dialog title="导入文件" compact onClose={() => setPanel(null)}>
-      {panel.source === "server" ? <LocalIntake categories={facets.categories ?? []} onComplete={imported}
+      {panel.source === "server" ? <LocalIntake categories={facets.categories ?? []} existingTags={facets.tags ?? []} onComplete={imported}
         onVersion={(skill, path) => setPanel({ kind: "new-version", skill, path })}>
         <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file" })}>从此设备上传目录</button>
-      </LocalIntake> : <UploadIntake key={panel.source ?? "directory"} directory={!panel.source} categories={facets.categories ?? []} onComplete={imported}>
+      </LocalIntake> : <UploadIntake key={panel.source ?? "directory"} directory={!panel.source} categories={facets.categories ?? []} existingTags={facets.tags ?? []} onComplete={imported}>
         {panel.source === "zip"
           ? <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file" })}>从此设备上传目录</button>
           : <button type="button" className="skillhub-text-button" onClick={() => setPanel({ kind: "file", source: "zip" })}>改用 ZIP 文件</button>}
@@ -341,7 +341,7 @@ export default function HomePage() {
       </UploadIntake>}
     </Dialog>}
     {panel?.kind === "github" && <Dialog title="导入 GitHub" compact onClose={() => setPanel(null)}>
-      <GitHubIntake categories={facets.categories ?? []} onComplete={imported} />
+      <GitHubIntake categories={facets.categories ?? []} existingTags={facets.tags ?? []} onComplete={imported} />
     </Dialog>}
     {panel?.kind === "backup" && <Dialog title="导入备份" compact onClose={() => setPanel(null)}>
       <LibraryBackup onImported={(result) => {

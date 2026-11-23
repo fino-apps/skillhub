@@ -44,11 +44,14 @@ export function ImportFeedback({ result }: { result: ImportResult | null }) {
   </div>;
 }
 
-export function ImportMetadataFields({ categories, disabled }: { categories: string[]; disabled: boolean }) {
+export function ImportMetadataFields({ categories, existingTags, disabled }: { categories: string[]; existingTags: string[]; disabled: boolean }) {
   const hintId = useId();
   const categoriesId = useId();
-
+  const tagsId = useId();
   const [summary, setSummary] = useState("");
+  const [tagPrefix, setTagPrefix] = useState("");
+  const enteredTags = new Set(tagsFrom(tagPrefix));
+  const suggestedTags = existingTags.filter((tag) => !enteredTags.has(tag) && !/[,，\n]/.test(tag));
 
   return <details className="skill-disclosure file-import-metadata" onChange={(event) => {
     const form = event.currentTarget.closest("form");
@@ -64,7 +67,9 @@ export function ImportMetadataFields({ categories, disabled }: { categories: str
       <label>短用途<input name="purpose" maxLength={240} /></label>
       <label>分类<input name="category" maxLength={128} list={categoriesId} /></label>
       <datalist id={categoriesId}>{categories.map((name) => <option key={name} value={name} />)}</datalist>
-      <label>标签<input name="tags" placeholder="用逗号分隔" /></label>
+      <label>标签<input name="tags" list={tagsId} placeholder="选择或输入标签，用逗号分隔"
+        onChange={(event) => setTagPrefix(event.target.value.match(/^.*[,，]\s*/)?.[0] ?? "")} /></label>
+      <datalist id={tagsId}>{suggestedTags.map((tag) => <option key={tag} value={tagPrefix + tag} />)}</datalist>
       <label>来源链接<input name="upstreamUrl" type="url" maxLength={2048} /></label>
       <label>备注<textarea name="notes" rows={3} maxLength={4096} /></label>
     </fieldset>
@@ -99,8 +104,9 @@ export function readImportMetadata(form: HTMLFormElement) {
   return metadata;
 }
 
-export default function LocalIntake({ categories, onComplete, onVersion, children }: {
+export default function LocalIntake({ categories, existingTags, onComplete, onVersion, children }: {
   categories: string[];
+  existingTags: string[];
   children?: ReactNode;
   onComplete: (result: ImportResult) => void; onVersion: (skill: Skill, path: string) => void;
 }) {
@@ -219,7 +225,7 @@ export default function LocalIntake({ categories, onComplete, onVersion, childre
     </div>}
     {items.length > 0 && <form className="github-form" onSubmit={save}>
       {items.length > 1 && <CandidatePicker items={items} selected={selected} onChange={setSelected} disabled={busy} />}
-      <ImportMetadataFields categories={categories} disabled={busy} />
+      <ImportMetadataFields categories={categories} existingTags={existingTags} disabled={busy} />
       <button type="submit" disabled={!selected.length || busy}>
         {busy ? "处理中…" : matching.length ? "作为独立条目收录" : items.length === 1 ? "确认收录" : `收录 ${selected.length} 项`}
       </button>
@@ -255,8 +261,8 @@ async function archiveDirectory(files: FileList) {
   return new File([archive], `${root}.zip`, { type: "application/zip" });
 }
 
-export function UploadIntake({ skillId, directory = false, categories = [], onComplete, children }: {
-  skillId?: string; directory?: boolean; categories?: string[]; onComplete: (result: ImportResult, pending?: boolean) => void; children?: ReactNode;
+export function UploadIntake({ skillId, directory = false, categories = [], existingTags = [], onComplete, children }: {
+  skillId?: string; directory?: boolean; categories?: string[]; existingTags?: string[]; onComplete: (result: ImportResult, pending?: boolean) => void; children?: ReactNode;
 }) {
   const [uploadId, setUploadId] = useState("");
   const [items, setItems] = useState<Candidate[]>([]);
@@ -325,7 +331,7 @@ export function UploadIntake({ skillId, directory = false, categories = [], onCo
     {busy && !uploadId && <p role="status">正在读取{directory ? "目录" : "ZIP 文件"}…</p>}
     {items.length > 0 && <form key={uploadId} className="github-form" onSubmit={commit}>
       <CandidatePicker items={items} selected={selected} disabled={busy} single={!!skillId} onChange={setSelected} />
-      {!skillId && <ImportMetadataFields categories={categories} disabled={busy} />}
+      {!skillId && <ImportMetadataFields categories={categories} existingTags={existingTags} disabled={busy} />}
       <button type="submit" disabled={busy || !selected.length}>
         {busy ? "收录中…" : skillId ? "确认收录" : `收录 ${selected.length} 项`}
       </button>

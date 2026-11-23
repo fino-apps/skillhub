@@ -22,7 +22,7 @@ type Preview = {
   skills?: Candidate[];
 };
 
-export default function GitHubIntake({ categories, onComplete }: { categories: string[]; onComplete: (result: ImportResult) => void }) {
+export default function GitHubIntake({ categories, existingTags, onComplete }: { categories: string[]; existingTags: string[]; onComplete: (result: ImportResult) => void }) {
   const [preview, setPreview] = useState<{ source: ReturnType<typeof githubLocation>; result: Preview } | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -94,7 +94,7 @@ export default function GitHubIntake({ categories, onComplete }: { categories: s
       {(preview.result.skills?.length ?? 0) > 0
         ? <form className="github-form" onSubmit={save}>
           <CandidatePicker items={preview.result.skills ?? []} selected={selected} onChange={setSelected} disabled={busy} />
-          <ImportMetadataFields categories={categories} disabled={busy} />
+          <ImportMetadataFields categories={categories} existingTags={existingTags} disabled={busy} />
           <button type="submit" disabled={busy || !selected.length}>
             {busy ? "收录中…" : `收录 ${selected.length} 项`}
           </button>
