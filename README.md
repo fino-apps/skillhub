@@ -8,10 +8,10 @@ SkillHub 是单机 Skill 技能库。直接导入或导出完整文件夹，也�
 
 ```sh
 ./build-desktop.sh
-open .fino/desktop/darwin-amd64/SkillHub.app
+open .fino/desktop/darwin-amd64/skillhub-0.1.0-amd64.dmg
 ```
 
-脚本使用 Go 1.27.4 和 MyGo v0.10.0。应用随包提供前端和本地 Go 服务，运行时可以直接从 Finder 启动。数据库和快照保存在 `~/Library/Application Support/SkillHub/`，日志在 `~/Library/Logs/SkillHub/app.log`。已有技能库可以通过备份 ZIP 导入。GitHub 收录需要本机 Git 和网络。
+脚本使用 Go 1.27.4 和 MyGo v0.10.0，同时生成 `SkillHub.app` 和 `.dmg`。打开磁盘映像，将 SkillHub 拖到「应用程序」，推出磁盘后从「应用程序」启动。应用随包提供前端和本地 Go 服务，运行时可以直接从 Finder 启动。数据库和快照保存在 `~/Library/Application Support/SkillHub/`，日志在 `~/Library/Logs/SkillHub/app.log`。已有技能库可以通过备份 ZIP 导入。GitHub 收录需要本机 Git 和网络。
 
 ## 前后端分开部署
 
