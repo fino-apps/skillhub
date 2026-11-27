@@ -15,7 +15,7 @@
 
 1. **打通技术链路。** 用新版工具链、当前的 Xcode Command Line Tools 和项目现有 SQLite 驱动打出最小 `.app`。从 Finder 启动，用现有前端生产产物验证 WKWebView 渲染，跑通一次同源请求和 SQLite 写入读回。 [Go 1.27 系统要求](https://go.dev/doc/go1.27#darwin) · [MyGo CGO 构建说明](https://mygo.run/docs/distribution#platforms)
 2. **接入 SkillHub。** 更新 `backend/go.mod` 的 Go 基线，在 `package.yaml` 固定 MyGo v0.10.0，接好桌面装配。运行 `fino doctor --output=. --targets=service` 和 `fino build --output=. --targets=service`，检查生成差异、模块依赖和手写扩展点。
-3. **固定本机打包入口。** 在 `backend/mygo.json` 设置应用 ID、Go 入口 `./cmd/skillhub-server`、输出目录 `../fino/desktop` 和系统最低版本 `13.0`，与 Go 的系统要求一致。一个脚本负责 `npm ci`、构建并写入桌面专用的嵌入目录，以及调用 MyGo 打包。桌面前端使用同源 API 并开启目录选择。脚本从仓库根目录运行下面的打包命令，生成 `fino/desktop/darwin-amd64/SkillHub.app`。 [MyGo 配置](https://mygo.run/docs/configuration) · [构建标签实现](https://github.com/egoist/mygo/blob/v0.10.0/cmd/mygo/build.go#L514)
+3. **固定本机打包入口。** 在 `backend/mygo.json` 设置应用 ID、Go 入口 `./cmd/skillhub-server`、输出目录 `../.fino/desktop` 和系统最低版本 `13.0`，与 Go 的系统要求一致。一个脚本负责 `npm ci`、构建并写入桌面专用的嵌入目录，以及调用 MyGo 打包。桌面前端使用同源 API 并开启目录选择。脚本从仓库根目录运行下面的打包命令，生成 `.fino/desktop/darwin-amd64/SkillHub.app`。 [MyGo 配置](https://mygo.run/docs/configuration) · [构建标签实现](https://github.com/egoist/mygo/blob/v0.10.0/cmd/mygo/build.go#L514)
 
 ```sh
 GOTOOLCHAIN=go1.27.4 CGO_ENABLED=1 MACOSX_DEPLOYMENT_TARGET=13.0 \

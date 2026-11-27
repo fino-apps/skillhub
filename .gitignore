@@ -65,4 +65,4 @@ npm-debug.log*
 
 # Embedded desktop frontend build output
 /backend/cmd/skillhub-server/desktop-assets/
-/fino/desktop/
+/.fino/desktop/
