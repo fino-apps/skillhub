@@ -31,9 +31,18 @@ export function importSourceName(kind = "") {
   return Object.hasOwn(sourceNames, kind) ? sourceNames[kind] : kind || "未知";
 }
 
+export function isWebURL(value: string) {
+  if (!/^https?:\/\//i.test(value)) return false;
+  try {
+    return Boolean(new URL(value).hostname);
+  } catch {
+    return false;
+  }
+}
+
 export function sourceURL(skill: Skill) {
   const url = skill.upstreamUrl?.trim();
-  return url && /^https?:\/\//i.test(url) && URL.canParse(url) ? url : "";
+  return url && isWebURL(url) ? url : "";
 }
 
 export function sourceLabel(skill: Skill) {

@@ -1,6 +1,6 @@
 import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { commitUpload } from "@/generated/api-client";
-import { importSourceName, message, stageZip, tagsFrom, type Candidate, type ImportResult } from "./library-api";
+import { importSourceName, isWebURL, message, stageZip, tagsFrom, type Candidate, type ImportResult } from "./library-api";
 import { Failure } from "./skill-ui";
 
 const importLimit = 100;
@@ -97,7 +97,7 @@ export function readImportMetadata(form: HTMLFormElement) {
   let error = "";
   if (tags.length > 100 || tags.some((tag) => [...tag].length > 128)) {
     error = "最多填写 100 个标签，每个标签最多 128 个字符";
-  } else if (upstreamUrl && (!/^https?:\/\//i.test(upstreamUrl) || !URL.canParse(upstreamUrl))) {
+  } else if (upstreamUrl && !isWebURL(upstreamUrl)) {
     error = "请输入以 http:// 或 https:// 开头的来源链接";
   }
   if (error) {

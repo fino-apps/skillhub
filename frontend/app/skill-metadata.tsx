@@ -1,6 +1,6 @@
 import { useId, useState, type FormEvent } from "react";
 import { batchUpdateSkillMetadata, updateSkill } from "@/generated/api-client";
-import { importSourceName, message, tagsFrom, type Skill } from "./library-api";
+import { importSourceName, isWebURL, message, tagsFrom, type Skill } from "./library-api";
 import { Failure } from "./skill-ui";
 
 export default function SkillMetadata({ skill, categories, onSaved }: { skill: Skill; categories: string[]; onSaved: () => void }) {
@@ -11,7 +11,7 @@ export default function SkillMetadata({ skill, categories, onSaved }: { skill: S
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.currentTarget));
     const url = String(values.upstreamUrl ?? "").trim();
-    if (url && (!/^https?:\/\//i.test(url) || !URL.canParse(url))) {
+    if (url && !isWebURL(url)) {
       setError("请输入以 http:// 或 https:// 开头的来源链接");
       return;
     }
