@@ -1,6 +1,6 @@
 # Fino skills
 
-这些技能随 `fino create` 安装，也可用 `fino create skills --output=<project-root>` 补装。`.agents/skills` 和 `.claude/skills` 指向本目录。默认保留已有文件；`--force` 会覆盖定制内容。
+Fino 上游提供的技能随 `fino create` 安装，也可用 `fino create skills --output=<project-root>` 补装。`.agents/skills` 和 `.claude/skills` 指向本目录。默认保留已有文件；`--force` 会覆盖定制内容。
 
 按任务选择技能，或在请求中明确指定名称；Codex 可使用 `$skill-name`。执行仍遵循项目规范和用户授权。
 
@@ -9,6 +9,7 @@
 | Skill | 用途 | 请求示例 | 来源 |
 |---|---|---|---|
 | [fino](fino/SKILL.md) | 契约、代码归属、实现、构建与发布 | `$fino 新增订单查询 RPC，并更新现有目标` | [Fino](https://github.com/fino-io/fino/tree/main/skills/generator/templates/skills/fino) |
+| [fino-desktop](fino-desktop/SKILL.md) | Fino 应用的 macOS 接入、图标与打包 | `$fino-desktop 为项目构建 macOS 桌面版` | Fino 备选模板，本项目已启用 |
 | [frontend-design](frontend-design/SKILL.md) | 业务页面布局、交互和视觉设计 | `$frontend-design 优化订单列表和空状态` | [Anthropic](https://github.com/anthropics/skills/tree/main/skills/frontend-design)，业务界面适配 |
 | [web-design-guidelines](web-design-guidelines/SKILL.md) | UI 实现与无障碍审查 | `$web-design-guidelines 审查订单页面的表单和键盘交互` | [Vercel skill](https://github.com/vercel-labs/agent-skills/tree/main/skills/web-design-guidelines) / [界面规则](https://github.com/vercel-labs/web-interface-guidelines)，附离线快照 |
 | [vercel-react-best-practices](vercel-react-best-practices/SKILL.md) | 请求、包体积和 React 渲染性能 | `$vercel-react-best-practices 排查筛选输入卡顿` | [Vercel](https://github.com/vercel-labs/agent-skills/tree/main/skills/react-best-practices)，React/Vite 客户端适配 |
