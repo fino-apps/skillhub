@@ -44,8 +44,8 @@ export function ImportFeedback({ result }: { result: ImportResult | null }) {
   </div>;
 }
 
-export function ImportMetadataFields({ categories, existingTags, defaultSource, disabled }: {
-  categories: string[]; existingTags: string[]; defaultSource: string; disabled: boolean;
+export function ImportMetadataFields({ categories, existingTags, defaultSource, defaultUrl, disabled }: {
+  categories: string[]; existingTags: string[]; defaultSource: string; defaultUrl?: string; disabled: boolean;
 }) {
   const hintId = useId();
   const categoriesId = useId();
@@ -68,7 +68,7 @@ export function ImportMetadataFields({ categories, existingTags, defaultSource, 
       <span className="skillhub-hint" id={hintId}>应用到本批新收录的 Skill</span>
       <label>短用途<input name="purpose" maxLength={240} /></label>
       <label>来源名称<input name="upstreamName" maxLength={120} placeholder={defaultSource} /></label>
-      <label>来源链接<input name="upstreamUrl" type="url" maxLength={2048} /></label>
+      <label>来源链接<input name="upstreamUrl" type="url" maxLength={2048} defaultValue={defaultUrl} /></label>
       <label>分类<input name="category" maxLength={128} list={categoriesId} /></label>
       <datalist id={categoriesId}>{categories.map((name) => <option key={name} value={name} />)}</datalist>
       <label>标签<input name="tags" list={tagsId} placeholder="选择或输入标签，用逗号分隔"

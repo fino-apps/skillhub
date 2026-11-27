@@ -23,7 +23,7 @@ type Preview = {
 };
 
 export default function GitHubIntake({ categories, existingTags, onComplete }: { categories: string[]; existingTags: string[]; onComplete: (result: ImportResult) => void }) {
-  const [preview, setPreview] = useState<{ source: ReturnType<typeof githubLocation>; result: Preview } | null>(null);
+  const [preview, setPreview] = useState<{ link: string; source: ReturnType<typeof githubLocation>; result: Preview } | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -37,9 +37,10 @@ export default function GitHubIntake({ categories, existingTags, onComplete }: {
     setBusy(true);
     setError("");
     try {
-      const source = githubLocation(String(values.get("link")).trim(), String(values.get("ref")).trim(), String(values.get("path")).trim());
+      const link = String(values.get("link")).trim();
+      const source = githubLocation(link, String(values.get("ref")).trim(), String(values.get("path")).trim());
       const result = await previewImport<Preview>({ source });
-      setPreview({ source, result });
+      setPreview({ link, source, result });
       setSelected((result.skills ?? []).slice(0, 100).map((skill) => skill.path ?? ""));
     } catch (err) {
       setError(message(err));
@@ -94,7 +95,7 @@ export default function GitHubIntake({ categories, existingTags, onComplete }: {
       {(preview.result.skills?.length ?? 0) > 0
         ? <form className="github-form" onSubmit={save}>
           <CandidatePicker items={preview.result.skills ?? []} selected={selected} onChange={setSelected} disabled={busy} />
-          <ImportMetadataFields categories={categories} existingTags={existingTags} defaultSource={importSourceName("github")} disabled={busy} />
+          <ImportMetadataFields categories={categories} existingTags={existingTags} defaultSource={importSourceName("github")} defaultUrl={preview.link} disabled={busy} />
           <button type="submit" disabled={busy || !selected.length}>
             {busy ? "收录中…" : `收录 ${selected.length} 项`}
           </button>
