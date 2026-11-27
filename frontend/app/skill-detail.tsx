@@ -7,8 +7,8 @@ import { UploadIntake } from "./local-intake";
 import SkillContent from "./skill-content";
 import SkillMetadata from "./skill-metadata";
 import SkillMerge, { mergeSummaryText } from "./skill-merge";
-import { archiveURL, fetchAllVersions, importSourceName, libraryNavigation, message, sourceLabel, sourceURL, type Facets, type Skill } from "./library-api";
-import { Dialog, ExportLocation, Failure, Menu, OperationFeedback, useSkillOperation } from "./skill-ui";
+import { fetchAllVersions, importSourceName, libraryNavigation, message, sourceLabel, sourceURL, type Facets, type Skill } from "./library-api";
+import { Dialog, ExportVersionDialog, Failure, Menu, OperationFeedback, useSkillOperation } from "./skill-ui";
 import { shortVersion, versionDigest, versionLabel, type SkillVersion } from "./skill-version";
 
 import "./skillhub.css";
@@ -140,15 +140,13 @@ function Detail({ skillId }: { skillId: string }) {
         </div>
         <div className="library-actions">
           {view && (view.available
-            ? <button type="button" disabled={busy} title="保存到服务端默认目录" onClick={() => void operation.save(skillId, view.id)}>
-              {busy ? "处理中…" : "导出文件夹"}
+            ? <button type="button" disabled={busy} onClick={() => { operation.dismiss(); setPanel({ kind: "export", version: view }); }}>
+              导出
             </button>
             : <button type="button" disabled={busy} onClick={() => repair(view)}>补齐版本</button>)}
           <Menu label="Skill 更多操作">
             <button type="button" onClick={() => setPanel({ kind: "metadata" })}>编辑整理信息</button>
             {view?.available && <>
-              <button type="button" onClick={() => { operation.dismiss(); setPanel({ kind: "export", version: view }); }}>导出到指定目录…</button>
-              <a href={archiveURL(skillId, view.id)}>下载 ZIP</a>
               <button type="button" onClick={() => setPanel({ kind: "install", version: view })}>Codex 安装命令</button>
             </>}
             <button type="button" disabled={busy} onClick={() => setPanel({ kind: "merge" })}>合并到其他 Skill</button>
@@ -232,10 +230,7 @@ function Detail({ skillId }: { skillId: string }) {
       {panel?.kind === "install" && <Dialog title="Codex 安装命令" compact onClose={() => setPanel(null)}>
         <InstallCommand skillId={skillId} versionId={panel.version.id} />
       </Dialog>}
-      {panel?.kind === "export" && <Dialog title="导出到指定目录" compact onClose={() => setPanel(null)}>
-        <ExportLocation busy={busy} onSave={(dir) => void operation.save(skillId, panel.version.id, dir === undefined, dir)} />
-        <OperationFeedback {...operation} />
-      </Dialog>}
+      {panel?.kind === "export" && <ExportVersionDialog skillId={skillId} versionId={panel.version.id} operation={operation} onClose={() => setPanel(null)} />}
       {panel?.kind === "zip" && <Dialog title="从 ZIP 保存版本" compact onClose={() => setPanel(null)}>
         <UploadIntake skillId={skillId} onComplete={(result, pending) => { if (!pending && !result.failures?.length) saved(); else reload(); }} />
       </Dialog>}

@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { exportVersionToDirectory } from "@/generated/api-client";
-import { backendDirectoryLabel, canPickDirectory, message } from "./library-api";
+import { archiveURL, backendDirectoryLabel, canPickDirectory, message } from "./library-api";
 
 export function Dialog({ title, children, onClose, compact, className = "" }: {
   title: string; children: ReactNode; onClose: () => void; compact?: boolean; className?: string;
@@ -139,14 +139,23 @@ export function OperationFeedback({ error, notice, savedPath, floating, dismiss 
   </div>;
 }
 
-export function ExportLocation({ onSave, busy }: { onSave: (directory?: string) => void; busy: boolean }) {
-  return <form className="github-form" onSubmit={(event) => {
-    event.preventDefault();
-    const values = new FormData(event.currentTarget);
-    onSave(String(values.get("directory")).trim());
-  }}>
-    {canPickDirectory && <button type="button" className="secondary" disabled={busy} onClick={() => onSave()}>选择文件夹</button>}
-    <label>{backendDirectoryLabel}<input name="directory" disabled={busy} required /></label>
-    <button type="submit" disabled={busy}>{busy ? "导出中…" : "导出"}</button>
-  </form>;
+export function ExportVersionDialog({ skillId, versionId, operation, onClose }: {
+  skillId: string; versionId: string; operation: ReturnType<typeof useSkillOperation>; onClose: () => void;
+}) {
+  const busy = !!operation.busy;
+  return <Dialog title="导出 Skill" compact onClose={onClose}>
+    <p className="skillhub-hint">下载 ZIP 到当前设备，解压后得到 Skill 文件夹。</p>
+    <a href={archiveURL(skillId, versionId)}>下载 Skill ZIP</a>
+    <form className="github-form" onSubmit={(event) => {
+      event.preventDefault();
+      const values = new FormData(event.currentTarget);
+      void operation.save(skillId, versionId, false, String(values.get("directory")).trim());
+    }}>
+      <p className="skillhub-hint">{canPickDirectory ? "也可以直接导出到本机目录。" : "也可以导出到后端所在机器的目录。"}</p>
+      {canPickDirectory && <button type="button" className="secondary" disabled={busy} onClick={() => void operation.save(skillId, versionId, true)}>选择本机目录并导出</button>}
+      <label>{backendDirectoryLabel}<input name="directory" disabled={busy} required pattern=".*\S.*" title="请输入目录路径" /></label>
+      <button type="submit" disabled={busy}>{busy ? "导出中…" : "导出到此目录"}</button>
+    </form>
+    <OperationFeedback {...operation} />
+  </Dialog>;
 }

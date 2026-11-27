@@ -7,13 +7,14 @@ import { UploadIntake } from "./local-intake";
 import { BatchMetadata } from "./skill-metadata";
 import { importSourceName, libraryNavigation, message, sourceURL, type Facets, type ImportResult, type LibraryPage, type Skill } from "./library-api";
 import { mergeSummaryText } from "./skill-merge";
-import { Dialog, Failure, Menu, OperationFeedback, Popover, useSkillOperation } from "./skill-ui";
+import { Dialog, ExportVersionDialog, Failure, Menu, OperationFeedback, Popover, useSkillOperation } from "./skill-ui";
 
 import "./skillhub.css";
 
 type Panel =
   | { kind: "github" }
   | { kind: "backup" }
+  | { kind: "export"; skillId: string; versionId: string }
   | { kind: "batch"; skills: Skill[] }
   | { kind: "file"; zip?: boolean };
 
@@ -264,14 +265,14 @@ export default function HomePage() {
         <button type="button" className="secondary" onClick={() => setPanel({ kind: "github" })}>导入 GitHub</button>
         <Menu label="备份与恢复">
           <button type="button" disabled={!!operation.busy} onClick={exportBackup}>
-            {operation.busy === "backup-export" ? "正在导出…" : "导出全部数据"}
+            {operation.busy === "backup-export" ? "正在导出备份…" : "导出技能库备份"}
           </button>
           <button type="button" onClick={() => setPanel({ kind: "backup" })}>导入备份</button>
         </Menu>
       </div>
     </LibraryToolbar>
     <div className="library-overlays">
-      <OperationFeedback {...operation} floating />
+      {panel?.kind !== "export" && <OperationFeedback {...operation} floating />}
       {selected.length > 0 && <div className="library-actions library-selection" role="group" aria-label="批量操作">
         <span role="status">已选 {selected.length} 项</span>
         <button type="button" className="secondary" onClick={() => setPanel({ kind: "batch", skills: skills.filter(({ id }) => selected.includes(id)) })}>批量编辑</button>
@@ -327,8 +328,8 @@ export default function HomePage() {
           <td className="library-classification"><span title={classification || undefined}>{classification || "未分类"}</span></td>
           <td className="library-row-actions"><div className="library-row-controls">
             {version && (version.available
-              ? <button type="button" className="skillhub-text-button" disabled={!!operation.busy} title="保存到服务端默认目录"
-                onClick={() => void operation.save(skill.id, version.id)}>{operation.busy === version.id ? "导出中…" : "导出文件夹"}</button>
+              ? <button type="button" className="skillhub-text-button" disabled={!!operation.busy}
+                onClick={() => { operation.dismiss(); setPanel({ kind: "export", skillId: skill.id, versionId: version.id }); }}>导出</button>
               : <button type="button" className="skillhub-text-button" disabled={!!operation.busy} onClick={() => void operation.run(version.id, async () => {
                 await repairVersion({ skillId: skill.id, versionId: version.id });
                 operation.setNotice("版本已补齐，可以导出。");
@@ -351,6 +352,7 @@ export default function HomePage() {
         </button>
       </UploadIntake>
     </Dialog>}
+    {panel?.kind === "export" && <ExportVersionDialog skillId={panel.skillId} versionId={panel.versionId} operation={operation} onClose={() => setPanel(null)} />}
     {panel?.kind === "github" && <Dialog title="导入 GitHub" compact onClose={() => setPanel(null)}>
       <GitHubIntake categories={facets.categories ?? []} existingTags={facets.tags ?? []} onComplete={imported} />
     </Dialog>}
