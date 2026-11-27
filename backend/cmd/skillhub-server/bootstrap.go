@@ -1,3 +1,5 @@
+//go:build !darwin || !skillhub_desktop
+
 package main
 
 import (
@@ -10,10 +12,6 @@ import (
 	"github.com/fino-io/gokit/tracing"
 	"github.com/fino-io/skillhub/backend/infra/nacos"
 	"github.com/fino-io/skillhub/backend/internal/skillhub/api"
-	"github.com/fino-io/skillhub/backend/internal/skillhub/app"
-	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/service"
-	infrarepo "github.com/fino-io/skillhub/backend/internal/skillhub/infra/repo"
-	pb "github.com/fino-io/skillhub/go/skillhub/v1"
 )
 
 func loadConfig() (nserver.Config, error) {
@@ -67,32 +65,10 @@ func serve(ctx context.Context, cfg nserver.Config) error {
 		}
 	}()
 
-	server, err := buildServer(infra, paths)
+	server, err := buildServer(infra, paths, nil)
 	if err != nil {
 		return err
 	}
 
 	return api.RunContext(ctx, cfg, server, tracer, instrumentation)
-}
-
-func buildServer(deps infra, paths libraryPaths) (pb.SkillhubServiceServer, error) {
-	if err := migrateSchema(deps.DB); err != nil {
-		return nil, err
-	}
-
-	libraryRepo := infrarepo.NewLibrary(infrarepo.LibraryDeps{
-		DB:             deps.DB,
-		PageTokenCodec: deps.Pagination,
-	})
-
-	libraryService := service.NewLibrary(service.LibraryDeps{
-		Store:       libraryRepo,
-		SnapshotDir: paths.snapshots,
-		UploadDir:   paths.uploads,
-		ExportDir:   paths.exports,
-	})
-
-	return app.NewService(app.ServiceDeps{
-		Library: libraryService,
-	}), nil
 }

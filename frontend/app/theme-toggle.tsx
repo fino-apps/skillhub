@@ -21,15 +21,23 @@ function preferredTheme(): Theme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ followSystem = false }: { followSystem?: boolean }) {
   const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
-    const nextTheme = preferredTheme();
-    document.documentElement.dataset.theme = nextTheme;
-    setFavicon(nextTheme);
-    setTheme(nextTheme);
-  }, []);
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => {
+      const nextTheme = followSystem ? (media.matches ? "dark" : "light") : preferredTheme();
+      document.documentElement.dataset.theme = nextTheme;
+      setFavicon(nextTheme);
+      setTheme(nextTheme);
+    };
+    apply();
+    if (followSystem) {
+      media.addEventListener("change", apply);
+      return () => media.removeEventListener("change", apply);
+    }
+  }, [followSystem]);
 
   function toggleTheme() {
     const nextTheme = theme === "dark" ? "light" : "dark";
@@ -42,6 +50,8 @@ export function ThemeToggle() {
     }
     setTheme(nextTheme);
   }
+
+  if (followSystem) return null;
 
   return (
     <button className="theme-toggle" type="button" onClick={toggleTheme} aria-pressed={theme === "dark"}>

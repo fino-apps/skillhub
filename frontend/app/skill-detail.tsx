@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { deleteSkill, deleteVersion, getSkill, listFacets, repairVersion, setDefaultVersion } from "@/generated/api-client";
+import { isDesktop } from "@/lib/config";
 import ComparePanel from "./compare-panel";
 import InstallCommand from "./install-command";
 import { UploadIntake } from "./local-intake";
@@ -146,9 +147,7 @@ function Detail({ skillId }: { skillId: string }) {
             : <button type="button" disabled={busy} onClick={() => repair(view)}>补齐版本</button>)}
           <Menu label="Skill 更多操作">
             <button type="button" onClick={() => setPanel({ kind: "metadata" })}>编辑整理信息</button>
-            {view?.available && <>
-              <button type="button" onClick={() => setPanel({ kind: "install", version: view })}>Codex 安装命令</button>
-            </>}
+            {!isDesktop && view?.available && <button type="button" onClick={() => setPanel({ kind: "install", version: view })}>Codex 安装命令</button>}
             <button type="button" disabled={busy} onClick={() => setPanel({ kind: "merge" })}>合并到其他 Skill</button>
             <button type="button" className="skill-danger" disabled={busy} onClick={() => removeSkill(skill.name)}>删除 Skill</button>
           </Menu>

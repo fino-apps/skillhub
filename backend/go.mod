@@ -1,10 +1,11 @@
 module github.com/fino-io/skillhub/backend
 
-go 1.25.13
+go 1.27.4
 
 replace github.com/fino-io/skillhub/go => ../go
 
 require (
+	github.com/egoist/mygo v0.10.0
 	github.com/fino-io/core/go v0.0.0-20261117055404-d850525540af
 	github.com/fino-io/finokit v0.0.0-20261022022734-d90a3a9465a0
 	github.com/fino-io/gokit v0.0.0-20261022023608-73b147b323dd
@@ -40,6 +41,7 @@ require (
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/ebitengine/purego v0.11.1 // indirect
 	github.com/etherlabsio/healthcheck/v2 v2.0.0 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
@@ -88,11 +90,11 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
-	golang.org/x/crypto v0.55.0 // indirect
-	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/crypto v0.57.0 // indirect
+	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/sync v0.24.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.43.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260817212433-ac3dfec99bb1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect

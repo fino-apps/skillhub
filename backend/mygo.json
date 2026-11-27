@@ -1,0 +1,10 @@
+{
+  "name": "SkillHub",
+  "identifier": "io.fino.skillhub",
+  "version": "0.1.0",
+  "main": "./cmd/skillhub-server",
+  "out": "dist",
+  "macos": {
+    "minimumSystemVersion": "13.0"
+  }
+}

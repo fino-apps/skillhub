@@ -2,9 +2,20 @@
 
 SkillHub 是单机 Skill 技能库。直接导入或导出完整文件夹，也可以按 GitHub commit 收录第三方 Skill。已保存版本可离线查看、比对和导出。
 
+## macOS 桌面版
+
+在 Intel Mac 上准备 Go、Node.js 和 Xcode Command Line Tools，再从仓库根目录运行：
+
+```sh
+./build-desktop.sh
+open backend/dist/darwin-amd64/SkillHub.app
+```
+
+脚本使用 Go 1.27.4 和 MyGo v0.10.0。应用随包提供前端和本地 Go 服务，运行时可以直接从 Finder 启动。数据库和快照保存在 `~/Library/Application Support/SkillHub/`，日志在 `~/Library/Logs/SkillHub/app.log`。已有技能库可以通过备份 ZIP 导入。GitHub 收录需要本机 Git 和网络。
+
 ## 前后端分开部署
 
-从项目根目录用 `.goreleaser.yaml` 构建两份 Linux AMD64 镜像。需要 Go 1.25.13 或更新版本、符合 `frontend/package.json` 要求的 Node.js、GoReleaser 2.15+、Zig 和 Docker。SQLite 需要 CGO，下面用 Zig 编译并静态链接到后端程序。GoReleaser 会安装前端依赖并构建网页，将镜像加载到本机 Docker。
+从项目根目录用 `.goreleaser.yaml` 构建两份 Linux AMD64 镜像。需要 Go 1.27.4 或更新版本、符合 `frontend/package.json` 要求的 Node.js、GoReleaser 2.15+、Zig 和 Docker。SQLite 需要 CGO，下面用 Zig 编译并静态链接到后端程序。GoReleaser 会安装前端依赖并构建网页，将镜像加载到本机 Docker。
 
 ```sh
 CC='zig cc -target x86_64-linux-musl' \

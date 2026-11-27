@@ -18,15 +18,20 @@ func prepareLibraryPaths() (libraryPaths, error) {
 		uploads:   filepath.Join(base, "uploads"),
 	}
 
+	err := paths.prepare()
+	return paths, err
+}
+
+func (paths *libraryPaths) prepare() error {
 	for _, path := range []*string{&paths.snapshots, &paths.exports, &paths.uploads} {
 		absolute, err := filepath.Abs(*path)
 		if err != nil {
-			return libraryPaths{}, err
+			return err
 		}
 		if err := os.MkdirAll(absolute, 0700); err != nil {
-			return libraryPaths{}, err
+			return err
 		}
 		*path = absolute
 	}
-	return paths, nil
+	return nil
 }

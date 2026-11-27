@@ -377,7 +377,7 @@ func (s skillhubServer) SelectLocalDirectory(ctx context.Context, in *pb.SelectL
 		return nil, errcode.NewSkillhubRequestMissing()
 	}
 
-	path, err := service.PickDirectory(ctx)
+	path, err := s.library.PickDirectory(ctx)
 	if err != nil {
 		return nil, rpcError(ctx, "SelectLocalDirectory", errcode.WrapPlatformBadRequest(err))
 	}

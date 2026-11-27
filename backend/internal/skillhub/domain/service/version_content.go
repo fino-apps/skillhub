@@ -136,9 +136,12 @@ func (s *Library) Export(ctx context.Context, skill, version, base string, choos
 	}
 
 	if choose {
-		base, err = PickDirectory(ctx)
+		base, err = s.PickDirectory(ctx)
 		if err != nil {
 			return "", invalid(err)
+		}
+		if base == "" {
+			return "", nil
 		}
 	}
 	base = cmp.Or(base, s.exports)

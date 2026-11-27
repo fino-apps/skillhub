@@ -245,6 +245,13 @@ func Unpack(data []byte, dir string) error {
 	return nil
 }
 
+func (s *Library) PickDirectory(ctx context.Context) (string, error) {
+	if s.pickDirectory != nil {
+		return s.pickDirectory(ctx)
+	}
+	return PickDirectory(ctx)
+}
+
 func PickDirectory(ctx context.Context) (string, error) {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {

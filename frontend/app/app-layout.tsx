@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { ThemeToggle } from "@/app/theme-toggle";
+import { isDesktop } from "@/lib/config";
 
-const projectTitle = "skillhub | fino";
+const projectTitle = isDesktop ? "SkillHub" : "skillhub | fino";
 const projectName = "skillhub";
 
 export default function AppLayout() {
@@ -23,12 +24,12 @@ export default function AppLayout() {
             </Link>
             <Link className="product-label" to="/" title="Home">{projectName}</Link>
           </div>
-          <nav className="site-tools" aria-label="开发工具">
+          {!isDesktop && <nav className="site-tools" aria-label="开发工具">
             <NavLink className="console-link" to="/console">API Console</NavLink>
             <NavLink className="console-link" to="/issues">Issues</NavLink>
-          </nav>
+          </nav>}
           <nav className="site-nav" aria-label="Main navigation">
-            <ThemeToggle />
+            <ThemeToggle followSystem={isDesktop} />
           </nav>
         </div>
       </header>

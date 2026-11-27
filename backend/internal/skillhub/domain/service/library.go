@@ -24,23 +24,26 @@ var (
 type Library struct {
 	store                       repo.Library
 	snapshots, uploads, exports string
+	pickDirectory               func(context.Context) (string, error)
 	writes                      sync.Mutex
 	commits                     sync.Mutex
 }
 
 type LibraryDeps struct {
-	Store       repo.Library
-	SnapshotDir string
-	UploadDir   string
-	ExportDir   string
+	Store         repo.Library
+	SnapshotDir   string
+	UploadDir     string
+	ExportDir     string
+	PickDirectory func(context.Context) (string, error)
 }
 
 func NewLibrary(deps LibraryDeps) *Library {
 	return &Library{
-		store:     deps.Store,
-		snapshots: deps.SnapshotDir,
-		uploads:   deps.UploadDir,
-		exports:   deps.ExportDir,
+		store:         deps.Store,
+		snapshots:     deps.SnapshotDir,
+		uploads:       deps.UploadDir,
+		exports:       deps.ExportDir,
+		pickDirectory: deps.PickDirectory,
 	}
 }
 
