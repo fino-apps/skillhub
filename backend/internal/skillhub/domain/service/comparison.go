@@ -126,7 +126,7 @@ func readForComparison(file *zip.File) ([32]byte, string, bool, error) {
 	if err != nil {
 		return [32]byte{}, "", false, err
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 	if file.UncompressedSize64 > PreviewLimit {
 		hash := sha256.New()
 		_, err := io.Copy(hash, r)

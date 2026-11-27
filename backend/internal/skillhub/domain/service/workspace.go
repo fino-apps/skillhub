@@ -33,12 +33,12 @@ func ReadManifest(dir string) (Manifest, error) {
 	if err != nil {
 		return Manifest{}, err
 	}
-	defer root.Close()
+	defer func() { _ = root.Close() }()
 	f, err := root.Open("SKILL.md")
 	if err != nil {
 		return Manifest{}, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	data, err := io.ReadAll(io.LimitReader(f, PreviewLimit+1))
 	if err != nil {
 		return Manifest{}, err
@@ -138,7 +138,7 @@ func Archive(dir string) ([]byte, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	defer root.Close()
+	defer func() { _ = root.Close() }()
 	var output bytes.Buffer
 	writer := zip.NewWriter(&output)
 	digest := sha256.New()
@@ -151,12 +151,12 @@ func Archive(dir string) ([]byte, string, error) {
 
 		info, err := f.Stat()
 		if err != nil {
-			f.Close()
+			_ = f.Close()
 			return nil, "", err
 		}
 		size += info.Size()
 		if !info.Mode().IsRegular() || size > ArchiveLimit {
-			f.Close()
+			_ = f.Close()
 			return nil, "", errors.New("Skill 文件大小超过限制")
 		}
 
@@ -164,14 +164,14 @@ func Archive(dir string) ([]byte, string, error) {
 		header.SetMode(0600 | info.Mode().Perm()&0111)
 		dst, err := writer.CreateHeader(header)
 		if err == nil {
-			fmt.Fprintf(digest, "%q:%d:%d\n", path, info.Size(), header.Mode().Perm())
+			_, _ = fmt.Fprintf(digest, "%q:%d:%d\n", path, info.Size(), header.Mode().Perm())
 			var copied int64
 			copied, err = io.Copy(io.MultiWriter(dst, digest), io.LimitReader(f, info.Size()+1))
 			if err == nil && copied != info.Size() {
 				err = errors.New("收录过程中源文件发生变化")
 			}
 		}
-		f.Close()
+		_ = f.Close()
 		if err != nil {
 			return nil, "", err
 		}
@@ -200,7 +200,7 @@ func Unpack(data []byte, dir string) error {
 	if err != nil {
 		return err
 	}
-	defer root.Close()
+	defer func() { _ = root.Close() }()
 	var remaining int64 = ArchiveLimit
 	for _, file := range reader.File {
 		path := strings.TrimSuffix(file.Name, "/")
@@ -228,7 +228,7 @@ func Unpack(data []byte, dir string) error {
 
 		output, err := root.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600|file.Mode().Perm()&0111)
 		if err != nil {
-			input.Close()
+			_ = input.Close()
 			return err
 		}
 

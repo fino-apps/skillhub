@@ -91,7 +91,7 @@ func Within(dir, path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer root.Close()
+	defer func() { _ = root.Close() }()
 	info, err := root.Stat(path)
 	if err != nil {
 		return "", err

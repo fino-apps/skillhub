@@ -154,7 +154,7 @@ func (s *Library) writeSnapshot(id string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	defer os.Remove(temporary.Name())
+	defer func() { _ = os.Remove(temporary.Name()) }()
 	_, err = temporary.Write(data)
 	if err = errors.Join(err, temporary.Close()); err != nil {
 		return err

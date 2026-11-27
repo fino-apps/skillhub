@@ -78,7 +78,7 @@ func (s *Library) VersionFile(ctx context.Context, skill, id, path string) (File
 		if err != nil {
 			return FilePreview{}, err
 		}
-		defer r.Close()
+		defer func() { _ = r.Close() }()
 		data, err := io.ReadAll(io.LimitReader(r, PreviewLimit+1))
 		if err != nil {
 			return FilePreview{}, err

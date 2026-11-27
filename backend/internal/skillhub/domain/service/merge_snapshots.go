@@ -35,7 +35,7 @@ func (s *Library) usableSnapshot(version model.SkillVersionSnapshot) bool {
 	if err != nil {
 		return false
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	return validateSnapshotArchive(file, info.Size(), version.ContentDigest) == nil
 }
 
@@ -76,7 +76,7 @@ func (c *snapshotChanges) retain(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	holding, err := os.CreateTemp(c.library.snapshots, ".before-merge-")
 	if err != nil {
 		return "", err

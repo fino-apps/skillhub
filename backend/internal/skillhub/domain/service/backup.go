@@ -136,7 +136,7 @@ func readBackupFile(file *zip.File) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer input.Close()
+	defer func() { _ = input.Close() }()
 	return io.ReadAll(input)
 }
 
@@ -268,7 +268,7 @@ func validateSnapshotArchive(reader io.ReaderAt, size int64, expectedDigest stri
 			return err
 		}
 
-		fmt.Fprintf(digest, "%q:%d:%d\n", file.Name, file.UncompressedSize64, file.Mode().Perm())
+		_, _ = fmt.Fprintf(digest, "%q:%d:%d\n", file.Name, file.UncompressedSize64, file.Mode().Perm())
 		n, err := io.Copy(digest, io.LimitReader(input, int64(file.UncompressedSize64)+1))
 		if err = errors.Join(err, input.Close()); err != nil {
 			return err

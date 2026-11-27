@@ -206,16 +206,16 @@ func (s *Library) openStagedBackup(uploadID string) (backupArchive, *os.File, er
 	}
 	info, err := file.Stat()
 	if err != nil {
-		file.Close()
+		_ = file.Close()
 		return backupArchive{}, nil, err
 	}
 	if time.Since(info.ModTime()) >= uploadLifetime {
-		file.Close()
+		_ = file.Close()
 		return backupArchive{}, nil, repo.ErrNotFound
 	}
 	backup, err := parseBackupArchive(file, info.Size())
 	if err != nil {
-		file.Close()
+		_ = file.Close()
 		return backupArchive{}, nil, err
 	}
 	return backup, file, nil
@@ -233,7 +233,7 @@ func (s *Library) PreviewBackupMerge(ctx context.Context, uploadID, sourceID, ta
 	if err != nil {
 		return summary, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	sourceIndex := slices.IndexFunc(backup.Skills, func(skill model.SkillSnapshot) bool { return string(skill.ID) == sourceID })
 	if sourceIndex < 0 {
 		return summary, repo.ErrNotFound
