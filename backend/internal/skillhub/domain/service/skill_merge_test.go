@@ -115,7 +115,7 @@ func TestMergeRejectsPreviewAfterSourceSnapshotChanges(t *testing.T) {
 
 func TestSnapshotChangesPreserveReplacedFileOnRollback(t *testing.T) {
 	library := NewLibrary(LibraryDeps{SnapshotDir: t.TempDir()})
-	id := model.SkillVersionID("sample")
+	id := model.SkillVersionID("00000000-0000-4000-8000-000000000001")
 	path := library.snapshotPath(string(id))
 	require.NoError(t, os.WriteFile(path, []byte("old"), 0600))
 	changes := snapshotChanges{library: library}

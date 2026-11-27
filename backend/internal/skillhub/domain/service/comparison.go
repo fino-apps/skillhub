@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"errors"
 	"io"
 	"slices"
 	"unicode/utf8"
@@ -122,6 +123,9 @@ func readForComparison(file *zip.File) ([32]byte, string, bool, error) {
 		return [32]byte{}, "", false, nil
 	}
 
+	if file.UncompressedSize64 > ArchiveLimit {
+		return [32]byte{}, "", false, errors.New("快照文件大小超过限制")
+	}
 	r, err := file.Open()
 	if err != nil {
 		return [32]byte{}, "", false, err
@@ -129,10 +133,16 @@ func readForComparison(file *zip.File) ([32]byte, string, bool, error) {
 	defer func() { _ = r.Close() }()
 	if file.UncompressedSize64 > PreviewLimit {
 		hash := sha256.New()
-		_, err := io.Copy(hash, r)
+		n, err := io.Copy(hash, io.LimitReader(r, ArchiveLimit+1))
+		if err == nil && n > ArchiveLimit {
+			err = errors.New("快照文件大小超过限制")
+		}
 		return [32]byte(hash.Sum(nil)), "", true, err
 	}
-	data, err := io.ReadAll(r)
+	data, err := io.ReadAll(io.LimitReader(r, PreviewLimit+1))
+	if err == nil && len(data) > PreviewLimit {
+		return [32]byte{}, "", false, errors.New("快照文件大小不符")
+	}
 	binary := !utf8.Valid(data) || bytes.IndexByte(data, 0) >= 0
 	if binary {
 		return sha256.Sum256(data), "", true, err

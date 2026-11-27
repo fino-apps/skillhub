@@ -10,6 +10,7 @@ import (
 	domainrepo "github.com/fino-io/skillhub/backend/internal/skillhub/domain/repo"
 	"github.com/fino-io/skillhub/backend/internal/skillhub/infra/repo/dao"
 	repomapper "github.com/fino-io/skillhub/backend/internal/skillhub/infra/repo/mapper"
+	"github.com/fino-io/skillhub/backend/internal/skillhub/safecount"
 )
 
 var _ domainrepo.ISkillRepo = (*SkillRepoImpl)(nil)
@@ -65,7 +66,7 @@ func (r *SkillRepoImpl) ListSkills(ctx context.Context, query model.ListSkillQue
 		if countErr != nil {
 			return model.ListSkillResult{}, fmt.Errorf("count skills: %w", countErr)
 		}
-		totalCount = int32(total)
+		totalCount = safecount.Int32(total)
 	}
 
 	nextPageToken := ""

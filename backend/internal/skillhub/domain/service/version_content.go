@@ -68,7 +68,10 @@ func (s *Library) VersionFile(ctx context.Context, skill, id, path string) (File
 			continue
 		}
 
-		result := FilePreview{Size: int32(file.UncompressedSize64)}
+		if file.UncompressedSize64 > ArchiveLimit {
+			return FilePreview{}, errors.New("快照文件大小超过限制")
+		}
+		result := FilePreview{Size: int32(file.UncompressedSize64)} // #nosec G115 -- size is bounded by ArchiveLimit.
 		if file.UncompressedSize64 > PreviewLimit {
 			result.TooLarge = true
 			return result, nil

@@ -10,6 +10,7 @@ import (
 	"github.com/fino-io/finokit/pagination"
 	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/model"
 	domainrepo "github.com/fino-io/skillhub/backend/internal/skillhub/domain/repo"
+	"github.com/fino-io/skillhub/backend/internal/skillhub/safecount"
 )
 
 var _ domainrepo.ISkillSourceAliasRepo = (*MemorySkillSourceAliasRepo)(nil)
@@ -67,7 +68,7 @@ func (r *MemorySkillSourceAliasRepo) ListSkillSourceAliass(ctx context.Context, 
 
 	var totalCount int32
 	if !query.SkipTotalCount {
-		totalCount = int32(len(snapshots))
+		totalCount = safecount.Int32(int64(len(snapshots)))
 	}
 
 	afterID, pageSize, binding, err := pagination.ResolveKeyset(r.pageTokenCodec, query.PageToken, query.PageSize, "skill_source_alias", query.Filter)

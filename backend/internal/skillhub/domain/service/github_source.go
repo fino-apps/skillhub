@@ -50,7 +50,7 @@ func Checkout(ctx context.Context, raw, ref string) (string, string, func(), err
 	}
 	cleanup := func() { _ = os.RemoveAll(dir) }
 	run := func(args ...string) (string, error) {
-		cmd := exec.CommandContext(ctx, "git", args...)
+		cmd := exec.CommandContext(ctx, "git", args...) // #nosec G204 -- fixed subcommands and validated repository and ref; no shell.
 		cmd.Dir = dir
 		cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
 		out, err := cmd.CombinedOutput()

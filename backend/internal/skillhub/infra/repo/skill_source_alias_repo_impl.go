@@ -10,6 +10,7 @@ import (
 	domainrepo "github.com/fino-io/skillhub/backend/internal/skillhub/domain/repo"
 	"github.com/fino-io/skillhub/backend/internal/skillhub/infra/repo/dao"
 	repomapper "github.com/fino-io/skillhub/backend/internal/skillhub/infra/repo/mapper"
+	"github.com/fino-io/skillhub/backend/internal/skillhub/safecount"
 )
 
 var _ domainrepo.ISkillSourceAliasRepo = (*SkillSourceAliasRepoImpl)(nil)
@@ -65,7 +66,7 @@ func (r *SkillSourceAliasRepoImpl) ListSkillSourceAliass(ctx context.Context, qu
 		if countErr != nil {
 			return model.ListSkillSourceAliasResult{}, fmt.Errorf("count skill_source_aliass: %w", countErr)
 		}
-		totalCount = int32(total)
+		totalCount = safecount.Int32(total)
 	}
 
 	nextPageToken := ""

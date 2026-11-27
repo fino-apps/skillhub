@@ -31,7 +31,7 @@ func (s *Library) usableSnapshot(version model.SkillVersionSnapshot) bool {
 	if err != nil || !info.Mode().IsRegular() {
 		return false
 	}
-	file, err := os.Open(path)
+	file, err := os.Open(path) // #nosec G304 -- path is built from a validated snapshot UUID.
 	if err != nil {
 		return false
 	}
@@ -46,6 +46,9 @@ type snapshotChanges struct {
 }
 
 func (c *snapshotChanges) write(id model.SkillVersionID, data []byte) error {
+	if !canonicalBackupID(string(id)) {
+		return ErrInvalid
+	}
 	path := c.library.snapshotPath(string(id))
 	if c.originals == nil {
 		c.originals = make(map[string]string)
@@ -72,7 +75,7 @@ func (c *snapshotChanges) write(id model.SkillVersionID, data []byte) error {
 }
 
 func (c *snapshotChanges) retain(path string) (string, error) {
-	file, err := os.Open(path)
+	file, err := os.Open(path) // #nosec G304 -- path is built from a validated snapshot UUID.
 	if err != nil {
 		return "", err
 	}

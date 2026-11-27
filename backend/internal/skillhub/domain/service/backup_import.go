@@ -12,6 +12,7 @@ import (
 
 	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/model"
 	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/repo"
+	"github.com/fino-io/skillhub/backend/internal/skillhub/safecount"
 	"github.com/google/uuid"
 )
 
@@ -57,7 +58,7 @@ func versionsBySkill(versions []model.SkillVersionSnapshot) map[string][]model.S
 }
 
 func mergeEntry(skill model.SkillSnapshot, versions []model.SkillVersionSnapshot) MergeSkillEntry {
-	entry := MergeSkillEntry{ID: string(skill.ID), Name: skill.Name, Source: skill.ImportKind, VersionCount: int32(len(versions))}
+	entry := MergeSkillEntry{ID: string(skill.ID), Name: skill.Name, Source: skill.ImportKind, VersionCount: safecount.Int32(int64(len(versions)))}
 	switch {
 	case skill.RepositoryUrl != "":
 		entry.Source = skill.RepositoryUrl
@@ -197,7 +198,10 @@ func (s *Library) previewBackup(ctx context.Context, backup backupArchive) (Back
 
 // openStagedBackup keeps the file open because ZIP entries read from it on demand.
 func (s *Library) openStagedBackup(uploadID string) (backupArchive, *os.File, error) {
-	file, err := os.Open(filepath.Join(s.uploads, uploadID, stagedBackupName))
+	if !canonicalBackupID(uploadID) {
+		return backupArchive{}, nil, ErrInvalid
+	}
+	file, err := os.Open(filepath.Join(s.uploads, uploadID, stagedBackupName)) // #nosec G304 -- uploadID is a canonical UUID.
 	if errors.Is(err, os.ErrNotExist) {
 		return backupArchive{}, nil, repo.ErrNotFound
 	}

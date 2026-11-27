@@ -11,6 +11,7 @@ import (
 
 	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/model"
 	"github.com/fino-io/skillhub/backend/internal/skillhub/domain/repo"
+	"github.com/fino-io/skillhub/backend/internal/skillhub/safecount"
 	"github.com/google/uuid"
 )
 
@@ -114,7 +115,7 @@ func planVersionMerge(incoming, current []model.SkillVersionSnapshot, defaultID 
 			step.Repairs = append(step.Repairs, preferred.target)
 			preferred.usable = true
 		}
-		plan.summary.Restored += int32(len(step.Repairs))
+		plan.summary.Restored = safecount.Int32(int64(plan.summary.Restored) + int64(len(step.Repairs)))
 		if len(step.Repairs) == 0 {
 			plan.summary.Skipped++
 		}

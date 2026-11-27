@@ -108,7 +108,7 @@ func (s *Library) ExportBackup(ctx context.Context) ([]byte, error) {
 }
 
 func backupFiles(input io.ReaderAt, size int64) (map[string]*zip.File, error) {
-	if size > backupLimit {
+	if size < 0 || size > backupLimit {
 		return nil, errors.New("技能库备份超过 256 MiB")
 	}
 	archive, err := zip.NewReader(input, size)
@@ -116,7 +116,7 @@ func backupFiles(input io.ReaderAt, size int64) (map[string]*zip.File, error) {
 		return nil, err
 	}
 	files := make(map[string]*zip.File, len(archive.File))
-	remaining := uint64(size)
+	remaining := uint64(size) // #nosec G115 -- size is non-negative and bounded above.
 	for _, file := range archive.File {
 		if files[file.Name] != nil || file.Method != zip.Store || file.UncompressedSize64 != file.CompressedSize64 ||
 			!file.Mode().IsRegular() || file.UncompressedSize64 > remaining {
@@ -269,12 +269,12 @@ func validateSnapshotArchive(reader io.ReaderAt, size int64, expectedDigest stri
 		}
 
 		_, _ = fmt.Fprintf(digest, "%q:%d:%d\n", file.Name, file.UncompressedSize64, file.Mode().Perm())
-		n, err := io.Copy(digest, io.LimitReader(input, int64(file.UncompressedSize64)+1))
+		n, err := io.Copy(digest, io.LimitReader(input, int64(file.UncompressedSize64)+1)) // #nosec G115 -- size is bounded by ArchiveLimit.
 		if err = errors.Join(err, input.Close()); err != nil {
 			return err
 		}
 
-		if uint64(n) != file.UncompressedSize64 {
+		if n != int64(file.UncompressedSize64) { // #nosec G115 -- size is bounded by ArchiveLimit.
 			return errors.New("快照文件大小不符")
 		}
 	}

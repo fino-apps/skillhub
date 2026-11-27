@@ -1777,8 +1777,13 @@ func encodeHTTPGenericResponse(ctx context.Context, cfg *nhttp.Config, w http.Re
 			if len(path) == 0 {
 				path = "/?pageToken=" + next
 			} else {
-				url, _ := core.ParseUrl(path)
-				url.Query.Add("pageToken", next)
+				url, err := core.ParseUrl(path)
+				if err != nil {
+					return err
+				}
+				if err := url.Query.Add("pageToken", next); err != nil {
+					return err
+				}
 				path = url.Format()
 			}
 			w.Header().Set("Link", fmt.Sprintf("<%s>; rel=\"next\"", path))
