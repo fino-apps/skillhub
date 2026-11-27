@@ -34,14 +34,10 @@ import (
 var desktopAssets embed.FS
 
 func loadConfig() (nserver.Config, error) {
-	data, err := mygo.App.Path(mygo.PathUserData)
-	if err != nil {
-		return nserver.Config{}, err
-	}
-	logDir, err := mygo.App.Path(mygo.PathLogs)
-	if err != nil {
-		return nserver.Config{}, err
-	}
+	return nserver.Config{HttpAddr: "127.0.0.1:0"}, nil
+}
+
+func configureDesktop(data, logPath string) error {
 	dsn := url.URL{
 		Scheme:   "file",
 		Path:     filepath.Join(data, "catalog.db"),
@@ -52,30 +48,48 @@ func loadConfig() (nserver.Config, error) {
 	settings, err := json.Marshal(map[string]any{
 		"db":         map[string]string{"driver": "sqlite", "dsn": dsn.String()},
 		"pagination": map[string]string{"encodedKey": base64.StdEncoding.EncodeToString(paginationKey[:])},
-		"logs":       map[string]any{"level": "info", "output": "file", "file": map[string]string{"path": filepath.Join(logDir, "app.log")}},
+		"logs":       map[string]any{"level": "info", "output": "file", "file": map[string]string{"path": logPath}},
 	})
 	if err != nil {
-		return nserver.Config{}, err
+		return err
 	}
 	if err := config.InitDefault(config.WithWatcherDisabled(), config.WithSource(memory.NewSource(memory.WithJSON(settings)))); err != nil {
-		return nserver.Config{}, err
+		return err
 	}
-	return nserver.Config{HttpAddr: "127.0.0.1:0"}, logs.NewConfig()
+	return logs.NewConfig()
 }
 
-func serve(ctx context.Context, cfg nserver.Config) error {
+func serve(ctx context.Context, cfg nserver.Config) (err error) {
 	if !mygo.App.RequestSingleInstanceLock() {
 		return nil
 	}
 
-	return runDesktop(ctx, cfg.HttpAddr)
-}
+	logPath := "~/Library/Logs/SkillHub/app.log"
+	running, logsConfigured := false, false
+	defer func() {
+		if err != nil && !running {
+			mygo.App.WhenReady(func() { showDesktopStartupError(err, logPath) })
+			err = errors.Join(err, mygo.App.Run())
+		}
+		if logsConfigured {
+			logs.DefaultLogger().Close()
+		}
+	}()
 
-func runDesktop(ctx context.Context, address string) (err error) {
+	logDir, err := mygo.App.Path(mygo.PathLogs)
+	if err != nil {
+		return err
+	}
+	logPath = filepath.Join(logDir, "app.log")
 	data, err := mygo.App.Path(mygo.PathUserData)
 	if err != nil {
 		return err
 	}
+	if err := configureDesktop(data, logPath); err != nil {
+		return err
+	}
+	logsConfigured = true
+
 	paths := libraryPaths{
 		snapshots: filepath.Join(data, "snapshots"),
 		exports:   filepath.Join(data, "exports"),
@@ -113,7 +127,7 @@ func runDesktop(ctx context.Context, address string) (err error) {
 	if err != nil {
 		return err
 	}
-	listener, err := net.Listen("tcp4", address)
+	listener, err := net.Listen("tcp4", cfg.HttpAddr)
 	if err != nil {
 		return err
 	}
@@ -141,6 +155,7 @@ func runDesktop(ctx context.Context, address string) (err error) {
 			win.Focus()
 		}
 	})
+	var startupErr error
 	mygo.App.WhenReady(func() {
 		win := mygo.NewWindow(mygo.WindowOptions{
 			Title: "SkillHub", Width: 1200, Height: 800, MinWidth: 720, MinHeight: 520,
@@ -148,15 +163,33 @@ func runDesktop(ctx context.Context, address string) (err error) {
 		})
 		window.Store(win)
 		attachDesktopNavigation(win, origin)
-		if err := win.Page().LoadURL(origin + launchPath); err != nil {
-			logs.Errorw("failed to load desktop", "error", err)
-			mygo.Dialog.Error("SkillHub 启动失败", err.Error())
-			mygo.App.Quit()
+
+		loading := true
+		fail := func(err error) {
+			loading = false
+			startupErr = err
+			showDesktopStartupError(err, logPath)
+		}
+		page := win.Page()
+		page.OnDidFinishLoad(func() {
+			if strings.HasPrefix(page.URL(), origin+"/") {
+				loading = false
+			}
+		})
+		page.OnDidFailLoad(func(err *mygo.LoadError) {
+			if loading && err.Code != -999 && strings.HasPrefix(err.URL, origin+"/") {
+				fail(errors.New(err.Description))
+			}
+		})
+		if err := page.LoadURL(origin + launchPath); err != nil {
+			fail(err)
 		}
 	})
 	stop := context.AfterFunc(ctx, mygo.App.Quit)
 	defer stop()
-	err = mygo.App.Run()
+	running = true
+	runErr := mygo.App.Run()
+	err = errors.Join(runErr, startupErr)
 
 	deadline, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -167,6 +200,12 @@ func runDesktop(ctx context.Context, address string) (err error) {
 		err = errors.Join(err, serveErr)
 	}
 	return err
+}
+
+func showDesktopStartupError(err error, logPath string) {
+	logs.Errorw("failed to start desktop", "error", err)
+	mygo.Dialog.Error("SkillHub 启动失败", err.Error()+"\n\n日志位置："+logPath)
+	mygo.App.Quit()
 }
 
 func attachDesktopNavigation(win *mygo.Window, origin string) {
