@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build macOS release
+    runs-on: macos-15-intel
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: |
+            go/go.sum
+            backend/go.sum
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Test Go modules
+        run: |
+          go -C go test ./...
+          go -C backend test ./...
+
+      - name: Set release version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release tags must use the format v1.2.3."
+            exit 1
+          fi
+          VERSION="$version" node -e '
+            const fs = require("fs");
+            const path = "backend/mygo.json";
+            const config = JSON.parse(fs.readFileSync(path, "utf8"));
+            config.version = process.env.VERSION;
+            fs.writeFileSync(path, JSON.stringify(config, null, 2) + "\n");
+          '
+
+      - name: Build DMG
+        run: ./build-desktop.sh
+
+      - name: Verify and prepare assets
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          app=".fino/desktop/darwin-amd64/SkillHub.app"
+          dmg=".fino/desktop/darwin-amd64/skillhub-${version}-amd64.dmg"
+          test -d "$app"
+          test -f "$dmg"
+          codesign --verify --strict --verbose=2 "$app"
+          hdiutil verify "$dmg"
+          mkdir -p dist
+          cp "$dmg" "dist/skillhub-${GITHUB_REF_NAME}-darwin-amd64.dmg"
+          cd dist
+          shasum -a 256 "skillhub-${GITHUB_REF_NAME}-darwin-amd64.dmg" > "skillhub-${GITHUB_REF_NAME}-darwin-amd64.dmg.sha256"
+          shasum -a 256 -c "skillhub-${GITHUB_REF_NAME}-darwin-amd64.dmg.sha256"
+
+      - name: Check existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if response="$(gh api --include "repos/${GITHUB_REPOSITORY}/releases/tags/${GITHUB_REF_NAME}" 2>&1)"; then
+            if [[ "$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft)" != true ]]; then
+              echo "::error::Release ${GITHUB_REF_NAME} is already published."
+              exit 1
+            fi
+          elif ! printf '%s\n' "$response" | grep -Eq '^HTTP/[^ ]+ 404'; then
+            printf '%s\n' "$response" >&2
+            exit 1
+          fi
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/skillhub-${{ github.ref_name }}-darwin-amd64.dmg
+            dist/skillhub-${{ github.ref_name }}-darwin-amd64.dmg.sha256

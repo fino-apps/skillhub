@@ -13,6 +13,15 @@ open .fino/desktop/darwin-amd64/skillhub-0.1.0-amd64.dmg
 
 脚本使用 Go 1.27.4 和 MyGo v0.10.0，同时生成 `SkillHub.app` 和 `.dmg`。打开磁盘映像，将 SkillHub 拖到「应用程序」，推出磁盘后从「应用程序」启动。应用随包提供前端和本地 Go 服务，运行时可以直接从 Finder 启动。数据库和快照保存在 `~/Library/Application Support/SkillHub/`，日志在 `~/Library/Logs/SkillHub/app.log`。已有技能库可以通过备份 ZIP 导入。GitHub 收录需要本机 Git 和网络。
 
+推送形如 `v1.2.3` 的标签后，GitHub Actions 会先运行 Go 测试，再构建 Intel 版 DMG，并将其和 SHA-256 校验文件发布到当前仓库的 GitHub Release。发布版本号取自标签，工作流使用仓库默认的 `GITHUB_TOKEN`，无需配置额外的发布令牌。已发布的版本不会被重跑覆盖；失败后可以重跑以完成尚未发布的草稿。首次使用前需将工作流文件推送到 GitHub：
+
+```sh
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+当前构建没有配置 Apple Developer ID 签名和公证，下载后 macOS 可能阻止直接打开应用；对外分发时需要另行配置签名和公证。
+
 ## 前后端分开部署
 
 从项目根目录用 `.goreleaser.yaml` 构建两份 Linux AMD64 镜像。需要 Go 1.27.4 或更新版本、符合 `frontend/package.json` 要求的 Node.js、GoReleaser 2.15+、Zig 和 Docker。SQLite 需要 CGO，下面用 Zig 编译并静态链接到后端程序。GoReleaser 会安装前端依赖并构建网页，将镜像加载到本机 Docker。
