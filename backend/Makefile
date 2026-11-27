@@ -9,7 +9,7 @@ GO_LINT_URI=github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.3
 GO_SEC=$(shell command -v gosec 2> /dev/null || echo '')
 GO_SEC_URI=github.com/securego/gosec/v2/cmd/gosec@v2.26.1
 GO_VULNCHECK=$(shell command -v govulncheck 2> /dev/null || echo '')
-GO_VULNCHECK_URI=golang.org/x/vuln/cmd/govulncheck@v1.6.0
+GO_VULNCHECK_URI=golang.org/x/vuln/cmd/govulncheck@v1.10.0
 
 default: test
 
@@ -53,6 +53,6 @@ sec:
 vuln:
 	$(if $(GO_VULNCHECK), ,go install $(GO_VULNCHECK_URI))
 	@echo "##### Running govulncheck"
-	govulncheck ./...
+	GOROOT="$(shell go env GOROOT)" PATH="$(shell go env GOROOT)/bin:$$PATH" govulncheck ./...
 
 verify: test-full vet lint sec vuln
